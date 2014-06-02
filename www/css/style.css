@@ -1,0 +1,324 @@
+/* overrides ionic.css */
+
+/* .list-inset{
+  background-color: transparent;
+}
+.item{
+  background-color: transparent;
+} */
+
+.scroll-content{
+  background-image: url('../img/content_bg.png');
+}
+
+/* text styles */
+.text1 {
+    font-family: "Myriad Pro";
+    font-size: 17px;
+    font-weight: normal;
+    color: #d5dae0;
+}
+
+.text2 {
+    text-align: left;
+    font-family: "Myriad Pro";
+    font-style: italic;
+    text-shadow: none;
+    color: #abb1b5;
+    font-weight: 200;
+}
+
+.label1 {
+    font-style: italic;font-size: 19px;color: #abb1b5;
+}
+
+.terms_container{
+    border: 1px solid #fff;
+    padding: 5px 15px;
+    height: 90px;
+    overflow-y: scroll;
+}
+
+.angular-google-map-container {
+    height: 220px;
+}
+
+.ui-input-text {
+    border-radius: 3px;
+    border: 1px solid #de432f;
+}
+
+.ui-bars-container .ui-bar-info{
+    /* height: 68px; */
+    background: #fff;
+    /* padding: 10px 20px;*/
+    margin-top: 0px;
+    /* letter-spacing: -1px; */
+    border-radius: 5px;
+    height: 100px;
+    width: 100%;
+}
+
+.ui-bars-container .ui-bar-info a{
+    text-decoration: none !important;
+    font-weight: normal !important;
+    color: #222222;
+}
+.ui-bars-container .ui-bar-info a span{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+h2.ui-bar-name{
+    color: #df4430;
+    font-size: 18px;
+    /* width: 100%;
+    color: #df4430;
+    font-size: 18px;
+    font-weight: normal;
+    font-style: italic;
+    text-shadow: none;
+    margin: 10px 0px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; */
+}
+
+.ui-bars-container .ui-bar-info .ui-bar-spec .ui-bar-open,
+.ui-bars-container .ui-bar-info .ui-bar-spec .ui-bar-close{
+    /* width: 28%; */
+}
+
+.ui-bars-container .ui-bar-open i,
+.ui-bars-container .ui-bar-close i {
+    font-size: 1.5em;
+    margin: 0 5px;
+}
+
+.ui-bars-container .ui-bar-open i {
+    color: #6ea25a;
+}
+
+.ui-bars-container .ui-bar-close i {
+    color: #de432f;
+}
+
+.ui-bars-container .ui-bar-open span,
+.ui-bars-container .ui-bar-close span {
+    font-size: 15px;
+}
+
+.ui-bars-container .ui-bar-open span {
+    color: #6ea25a;
+}
+
+.ui-bars-container .ui-bar-close span {
+    color: #de432f;
+}
+
+.ui-bars-container .ui-bar-hot i {
+    font-size: 1.5em;
+    margin: 0 5px;
+}
+.ui-bars-container .ui-bar-hot span {
+    font-size: 15px;
+}
+
+.ui-bars-container .ui-bar-distance i {
+    font-size: 1.5em;
+    margin: 0 5px;
+}
+.ui-bars-container .ui-bar-distance span {
+    font-size: 15px;
+}
+
+.barsdetail_info_container {
+    background: #fff;
+    margin-top: 15px;
+    padding: 10px 15px;
+    /* letter-spacing: -1px;
+    border-radius: 5px; */
+}
+.ui-bar-address {
+    font-size: 16px;
+    font-style: italic;
+    /* text-shadow: none;
+    font-size: 16px;
+    font-style: italic;
+    margin: 0px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; */
+}
+.ui-bar-netaddr i,
+.ui-bar-phonenum i {
+    font-size: 1.5em;
+    margin: 0 5px;
+    color: #379ee6;
+}
+.ui-bar-netaddr span,
+.ui-bar-phonenum span {
+    color: #379ee6;
+}
+
+.ui-bar-rate {
+    /* font-size: 20px; */
+}
+.ui-bar-rate i {
+    font-size: 1.5em;
+    color: #de432f;
+}
+.ui-bar-rate span {
+    margin-left: 10px;
+}
+
+.ui-bar-status-time {
+    text-align: center;
+}
+.ui-bar-status-time .ui-bar-open,
+.ui-bar-status-time .ui-bar-close{
+    display: inline-block;
+}
+
+.ui-bar-status-time .ui-bar-time{
+    font-style: italic;
+    text-shadow: none;
+    letter-spacing: 0;
+    margin-left: 5px;
+}
+
+.ui-bar-carousel{
+    width: 258px;
+    height: 50px;
+    margin: 15px 0 !important;
+}
+
+.ui-bar-carousel .swiper-slide img{
+    width: 100%;
+    height: 100%;
+}
+
+.ui-bar-carousel .pagination {
+    position: absolute;
+    z-index: 20;
+    left: 10px;
+    bottom: 10px;
+}
+
+.wide-as-needed {
+  overflow: scroll;
+  white-space: nowrap;
+}
+
+.ui-red-line{
+    height: 3px;
+    background-color: #d44c4c;
+}
+.ui-blue-line{
+    height: 3px;
+    background-color: #4a87ee;
+}
+
+.home_header {
+    position: relative;
+    background: #fff;
+    border-radius: 3px;
+    height: 120px;
+    overflow: hidden;
+}
+
+.home_header .user-photo .ion-person {
+    font-size: 6.5em;
+    color: #ccc;
+}
+
+.home_header .camera-icon {
+    font-size: 5em;
+}
+
+.profile_container{
+    position: relative;
+    background: #fff;
+    border-radius: 3px;
+    height: 120px;
+    overflow: hidden;
+}
+.profile_container div{
+    text-align: center;
+}
+.profile_container div.ui-block-a{
+    position: relative;
+    height: 78px;
+    margin: 1px;
+    /* background-image: url(../img/profile_bg.png);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 176 87; */
+}
+
+.profile_container div.ui-block-a div.user_photo{
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    top: 50%;
+    margin-top: -25px;
+    left: 50%;
+    margin-left: -25px;
+    border-radius: 25px;
+    font-size: 6.5em;
+    color: #ccc;
+}
+
+.profile_container p{
+    font-size: 15px;
+    text-align: center;
+    margin: 5px 0;
+    line-height: 15px;
+}
+
+.profile_container .ui-btn-red,
+.profile_container .ui-btn-green{
+    margin-top: 5px;
+    font-size: 15px;
+    padding: 5px 0px;
+    width: 95%;
+    font-weight: normal !important;
+}
+
+.ui-image-container{
+    position: relative;
+    /* background: #fff;
+    padding: 10px;
+    width: 268px;
+    margin: 10px auto;
+    border-radius: 5px; */
+}
+.ui-image-container img{
+    /* width: 268px;
+    height: 148px; */
+}
+
+.ui-image-container .ui-heart-num{
+    color: #d44c4c;
+}
+.ui-image-container .ui-comment-num{
+    color: #4a87ee;
+}
+.ui-image-container .ui-heart-num,
+.ui-image-container .ui-comment-num{
+    display: inline-block;
+    font-size: 1.5em;
+}
+
+.ui-image-container .ui-heart-num span,
+.ui-image-container .ui-comment-num span{
+    color: #6d6e76;
+    padding: 0px 5px;
+    font-size: 15px;
+}
+
+.ui-image-container .ui-time-ago{
+    color: #646262;
+    font-size: 15px;
+}

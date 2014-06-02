@@ -1,0 +1,46 @@
+<ion-view title="CREATE YOUR ACCOUNT">
+  <ion-content class="has-header padding">
+    <!-- <h1>CREATE YOUR ACCOUNT</h1> -->
+    <div class="list list-inset">
+      <label class="item item-input">
+        <i class="icon ion-ios7-person-outline placeholder-icon"></i>
+        <input type="text" placeholder="Username (Required)" required="true" ng-model="user.username">
+      </label>
+      <label class="item item-input">
+        <i class="icon ion-ios7-email-outline placeholder-icon"></i>
+        <input type="email" placeholder="E-Mail (Required)" required="true" ng-model="user.email">
+      </label>
+      <label class="item item-input">
+        <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
+        <input type="password" placeholder="Password (Required)" required="true" ng-model="user.password">
+      </label>
+      <label class="item item-input">
+        <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
+        <input type="text" placeholder="Name (Optional)" ng-model="user.name">
+      </label>
+    </div>
+    <div class="row">
+      <div class="col col-100">
+        <label for="terms" class="label1">Terms and Agreement</label>
+        <div class="terms_container text2" id="terms">
+          Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam no nummy nibh euismod tincidunt ut laoreet dolore magn euismod tincidunt ut laoreet dolore magn
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-33">
+        <!-- <label class="item item-checkbox">-->
+        <div class="item item-checkbox label1" style="border: 0; background-color: transparent;">
+          <label class="checkbox checkbox-assertive">
+            <input type="checkbox" ng-model="checked">
+          </label>
+          I Agree
+        </div>
+        <!-- </label> -->
+      </div>
+      <div class="col col-33 col-offset-33">
+        <button class="button button-full button-assertive" ng-disabled="!checked" ng-click="signup(user)"><b>SIGN UP</b></button>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>

@@ -1,0 +1,32 @@
+<ion-view title="LOGIN TO YOUR ACCOUNT">
+  <ion-content class="has-header padding">
+    <!-- <h1>LOGIN TO YOUR ACCOUNT</h1> -->
+    <!-- <div class="row">
+      <div class="col col-20 col-offset-67">
+        <button class="button button-small button-assertive" ng-click="signup()"><b>SIGN UP</b></button>
+      </div>
+    </div> -->
+    <div class="list list-inset">
+      <label class="item item-input">
+        <i class="icon ion-ios7-person-outline placeholder-icon"></i>
+        <input type="text" placeholder="Username" ng-model="user.username">
+      </label>
+      <label class="item item-input">
+        <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
+        <input type="password" placeholder="Password" ng-model="user.password">
+      </label>
+    </div>
+    <div class="row">
+      <div class="col col-33 col-offset-33">
+        <button class="button button-full button-assertive" ng-click="login(user)">
+          <b>LOGIN</b>
+        </button>
+      </div>
+      <div class="col col-33">
+        <button class="button button-full button-assertive" ng-click="signup()">
+          <b>SIGNUP</b>
+        </button>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>

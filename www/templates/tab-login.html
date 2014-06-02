@@ -1,0 +1,29 @@
+<ion-view title="Login">
+  <ion-content class="has-header padding">
+    <h1>Login</h1>
+    <div class="list" ng-hide="loggedIn">
+      <div class="item item-input-inset">
+        <label class="item-input-wrapper">
+          <input type="text" placeholder="username" ng-model="user.username">
+        </label>
+      </div>
+      <div class="item item-input-inset">
+        <label class="item-input-wrapper">
+          <input type="password" placeholder="password" ng-model="user.password">
+        </label>
+      </div>
+      <div class="item item-input-inset">
+        <button class="button button-small" ng-click="login(user)">
+          Login
+        </button>
+      </div>
+    </div>
+    <div class="list" ng-show="loggedIn">
+      <div class="item item-input-inset">
+        <button class="button button-small" ng-click="logout(user)">
+          Logout
+        </button>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>
