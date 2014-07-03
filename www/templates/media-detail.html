@@ -4,26 +4,31 @@
   The FriendsCtrl pulls data from the Friends service (service.js)
   The Friends service returns an array of friend data
 -->
-<ion-view title="{{media.caption}}">
+<ion-view title="{{activity.caption}}">
   <ion-content has-header="true" padding="true">
     <div class="list card">
       <div class="item item-avatar">
-        <h2>{{media.caption}}</h2>
-        <div>{{media.createdTime}}</div>
-        <div>{{media.user.username}} was at {{media.bar.name}}</div>
+        <img src="{{activity.avatar}}">
+        <h2>{{activity.media.caption}}</h2>
+        <div>{{activity.formattedTime}}</div>
       </div>
-      <div class="item item-body">
-        <img class="full-image" src="{{media.url}}"></img>
+      <div class="item item-image">
+        <img class="full-image" src="{{activity.media.url}}">
       </div>
       <div class="item tabs tabs-secondary tabs-icon-left">
-        <a class="tab-item" href="#">
+        <a class="tab-item" ng-click="like()">
           <i class="icon ion-thumbsup"></i>
-          Like
+          {{activity.likes.length}}
         </a>
-        <a class="tab-item" href="#">
-          <i class="icon ion-chatbox"></i>
-          Comment
-        </a>
+        <div class="item item-input-inset">
+          <label class="item-input-wrapper">
+            <input type="text" placeholder="Comment" ng-model="activity.comment">
+            <i class="icon ion-ios7-close placeholder-icon" ng-click="clearComment()"></i>
+          </label>
+          <button class="button button-small button-assertive" ng-click="submitComment()" ng-disabled="!activity.comment">
+            Submit
+          </button>
+        </div>
       </div>
     </div>
   </ion-content>

@@ -1,7 +1,7 @@
 <ion-view title="HOME">
-  <ion-content class="has-header padding">
+  <ion-content has-header="true" padding="true">
     <div class="row home_header">
-      <div class="col col-33 user-photo"><i class="icon ion-person"></i><h2>hello</h2></div>
+      <div class="col col-33 user-photo"><i class="icon ion-person"></i></div>
       <div class="col col-66">
         <div class="row">
           <div class="col col-33">
@@ -10,13 +10,13 @@
           <div class="col col-33">
             <button class="button button-icon icon ion-ios7-videocam" ng-click="captureVideo()"></button>
           </div>
-          <div class="col col-33">
+          <!-- <div class="col col-33">
             <button class="button button-icon icon ion-ios7-photos" ng-click="getImage()"></button>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
-    <!-- <div class="card">
+    <div class="card">
       <div class="item">
         <input type="file"
                onchange="angular.element(this).scope().filesChanged(this)"
@@ -24,17 +24,21 @@
         <button ng-click="uploadImage()">Upload</button>
       </div>
       <li ng-repeat="file in files">{{file.name}}</li>
-    </div> -->
+    </div>
     <div class="list list-inset" ng-show="media">
       <div class="item item-input">
         <input type="text" placeholder="Caption" ng-model="media.caption">
       </div>
       <div class="item item-image">
-        <img class="full-image" ng-src="{{media.data}}">
+        <!-- <img class="full-image" src="{{media.path}}"> -->
+        <video width="320" height="240" controls>
+          <source src="{{media.path}}" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </div>
       <div class="item row">
         <div class="col col-50">
-          <button class="button button-full button-assertive" ng-click="uploadMedia()">Upload</button>
+          <button class="button button-full button-assertive" ng-disabled="!media.caption" ng-click="uploadMedia()">Upload</button>
         </div>
         <div class="col col-50">
           <button class="button button-full button-assertive" ng-click="cancelUpload()">Cancel</button>
@@ -42,35 +46,25 @@
       </div>
       <div class="item"><p>{{message}}</p></div>
     </div>
-    <div class="list card" ng-hide="media">
-      <div class="item item-avatar">
-        <h2>Hot Bar</h2>
-        <p>May 31, 2014</p>
-      </div>
-      <div class="item item-body">
-        <img class="full-image" ng-src="img/temp/start_img.png">
-        <div class="item tabs tabs-secondary tabs-icon-left">
-          <div class="tab-item">
-            <i class="icon ion-thumbsup"></i>
-            31
-          </div>
-          <div class="tab-item">
-            <i class="icon ion-chatbox"></i>
-            6
+    <!-- <div class="list card" ng-hide="false">
+      <div ng-repeat="f in activities">
+        <div class="item item-avatar">
+          <h2>{{f.media.caption}}</h2>
+          <p>{{f.formattedTime}}</p>
+        </div>
+        <div class="item item-body">
+          <img class="full-image" ng-src="">
+          <div class="item tabs tabs-secondary tabs-icon-left">
+            <div class="tab-item" ng-click="like(f)">
+              <i class="icon ion-thumbsup"></i>
+              {{f.likes.length}}
+            </div>
+            <div class="tab-item" ng-click="openModal()">
+              <i class="icon ion-chatbox"></i>
+            </div>
           </div>
         </div>
-        <!-- <div class="row">
-          <div class="col col-80">
-            <div class="ui-heart-num">
-              <i class="icon ion-heart"></i><span>101</span>
-            </div>
-            <div class="ui-comment-num">
-              <i class="icon ion-chatbubble"></i><span>3</span>
-            </div>
-          </div>
-          <div class="col col-20 ui-time-ago">31 mins ago</div>
-        </div> -->
-      </div>
+      </div> -->
     </div>
   </ion-content>
 </ion-view>

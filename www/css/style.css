@@ -11,6 +11,15 @@
   background-image: url('../img/content_bg.png');
 }
 
+/* .item.thumb-right img:nth-child(4){
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  max-width: 80px !important;
+  max-height: 80px !important;
+  width: 100%  !important;
+} */
+
 /* text styles */
 .text1 {
     font-family: "Myriad Pro";

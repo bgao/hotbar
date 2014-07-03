@@ -1,118 +1,241 @@
 angular.module('hotbar.controllers', [])
 
-.controller('MediaCtrl', function($scope, $ionicLoading, $log, Media, Users, Bars) {
+.controller('MediaCtrl', function($scope, $ionicLoading, $log,
+                                  MediaFeed, Users, Bars, Util) {
     $ionicLoading.show({
         template: 'Loading...'
     });
-    function setUser(media) {
-        if(media && media.owner) {
-            Users.get(media.owner, function(err, user){
-                if(err) { $log.error(err); media.user = null; }
-                else media.user = user;
-                $scope.$apply();
-            });
-        } else {
-            media.user = null;
-        }
-    }
-    function setBar(media) {
-        if (media && media.bar) {
-            Bars.get(media.bar, function(err, bar) {
-                if(err) { $log.error(err); media.bar = null; }
-                else media.bar = bar;
-                $scope.$apply();
-            });
-        } else {
-            media.bar = null;
-        }
-    }
-    Media.all(function(err, media) {
+    // function setUser(media) {
+    //     if(media && media.owner) {
+    //         Users.get(media.owner, function(err, user){
+    //             if(err) { $log.error(err); media.user = null; }
+    //             else media.user = user;
+    //             $scope.$apply();
+    //         });
+    //     } else {
+    //         media.user = null;
+    //     }
+    // }
+    // function setBar(media) {
+    //     if (media && media.bar) {
+    //         Bars.get(media.bar, function(err, bar) {
+    //             if(err) { $log.error(err); media.bar = null; }
+    //             else media.bar = bar;
+    //             $scope.$apply();
+    //         });
+    //     } else {
+    //         media.bar = null;
+    //     }
+    // }
+    MediaFeed.all(function(err, feed) {
         if (err) {
             $log.error(err);
-            $scope.media = [];
+            // show network error
             $ionicLoading.hide();
         } else {
-            $scope.$apply(function() {
-                for(var i = 0; i < media.length; ++i) {
-                    var m = media[i];
-                    m.createdTime = new Date(m.created);
-                    m.thumbnail_url = Media.getThumbnailUrl(m.url);
-                    setUser(m);
-                    setBar(m);
+            if (feed) {
+                $scope.feed = [];
+                while(feed.hasNextEntity()) {
+                    var _feed = {};
+                    var message = feed.getNextEntity();
+
+                    if (!message.get('object')) continue; // get media feed only
+                    var email = '',
+                    avatar = '',
+                    actor = message.get('actor');
+
+                    _feed.uuid = message.get('uuid');
+                    _feed.created = message.get('created');
+                    _feed.media = message.get('object');
+                    _feed.content = message.get('content');
+                    _feed.name = actor.displayName || 'Anonymous';
+                    _feed.username = actor.displayName;
+                    
+                    if ('email' in actor) {
+                        email = actor.email;
+                        avatar = 'http://www.gravatar.com/avatar/' +
+                            Util.MD5(email.toLowerCase()) + '?s=' + 50;
+                    }
+                    if (!email) {
+                        if ('image' in actor && 'url' in actor.image) {
+                            avatar = actor.image.url;
+                        }
+                    }
+                    if (!avatar) {
+                        avatar = 'http://www.gravatar.com/avatar/' +
+                            Util.MD5('rod@apigee.com') + '?s=' + 50;
+                    }
+                    _feed.avatar = avatar;
+                    _feed.formattedTime = Util.prettyDate(_feed.created);
+                    $scope.feed.push(_feed);
                 }
-                $scope.media = media;
+                $scope.$apply();
                 $ionicLoading.hide();
-            });
+            }
         }
     });
 })
 
-.controller('MediaDetailCtrl', function($scope, $stateParams, $ionicLoading, $log, Media, Users, Bars) {
+.controller('MediaDetailCtrl', function($scope, $stateParams, $ionicLoading, $log,
+                                        Global, MediaFeed, Users, Bars, Util) {
+    function getLikes(activity) {
+        MediaFeed.getLikes(activity, function(err, entities) {
+            if (err) {
+                $log.error(err);
+            } else {
+                activity.liked = false;
+                for (var i=0; i < entities.length; ++i) {
+                    if (entities[i].uuid === Global.user.uuid) {
+                        activity.liked = true;
+                        break;
+                    }
+                }
+                activity.likes = entities;
+                $scope.$apply();
+            }
+            $ionicLoading.hide();
+        });
+    }
+
+    $scope.like = function() {
+        if ($scope.activity) {
+            $ionicLoading.show({
+                template: "Loading..."
+            });
+            if ($scope.activity.liked ) {
+                MediaFeed.unlike($scope.activity, function(err, result) {
+                    if (err) {
+                        $log.error(err);
+                    } else {
+                        $log.debug(result)
+                    }
+                    getLikes($scope.activity);
+                });
+            } else {
+                MediaFeed.like($scope.activity, function(err, result) {
+                    if (err) {
+                        $log.error(err);
+                    } else {
+                        $log.debug(result);
+                    }
+                    getLikes($scope.activity);
+                });
+            }
+        }
+    };
+    $scope.submitComment = function() {
+        MediaFeed.comment($scope.activity, function(err, result) {
+            if (err) {
+                $log.error(err);
+            } else {
+                $log.debug(result);
+            }
+        });
+        $scope.clearComment();
+    };
+    $scope.clearComment = function() { $scope.activity.comment = ''; }
+
     $ionicLoading.show({
         template: 'Loading...'
     });
-    function setUser(media) {
-        Users.get(media.owner, function(err, user){
-            if(err) { $log.error(err); media.user = null; }
-            else media.user = user;
-            $scope.$apply();
-        });
-    }
-    function setBar(media) {
-        Bars.get(media.bar, function(err, bar) {
-            if(err) { $log.error(err); media.bar = null; }
-            else media.bar = bar;
-            $scope.$apply();
-        });
-    }
-    Media.get($stateParams.mediaId, function(err, media) {
-        var _media = null;
+    MediaFeed.get($stateParams.mediaId, function(err, activity) {
+        var _activity = {};
         if (err) {
             $log.error(err);
         } else {
-            _media = media;
-            _media.createdTime = new Date(_media.created);
-            _media.url = Media.getMediaUrl(_media.url);
-            setUser(_media);
-            setBar(_media);
+            var email = ''
+              , avatar = ''
+              , actor = activity.get('actor');
+            _activity.uuid = activity.get('uuid');
+            _activity.created = activity.get('created');
+            _activity.media = activity.get('object');
+            _activity.content = activity.get('content');
+            _activity.name = actor.displayName || 'Anonymous';
+            _activity.username = actor.displayName;
+            if ('email' in actor) {
+                email = actor.email;
+                avatar = 'http://www.gravatar.com/avatar/' +
+                    Util.MD5(email.toLowerCase()) + '?s=' + 50;
+            }
+            if (!email) {
+                if ('image' in actor && 'url' in actor.image) {
+                    avatar = actor.image.url;
+                }
+            }
+            if (!avatar) {
+                avatar = 'http://www.gravatar.com/avatar/' +
+                    Util.MD5('rod@apigee.com') + '?s=' + 50;
+            }
+            _activity.avatar = avatar;
+            _activity.formattedTime = Util.prettyDate(_activity.created);
+            _activity.likes = [];
+            _activity.liked = false;
+            $scope.activity = _activity;
+            getLikes($scope.activity);
         }
-        $scope.$apply(function(){ $scope.media = _media; });
-        $ionicLoading.hide();
+        // $ionicLoading.hide();
     });
 })
 
-.controller('HomeCtrl', function($scope, $ionicLoading, $state, $log, Global, Media) {
+.controller('HomeCtrl', function($scope, $ionicLoading, $state, $log, $ionicModal,
+                                 Global, MediaFeed, Users, Util, S3) {
     var client = Global.client;
     var user = Global.user;
     var navigator = window.navigator;
+
+    /* var cameraSuccess = function(imageData) {
+        $scope.$apply(function() {
+            $scope.media = {
+                filename: Global.user.username+"_" + 
+                    Math.round(new Date().getTime()/1000)+".jpg",
+                bar: Global.bar,
+                // data: imageData
+                data: "data:image/jpeg;base64,"+imageData
+            };            
+        });       
+    } */
+    var cameraSuccess = function(imageFile) {
+        $scope.$apply(function() {
+            $scope.media = {
+                filename: Global.user.username + "_" +
+                    Math.round(new Date().getTime()/1000) + "_" +
+                    imageFile,
+                bar: Global.bar,
+                path: imageFile
+                // src: "data:image/jpeg;base64,"+imageData
+            };            
+        });       
+    }
     var captureSuccess = function(mediaFiles) {
-        $log.info(mediaFiles[0].fullPath);
-        uploadMedia(mediaFiles[0]);
+        $scope.$apply(function() {
+            $scope.media = {
+                filename: Global.user.username + "_" +
+                    mediaFiles[0].name,
+                path: mediaFiles[0].fullPath,
+                type: mediaFiles[0].type,
+                size: mediaFiles[0].size,
+                bar: Global.bar
+            };
+            $scope.message = mediaFiles[0].type;
+        });
+        // uploadMedia(mediaFiles[0]);
     }
     var captureError = function(error) {
         navigator.notification.alert('Error code: ' + error.code, null,
                                      'Capture Error');
     }
-    $scope.user = Global.user;
-    // $scope.captureImage = function() {
-    //     window.navigator.device.capture.captureImage(captureSuccess,
-    //                                                  captureError,
-    //                                                 {limit: 1});
-    // }
-    var cameraSuccess = function(imageData) {
-        $scope.$apply(function() {
-            $scope.media = {
-                filename: Math.round(new Date().getTime()/1000)+".jpg",
-                bar: Global.bar,
-                data: "data:image/jpeg;base64,"+imageData
-                // src: "data:image/jpeg;base64,"+imageData
-            };            
-        });       
-    }
-    $scope.captureImage = function() {
+
+
+    /* $scope.captureImage = function() {
         navigator.camera.getPicture(cameraSuccess, captureError,
-                                    {quality: 75,
-                                     destinationType: Camera.DestinationType.DATA_URL});
+                                    { quality: 75,
+                                      // destinationType: Camera.DestinationType.DATA_URL});
+                                      destinationType: Camera.DestinationType.FILE_URI });
+    } */
+    $scope.captureImage = function() {
+        navigator.device.capture.captureImage(captureSuccess,
+                                              captureError);
+                                              // { limit: 1 });
     }
     $scope.captureVideo = function() {
         navigator.device.capture.captureVideo(captureSuccess,
@@ -121,24 +244,43 @@ angular.module('hotbar.controllers', [])
     }
     $scope.getImage = function() {
         navigator.camera.getPicture(cameraSuccess, captureError,
-                                    {destinationType: Camera.DestinationType.DATA_URL,
-                                     sourceType: Camera.PictureSourceType.PHOTOLIBRARY});
+                                    { // destinationType: Camera.DestinationType.DATA_URL,
+                                      destinationType: Camera.DestinationType.FILE_URI,
+                                      sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                                      encodingType: Camera.EncodingType.JPEG });
     }
     $scope.uploadMedia = function() {
         $ionicLoading.show({
             template: "Loading..."
         });
-        Media.create($scope.media, function(err, entity) {
-            $ionicLoading.hide();
-            if (err) {
-                $log.error(err);
-                $scope.message;
-            }
-            else {
-                $log.info(entity);
-                $state.go("tab.media");
-            }
-        });
+        
+        var reader = new FileReader();
+        reader.onloadend = function() {
+            $scope.media.data = reader.result;
+            S3.put($scope.media, function(err, data) {
+                $ionicLoading.hide();
+                if (err) {
+                    $log.error(err);
+                    $scope.message;
+                }
+                else {
+                    $log.debug(data);
+                    // set media url
+                    $scope.media.url =
+                        "http://d2x86vdxy89a0s.cloudfront.net/"+$scope.media.filename;
+                    MediaFeed.create($scope.media, function(err, entity) {
+                        if (err) {
+                            $log.error(err);
+                        } else {
+                            $log.debug(entity);
+                            $state.go("tab.media");
+                        }
+                    });
+                }
+            });
+            $scope.$apply();
+        };
+        reader.readAsBinaryString($scope.media.path);
     }
     $scope.cancelUpload = function() {
         $scope.media = null;
@@ -153,31 +295,151 @@ angular.module('hotbar.controllers', [])
     $scope.uploadImage = function() {
         $log.info("uploading image...");
         $log.debug($scope.files);
+        // Resize the image to get thumbnail
+        var img = new Image();
+        img.src = $scope.files[0];
+        img.onload = function() {
+            var canvas = document.createElement("canvas");
+            new thumbnailer(canvas, img, 188, 3);
+            var data = canvas.toDataURL();
+        }
         var reader = new FileReader();
         reader.onloadend = function() {
-            $scope.$apply(function() {
-                $scope.media = {
-                    filename: Math.round(new Date().getTime()/1000)+".jpg",
-                    bar: Global.bar,
-                    data: reader.result
-                };
-                $log.debug($scope.media);
+            $scope.media = {
+                filename: Global.user.username + "_" +
+                    Math.round(new Date().getTime()/1000)+".jpg",
+                bar: Global.bar,
+                data: reader.result
+            };
+            S3.put($scope.media, function(err, data) {
+                $ionicLoading.hide();
+                if (err) {
+                    $log.error(err);
+                    $scope.message;
+                }
+                else {
+                    $log.debug(data);
+                    // set media url
+                    $scope.media.url =
+                        "http://d2x86vdxy89a0s.cloudfront.net/"+$scope.media.filename;
+                    MediaFeed.create($scope.media, function(err, entity) {
+                        if (err) {
+                            $log.error(err);
+                        } else {
+                            $log.debug(entity);
+                            $state.go("tab.media");
+                        }
+                    });
+                }
             });
+            $scope.$apply();
         };
         reader.readAsDataURL($scope.files[0]);
+    };
+
+    function getAvatar() {
+        var email = ''
+        , avatar = '';
+        if (Global.user && Global.user.email) {
+            email = Global.user.email;
+            avatar = 'http://www.gravatar.com/avatar/' +
+                Util.MD5(email.toLowerCase()) + '?s=' + 50;
+        }
+        if (!email) {
+            if ( Global.user && Global.user.image &&
+                 Global.user.image.url ) {
+                avatar = Global.user.image.url;
+            }
+        }
+        if (!avatar) {
+            avatar = 'http://www.gravatar.com/avatar/' +
+                Util.MD5('rod@apigee.com') + '?s=' + 50;
+        }
+        $scope.avatar = avatar;
     }
-    if (user && client) {
-        client.getFeedForUser(user.username, function(err, data, entities) {
+
+    function getLikes(activity) {
+        MediaFeed.getLikes(activity, function(err, entities) {
             if (err) {
                 $log.error(err);
-                $scope.data = null;
             } else {
-                $scope.$apply(function() {
-                    $scope.data = entities;
-                });
+                activity.liked = false;
+                for (var i=0; i < entities.length; ++i) {
+                    if (entities[i].uuid === Global.user.uuid) {
+                        activity.liked = true;
+                        break;
+                    }
+                }
+                activity.likes = entities;
+                $scope.$apply();
             }
+            $ionicLoading.hide();
         });
     }
+    
+    $scope.like = function(activity) {
+        if (activity) {
+            $ionicLoading.show({
+                template: "Loading..."
+            });
+            if (activity.liked ) {
+                MediaFeed.unlike(activity, function(err, result) {
+                    if (err) {
+                        $log.error(err);
+                    } else {
+                        $log.debug(result)
+                    }
+                    getLikes(activity);
+                });
+            } else {
+                MediaFeed.like(activity, function(err, result) {
+                    if (err) {
+                        $log.error(err);
+                    } else {
+                        $log.debug(result);
+                    }
+                    getLikes(activity);
+                });
+            }
+        }
+    };
+    $scope.comment = function(activity) {
+        MediaFeed.comment(activity, function(err, result) {
+            if (err) {
+                $log.error(err);
+            } else {
+                $log.debug(result);
+            }
+        });
+    };
+    getAvatar();
+    $ionicLoading.show({
+        template: "Loading..."
+    });
+    Users.getActivityFeed(function(err, entities) {
+        if (err)
+            $log.error(err);
+        else {
+            $scope.activities = [];
+            for(var i = 0; i < entities.length; ++i) {
+                var _activity = {};
+                _activity.uuid = entities[i].uuid;
+                _activity.created = entities[i].created;
+                _activity.media = entities[i].object;
+                _activity.content = entities[i].content;
+                _activity.formattedTime = Util.prettyDate(_activity.created);
+                getLikes(_activity, function(err, data) {
+                    if (err) {
+                    } else {
+                        $scope.activities.push(data);
+                    }
+                });
+                
+            }
+            $scope.$apply();
+        }
+        $ionicLoading.hide();
+    });
 })
 
 .controller('BarsCtrl', function($scope, $ionicLoading, $log, Bars, Global) {
@@ -322,13 +584,25 @@ angular.module('hotbar.controllers', [])
     // });
 })
 
-.controller('AccountCtrl', function($scope, $ionicLoading, $log, $state, Global, Users) {
+.controller('AccountCtrl', function($scope, $ionicLoading, $log, $state, Global, Users,Util) {
     var client = Global.client;
     var user = Global.user;
     $ionicLoading.show({
         template: "Loading..."
     });
     $ionicLoading.hide();
+    $scope.update = function() {
+        users.update($scope.username, $scope.oldPass, $scope.newPass,
+                     $scope.email, $scope.name, function(err) {
+                         if (err) {
+                             $log.error(err);
+                             Users.logout();
+                             $state.go("login");
+                         } else {
+                             $log.debug("updated");
+                         }
+                     });
+    }
     $scope.logout = function() {
         Users.logout();
         $state.go("login");

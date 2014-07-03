@@ -1346,6 +1346,7 @@ var Usergrid = (function(){
   */
   Usergrid.Entity.prototype.getEntityId = function (entity) {
     var id = false;
+    var type = entity.get('type');
     if (isUUID(entity.get('uuid'))) {
       id = entity.get('uuid');
     } else {
@@ -1899,7 +1900,9 @@ var Usergrid = (function(){
     for (var key in this._list) {
       var listItem = this._list[key];
       if (listItem.get('uuid') === uuid) {
-        return listItem;
+          callback(false, listItem);
+          return;
+          // return listItem;
       }
     }
 

@@ -6,7 +6,7 @@
 // 'hotbar.services' is found in services.js
 // 'hotbar.controllers' is found in controllers.js
 angular.module('hotbar', ['ionic', 'hotbar.controllers', 'hotbar.services',
-                          'google-maps'])
+                          'google-maps', 'LocalStorageModule'])
 
     .run(function($ionicPlatform) {
         $ionicPlatform.ready(function() {
@@ -27,10 +27,13 @@ angular.module('hotbar', ['ionic', 'hotbar.controllers', 'hotbar.services',
         delete $httpProvider.defaults.headers.common['X-Requested-With'];
     })
 
+    .config(['localStorageServiceProvider', function(localStorageServiceProvider){
+        localStorageServiceProvider.setPrefix('hotbar');
+    }])
+
     /* .config(function(DropboxProvider) {
         DropboxProvider.config("yampzvmdl79llfo", "http://localhost:8100");
     }) */
-
 
     .config(function($stateProvider, $urlRouterProvider) {
 
