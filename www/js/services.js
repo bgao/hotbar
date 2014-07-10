@@ -190,85 +190,6 @@ angular.module('hotbar.services', [])
         }
     }
 }])
-.factory('Dropbox', ['$log', 'Global', function($log, Global) {
-    var access_token = "W_YxUsgeUvwAAAAAAAACaVjEraJtDmHnS3_s2ilMCX3jEABkDWp6H0Vg75w7AaBh";
-    var dropbox_base = "https://api-content.dropbox.com/1/";
-    /* var dropbox_client = new Dropbox.Client({
-        // key: "kdCm1MecxvA=|j+Fjz4+qmXEAmMopy5Xj1NpkOoLB5KdAvfF3W2kxiw==", sandbox:true
-        key: "yampzvmdl79llfo", sandbox:true
-    }); */
-    // dropbox_client.authDriver(new Dropbox.AuthDriver.Cordova());
-    return {
-        get: function(media, callback) {
-            var url = dropbox_base + "thumbnails/sandbox/test.jpg?access_token=" +
-                access_token;
-            $http.get(url)
-                .success(function(data, status) {
-                    $log.debug('success: ' + status);
-                    callback(null, data);
-                })
-                .error(function(data, status) {
-                    $log.error('error: ' + status);
-                    callback(status, null);
-                });
-        },
-        upload: function(media, callback) {
-            /* dropbox_client.authenticate(function(err, data) {
-                if (err) {
-                    callback(err, null);
-                } else {
-
-                dropbox_client.writeFile(mediaUrl, media.data, function(err, stat) {
-                if (err) {
-                    callback(err, null);
-                } else {
-                    $log.debug(stat);
-                    // create apigee media entity
-                    var options = {
-                        type: 'media',
-                        caption: media.caption,
-                        bar: media.bar,
-                        user: Global.user.uuid,
-                        position: Global.position,
-                        url: mediaUrl
-                    };
-                    client.createUserActivityWithEntity
-                    (Global.user, options, function(err, data){
-                        if (err) {
-                            callback(data, null);
-                        } else {
-                            callback(null, data);
-                        }
-                    });
-                }
-                }); */
-            $http({
-                method: 'POST',
-                url: postUrl+"?access_token="+access_token,
-                data: media.data,
-                headers: { 'Content-Type': undefined },
-                transformRequest: angular.identity
-            }).success(function(data, status) {
-                $log.debug(data);
-                $log.debug(status);
-                callback(null, data);
-            }).error(function(data,status) {
-                $log.error(data);
-                $log.debug(status);
-                callback(data, null);
-            });
-
-            /* $http.post(postUrl+"?access_token="+access_token, fd)
-                .success(function(data, status) {
-                })
-                .error(function(data, status) {
-                    $log.debug(data);
-                    callback(status, null);
-                }); */
-
-        }
-    }
-}])
 .factory('Bars', ['Global', function(Global) {
     return {
         all: function(callback) {
@@ -345,9 +266,6 @@ angular.module('hotbar.services', [])
 }])
 .factory('MediaFeed', ['$window', '$http', '$log', 'Global',
                        function($window, $http, $log, Global) {
-    var access_token = "W_YxUsgeUvwAAAAAAAACaVjEraJtDmHnS3_s2ilMCX3jEABkDWp6H0Vg75w7AaBh";
-    var dropbox_base = "https://api-content.dropbox.com/1/";
-
     return {
         all: function(callback) {
             var allFeed = Global.getAllFeed();
@@ -410,8 +328,6 @@ angular.module('hotbar.services', [])
         create: function(media, callback) {
             var _user = Global.getUser();
             var _client = Global.getClient();
-            // var mediaUrl = _user.username+"/"+media.filename;
-            // var thumbnailUrl = "thumbnail/" + _user.username + "/" + media.filename;
             media.type = "media";
             var options = {
                 "actor": {
