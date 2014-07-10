@@ -40,7 +40,6 @@ module.exports.resolveLocalFileSystemURL = function(uri, successCallback, errorC
     };
     // sanity check for 'not:valid:filename'
     if(!uri || uri.split(":").length > 2) {
-        console.log("::invalid file name");
         setTimeout( function() {
             fail(FileError.ENCODING_ERR);
         },0);
@@ -63,7 +62,7 @@ module.exports.resolveLocalFileSystemURL = function(uri, successCallback, errorC
             fail(FileError.NOT_FOUND_ERR);
         }
     };
-    console.log("::calling cordova::exec");
+
     exec(success, fail, "File", "resolveLocalFileSystemURI", [uri]);
 };
 module.exports.resolveLocalFileSystemURI = function() {

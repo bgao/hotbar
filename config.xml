@@ -9,7 +9,7 @@
     </author>
     <content src="index.html" />
     <access origin="*" />
-    <preference name="fullscreen" value="true" />
+    <preference name="fullscreen" value="false" />
     <preference name="webviewbounce" value="false" />
     <preference name="UIWebViewBounce" value="false" />
     <preference name="DisallowOverscroll" value="true" />
@@ -18,8 +18,4 @@
          to be sent to iCloud. Note: enabling this could result in Apple rejecting your app.
     -->
     <preference name="BackupWebStorage" value="none" />
-
-    <feature name="StatusBar">
-      <param name="ios-package" value="CDVStatusBar" onload="true" />
-    </feature>
 </widget>

@@ -21,8 +21,8 @@
     </div>
     <div class="row">
       <div class="col col-100">
-        <label for="terms" class="label1">Terms and Agreement</label>
-        <div class="terms_container text2" id="terms">
+        <label for="terms" class="terms-label">Terms and Agreement</label>
+        <div class="terms-container terms-text" id="terms">
           Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam no nummy nibh euismod tincidunt ut laoreet dolore magn euismod tincidunt ut laoreet dolore magn
         </div>
       </div>
@@ -30,7 +30,7 @@
     <div class="row">
       <div class="col col-33">
         <!-- <label class="item item-checkbox">-->
-        <div class="item item-checkbox label1" style="border: 0; background-color: transparent;">
+        <div class="item item-checkbox terms-label">
           <label class="checkbox checkbox-assertive">
             <input type="checkbox" ng-model="checked">
           </label>
@@ -39,7 +39,7 @@
         <!-- </label> -->
       </div>
       <div class="col col-33 col-offset-33">
-        <button class="button button-full button-assertive" ng-disabled="!checked" ng-click="signup(user)"><b>SIGN UP</b></button>
+        <button class="button button-default button-assertive" ng-disabled="!checked" ng-click="signup(user)"><b>SIGN UP</b></button>
       </div>
     </div>
   </ion-content>

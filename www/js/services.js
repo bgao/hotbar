@@ -38,78 +38,68 @@ angular.module('hotbar.services', [])
         MD5: MD5
     };
 }])
-.factory('Global', ['$log', 'localStorageService', function($log, localStorageService) {
+.factory('Global', ['$log', function($log, localStorageService) {
     function clearAll() {
-        localStorageService.clearAll();
+        window.user = null;
+        window.position = null;
+        window.client = null;
+        window.allFeed = null;
     }
     function getUser() {
-        return localStorageService.get('user');
+        return window.user;
     }
     function setUser(user) {
-        return localStorageService.set('user', user);
-    }
-    function setClient(client) {
-        return localStorageService.set('client', client);
-    }
-    function getClient(client) {
-        return localStorageService.get('client');
-    }
-    return {
-        clear: clear,
-        getUser: getUser,
-        setUser: setUser,
-        getClient, getClient,
-        setClient, setClient
-    };
-    var _this = this;
-    // _this._data = {
-    //     client: window.client,
-    //     user: window.user,
-    //     authenticated: !!window.user
-    // };
-    if (!_this._data) 
-        _this._data = {
-            client: window.client, // window.localStorage['client'],
-            user: window.user, // window.localStorage['user'],
-            position: window.position, // window.localStorage['position']
-            radius: window.radius,
-            bar: "f03d4a00-ce79-11e3-a710-7f3db49e4552"
-        };
-    if (!_this._data.client) {
-        var client_creds = {  // TODO: needs to be abstracted
-            orgName: "hotbar",
-            appName: "hotbar",
-            logging: true
-        };
-        _this._data.client = new window.Apigee.Client(client_creds);
-        window.client = _this._data.client;
-    }
-    if (!_this._data.position) {
-        // default postion Boston
-        _this._data.position =
-            new google.maps.LatLng(42.358431, -71.059773);
-        window.position = _this._data.position;
-        $log.debug( "Getting device position" );
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                _this._data.position =
-                    new google.maps.LatLng(pos.coords.latitude,
-                                           pos.coords.longitude);
-                window.position = _this._data.position;
-            });
-        }
-    }
-    if (!_this._data.radius) {
-        _this._data.radius = 5*1.6*1000; // 5 miles = 8000 meters
-        window.radius = _this._data.radius;
-    }
-    _this._data.setUser = function(user) {
-        _this._data.user = user;
         window.user = user;
     }
-    return _this._data;
+    function getClient() {
+        var client = window.client;
+        if (!client) {
+            var client_creds = {
+                orgName: 'hotbar',
+                appName: 'hotbar',
+                logging: false // true
+            };
+            client = new window.Apigee.Client(client_creds);
+            window.client = client;
+        }
+        return client;
+    }
+    function getPosition() {
+        $log.debug( "Getting device position" );
+        var position;
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                position = new google.maps.LatLng(pos.coords.latitude,
+                                                  pos.coords.longitude);
+                window.position = position;
+            });
+        } else {
+            position = window.position;
+        }
+        // hacking
+        if (!position)
+            position = new google.maps.LatLng(42.358431, -71.059773);
+        return position;
+    }
+    function getAllFeed() {
+        return window.allFeed;
+    }
+    function setAllFeed(allFeed) {
+        window.allFeed = allFeed;
+    }
+    return {
+        clearAll: clearAll,
+        getUser: getUser,
+        setUser: setUser,
+        getClient: getClient,
+        getPosition: getPosition,
+        getAllFeed: getAllFeed,
+        setAllFeed: setAllFeed,
+        bar: "f03d4a00-ce79-11e3-a710-7f3db49e4552", // hacking
+        radius: 5*1.6*1000 // 5 miles = 8000 meters
+    };
 }])
-.factory('S3', ['Global', function(Global) {
+.factory('S3', [function() {
     var s3URI = encodeURI("https://hotbar.s3.amazonaws.com/"),
     policyBase64 = "eyJleHBpcmF0aW9uIjoiMjAyMC0xMi0zMVQxMjowMDowMC4wMDBaIiwiY29uZGl0aW9ucyI6W3siYnVja2V0IjoiaG90YmFyIn0sWyJzdGFydHMtd2l0aCIsIiRrZXkiLCIiXSx7ImFjbCI6InB1YmxpYy1yZWFkIn0sWyJzdGFydHMtd2l0aCIsIiRDb250ZW50LVR5cGUiLCIiXSxbImNvbnRlbnQtbGVuZ3RoLXJhbmdlIiwwLDUyNDI4ODAwMDAwMF1dfQ==";
     signature = "BHDwJUlm+5/rtuVu8+EQc651dHo=",
@@ -144,9 +134,11 @@ angular.module('hotbar.services', [])
             
         },
         put: function(media, callback) {
+            var navigator = window.navigator;
             var bucket = new AWS.S3({params: {Bucket: 'hotbar'}});
             // var buf = dataURItoBlob(media.data.replace(/^data:image\/\w+;base64,/, ""));
             var buf = dataURItoBlob(media.data);
+            // var buf = media.data;
             var params = {
                 Key: media.filename, // required
                 ACL: 'public-read',
@@ -278,9 +270,9 @@ angular.module('hotbar.services', [])
     }
 }])
 .factory('Bars', ['Global', function(Global) {
-    var _client = Global.client;
     return {
         all: function(callback) {
+            var _client = Global.getClient();
             if(_client) {
                 var options = {
                     type: 'bars'
@@ -300,6 +292,7 @@ angular.module('hotbar.services', [])
             }
         },
         get: function(uuid, callback) {
+            var _client = Global.getClient();
             var options = {
                 type: 'bars',
                 uuid: uuid
@@ -315,19 +308,56 @@ angular.module('hotbar.services', [])
         },
         getBar: function(position, callback) {
             
+        },
+        checkin: function(bar, callback) {
+            var _client = Global.getClient();
+            var _user = Global.getUser();
+            // create an Entity object that models the connecting entity
+            var connecting_entity_options = {
+                client: _client,
+                data: {
+                    type:'users',
+                    username: _user.get('username') || null
+                }
+            };
+            var connecting_entity = new Apigee.Entity(connecting_entity_options);
+            
+            // create an Entity object that models the entity being connected to
+            var connected_entity_options = {
+                client: _client,
+                data: {
+                    type:'bars',
+                    uuid: bar.uuid
+                }
+            };
+            var connected_entity = new Apigee.Entity(connected_entity_options);
+            
+            // send the POST request
+            connecting_entity.connect('checkin', connected_entity, function (err, result) {
+                if (err) { 
+                    callback(err, null);
+	        } else { 
+                    callback(null, result);
+	        }
+            });
         }
     }
 }])
-.factory('MediaFeed', ['$window', '$http', '$log', 'Global', 'Dropbox',
-                       function($window, $http, $log, Global, Dropbox) {
-    var _client = Global.client;
-    var _user = Global.user;
+.factory('MediaFeed', ['$window', '$http', '$log', 'Global',
+                       function($window, $http, $log, Global) {
     var access_token = "W_YxUsgeUvwAAAAAAAACaVjEraJtDmHnS3_s2ilMCX3jEABkDWp6H0Vg75w7AaBh";
     var dropbox_base = "https://api-content.dropbox.com/1/";
-    var allMediaFeed = null;
 
     return {
         all: function(callback) {
+            var allFeed = Global.getAllFeed();
+            if (allFeed) {
+                allFeed.fetch();
+                allFeed.resetPaging();
+                callback(null, allFeed);
+                return;
+            }
+            var _client = Global.getClient();
             if(_client) {
                 var options = {
                     type: 'activities',
@@ -337,9 +367,10 @@ angular.module('hotbar.services', [])
                     if (err) {
                         callback(err, null);
                     } else {
-                        allMediaFeed = collectionObj;
-                        allMediaFeed.resetPaging();
-                        callback(null, allMediaFeed);
+                        allFeed = collectionObj;
+                        allFeed.resetPaging();
+                        Global.setAllFeed(allFeed);
+                        callback(null, allFeed);
                     }
                 });
             } else {
@@ -347,6 +378,8 @@ angular.module('hotbar.services', [])
             }
         },
         get: function(uuid, callback) {
+            var _client = Global.getClient();
+            var allMediaFeed = Global.getAllFeed();
             if (allMediaFeed) {
                 allMediaFeed.getEntityByUUID(uuid, function(err, feed) {
                     if (err) callback(err, null);
@@ -362,8 +395,8 @@ angular.module('hotbar.services', [])
                         if (err) {
                             callback(err, null);
                         } else {
-                            allMediaFeed = data;
-                            allMediaFeed.getEntityByUUID(uuid, function(err, feed) {
+                            Global.setAllFeed(data);
+                            data.getEntityByUUID(uuid, function(err, feed) {
                                 if (err) callback(err, null);
                                 else callback(null, feed);
                             });
@@ -373,45 +406,30 @@ angular.module('hotbar.services', [])
                     callback(null, null);
                 }
             }
-            // var header = media['file-metadata']['content-type'];
-            // var url = "https://api.usergrid.com/hotbar/hotbar/media/"+
-            //     media.uuid+"?access_token="+$window.localStorage.apigee_token;
-            // $http.get(url, {headers:{'Accept': header}})
-            //     .success(function(data, status){
-            //         console.log('Type ' + typeof(data));
-            //         console.log('success: ' + status);
-            //         callback(null, data);
-            //     })
-            //     .error(function(data, status) {
-            //         console.log('error: ' + status);
-            //         callback(status, null);
-            //     });
         },
         create: function(media, callback) {
-            var _user = Global.user;
-            var mediaUrl = _user.username+"/"+media.filename;
-            var thumbnailUrl = "thumbnail/" + _user.username + "/" + media.filename;
-            // Dropbox.upload(media, function(err, data) {
-            // create apigee media entity
-            // media.url = mediaUrl;
-            // media.thumbnail = thumbnailUrl;
+            var _user = Global.getUser();
+            var _client = Global.getClient();
+            // var mediaUrl = _user.username+"/"+media.filename;
+            // var thumbnailUrl = "thumbnail/" + _user.username + "/" + media.filename;
+            media.type = "media";
             var options = {
                 "actor": {
-                    "displayName": _user.username,
-                    "uuid": _user.uuid,
-                    "username": _user.username,
+                    "displayName": _user.get('username'),
+                    "uuid": _user.get('uuid'),
+                    "username": _user.get('username'),
                     "image" : {
                         "duration" : 0,
                         "height" : 80,
                         "url" : "http://www.gravatar.com/avatar/",
                         "width" : 80
                     },
-                    "email": _user.email
+                    "email": _user.get('email')
                 },
                 "verb": "post",
                 "object": media,
-                "lat": Global.position.lat(),
-                "lon": Global.position.lng()
+                "lat": Global.getPosition().lat() || null,
+                "lon": Global.getPosition().lng() || null
             };
             _client.createUserActivity('me', options, function(err, activity) {
                 if (err) {
@@ -421,37 +439,15 @@ angular.module('hotbar.services', [])
                 }
             });
         },
-        getThumbnailUrl: function(url) {
-            var thumbnailUrl = dropbox_base+"thumbnails/sandbox/"+url+"?size=l";
-            return thumbnailUrl + "&access_token=" + access_token;
-            // $http.get(thumbnailUrl+"&access_token="+access_token)
-            //     .success(function(data, status) {
-            //         callback(null, data);
-            //     })
-            //     .error(function(data, status) {
-            //         $log.error('error: ' + status);
-            //         callback(status, null);
-            //     });
-        },
-        getMediaUrl: function(url) {
-            var mediaUrl = dropbox_base + "files/sandbox/" + url;
-            return mediaUrl + "?access_token=" + access_token;
-            // $http.get(mediaUrl+"?access_token="+access_token)
-            //     .success(function(data, status) {
-            //         callback(null, data);
-            //     })
-            //     .error(function(data, status) {
-            //         $log.error('error: ' + status);
-            //         callback(status, null);
-            //     });
-        },
         like: function(mediaFeed, callback) {
+            var _client = Global.getClient();
+            var _user = Global.getUser();
             // create an Entity object that models the connecting entity
             var connecting_entity_options = {
                 client: _client,
                 data: {
                     type:'users',
-                    username: Global.user.username
+                    username: _user.get('username') || null
                 }
             };
             var connecting_entity = new Apigee.Entity(connecting_entity_options);
@@ -476,12 +472,14 @@ angular.module('hotbar.services', [])
             });
         },
         unlike: function(mediaFeed, callback) {
+            var _client = Global.getClient();
+            var _user = Global.getUser();
             // create an Entity object that models the connecting entity
             var connecting_entity_options = {
                 client: _client,
                 data: {
                     type:'users',
-                    username: _user.username
+                    username: _user.get('username')
                 }
             };
             var connecting_entity = new Apigee.Entity(connecting_entity_options);
@@ -506,6 +504,7 @@ angular.module('hotbar.services', [])
             });
         },
         getLikes: function(mediaFeed, callback) {
+            var _client = Global.getClient();
             var options = {
                 client: _client,
                 data: {
@@ -528,41 +527,39 @@ angular.module('hotbar.services', [])
 	        }
             });
         },
-        comment: function(mediaFeed, callback) {
+        submitComment: function(mediaFeed, callback) {
+            var _user = Global.getUser();
+            var _client = Global.getClient();
+            var object = {
+                type: "comment",
+                media: mediaFeed.uuid,
+                comment: mediaFeed.comment
+            };
             if (mediaFeed && mediaFeed.comment) {
-                var _user = Global.user;
                 var options = {
                     "actor": {
-                        "displayName": _user.username,
-                        "uuid": _user.uuid, 
-                        "username": _user.username, 
+                        "displayName": _user.get('username'),
+                        "uuid": _user.get('uuid'),
+                        "username": _user.get('username'),
                         "image" : {
                             "duration" : 0,
                             "height" : 80,
                             "url" : "http://www.gravatar.com/avatar/",
                             "width" : 80
                         },
-                        "email" : _user.email,
-                        "picture": "fred"
+                        "email" : _user.get('email'),
+                        // "picture": "fred"
                     },
                     "verb": "post",
-                    "content": comment,
-                    "lat": Global.position.lat(),
-                    "lon": Global.position.lng()
+                    "object": object,
+                    "lat": Global.getPosition().lat() || null,
+                    "lon": Global.getPosition().lng() || null
                 };
                 _client.createUserActivity('me', options, function(err, activity) {
                     if (err) {
                         callback(err, null);
                     } else {
-                        // create the connection
-                        // send the POST request
-                        activity.connect('comments', mediaFeed, function (err, result) {
-                            if (err) { 
-                                callback(err, null);
-	                    } else { 
-                                callback(null, result);
-	                    }
-                        });
+                        callback(null, activity);
                     }
                 });
             }
@@ -570,9 +567,9 @@ angular.module('hotbar.services', [])
     }
 }])
 .factory('Users', ['Global', function(Global) {
-    var _client = Global.client;
     return {
         get: function(uuid, callback) {
+            var _client = Global.getClient();
             var options = {
                 'type': 'users',
                 'uuid': uuid
@@ -582,7 +579,7 @@ angular.module('hotbar.services', [])
                     if(err) {
                         callback(user, null);
                     } else {
-                        callback(null, user._data);
+                        callback(null, user);
                     }
                 });
             } else {
@@ -590,6 +587,7 @@ angular.module('hotbar.services', [])
             }
         },
         login: function(username, password, callback) {
+            var _client = Global.getClient();
             if (_client) {
                 _client.login(username, password, function(err, data) {
                     if (err) {
@@ -615,11 +613,14 @@ angular.module('hotbar.services', [])
             }
         },
         logout: function() {
+            var _client = Global.getClient();
             if (_client) {
                 _client.logout();
             }
+            Global.clearAll();
         },
         signup: function(username, password, email, name, callback) {
+            var _client = Global.getClient();
             if (_client) {
                 _client.signup(username, password, email, name, function (err, user) {
                     if (err) {
@@ -635,11 +636,12 @@ angular.module('hotbar.services', [])
             }
         },
         update: function(username, oldPass, newPass, email, name, callback) {
-            var user = Global.user;
-            if (_client && user) {
-                user.set({ "name": name, "username": username, "email": email,
-                              "oldpassword": oldPass, "newpassword": newPass });
-                user.save(function(err) {
+            var _client = Global.getClient();
+            var _user = Global.getUser();
+            if (_client && _user) {
+                _user.set({ "name": name, "username": username, "email": email,
+                            "oldpassword": oldPass, "newpassword": newPass });
+                _user.save(function(err) {
                     if (err) {
                         callback(err);
                     } else {
@@ -651,9 +653,11 @@ angular.module('hotbar.services', [])
             }
         },
         getActivityFeed: function(callback) {
-            var _user = Global.user;
+            var _user = Global.getUser();
+            var _client = Global.getClient();
             if (_client && _user) {
-                _client.getFeedForUser(_user.username, function(err, data, entities) {
+                _client.getFeedForUser(_user.get('username'),
+                    function(err, data, entities) {
                     if (err) {
                         callback(err, null);
                     } else {

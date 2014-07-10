@@ -1,53 +1,53 @@
 angular.module('hotbar.controllers', [])
 
-.controller('MediaCtrl', function($scope, $ionicLoading, $log,
+.controller('MediaCtrl', function($scope, $ionicLoading, $log, $timeout,
                                   MediaFeed, Users, Bars, Util) {
+    // Check network connection
+    /* var connectState = navigator.connection.type;
+    // Connection.UNKNOWN
+    // Connection.ETHERNET
+    // Connection.WIFI
+    // Connection.CELL
+    // Connection.NONE
+    if (connectState == Connection.UNKNOWN)
+        navigator.notification.alert("Connection status: UNKNOWN", null, "Connection Type");
+    else if (connectState == Connection.ETHERNET)
+        navigator.notification.alert("Connection status: ETHERNET", null, "Connection Type");
+    else if (connectState == Connection.WIFI)
+        navigator.notification.alert("Connection status: WIFI", null, "Connection Type");
+    else if (connectState == Connection.CELL)
+        navigator.notification.alert("Connection status: CELL", null, "Connection Type");
+    else if (connectState == Connection.NONE)
+        navigator.notification.alert("Connection status: NONE", null, "Connection Type");
+    else
+        navigator.notification.alert("Connection status: ERROR", null, "Connection Type"); */
+
+    // Load all media activities
     $ionicLoading.show({
-        template: 'Loading...'
+        template: '<i class=\"icon ion-loading-a\"></i>Loading...'
     });
-    // function setUser(media) {
-    //     if(media && media.owner) {
-    //         Users.get(media.owner, function(err, user){
-    //             if(err) { $log.error(err); media.user = null; }
-    //             else media.user = user;
-    //             $scope.$apply();
-    //         });
-    //     } else {
-    //         media.user = null;
-    //     }
-    // }
-    // function setBar(media) {
-    //     if (media && media.bar) {
-    //         Bars.get(media.bar, function(err, bar) {
-    //             if(err) { $log.error(err); media.bar = null; }
-    //             else media.bar = bar;
-    //             $scope.$apply();
-    //         });
-    //     } else {
-    //         media.bar = null;
-    //     }
-    // }
     MediaFeed.all(function(err, feed) {
         if (err) {
-            $log.error(err);
+            $log.error("MediaFeed::all: " + err);
             // show network error
             $ionicLoading.hide();
         } else {
             if (feed) {
-                $scope.feed = [];
+                var media = [];
+                var comments = [];
                 while(feed.hasNextEntity()) {
                     var _feed = {};
                     var message = feed.getNextEntity();
 
-                    if (!message.get('object')) continue; // get media feed only
-                    var email = '',
+                    if (!message.get('object'))
+                        continue; // get only media and comments
+                    var object = message.get('object');
+                    var email = ''
                     avatar = '',
                     actor = message.get('actor');
 
                     _feed.uuid = message.get('uuid');
                     _feed.created = message.get('created');
-                    _feed.media = message.get('object');
-                    _feed.content = message.get('content');
                     _feed.name = actor.displayName || 'Anonymous';
                     _feed.username = actor.displayName;
                     
@@ -67,54 +67,59 @@ angular.module('hotbar.controllers', [])
                     }
                     _feed.avatar = avatar;
                     _feed.formattedTime = Util.prettyDate(_feed.created);
-                    $scope.feed.push(_feed);
+                    if (object.type == 'comment') {
+                        _feed.comment = object;
+                        comments.push(_feed);
+                    } else if (object.type == 'media') {
+                        _feed.media = object;
+                        media.push(_feed);
+                    }
                 }
-                $scope.$apply();
-                $ionicLoading.hide();
+                $timeout(function() {
+                    $scope.media = media;
+                    $scope.comments = comments;
+                    $ionicLoading.hide();
+                }, 500);
             }
         }
     });
 })
 
 .controller('MediaDetailCtrl', function($scope, $stateParams, $ionicLoading, $log,
-                                        Global, MediaFeed, Users, Bars, Util) {
-    function getLikes(activity) {
+                                        $timeout, Global, MediaFeed, Users, Bars, Util) {
+    function getLikes(activity, callback) {
+        var _user = Global.getUser();
         MediaFeed.getLikes(activity, function(err, entities) {
-            if (err) {
-                $log.error(err);
-            } else {
-                activity.liked = false;
-                for (var i=0; i < entities.length; ++i) {
-                    if (entities[i].uuid === Global.user.uuid) {
-                        activity.liked = true;
-                        break;
-                    }
-                }
-                activity.likes = entities;
-                $scope.$apply();
-            }
             $ionicLoading.hide();
+            if (err) {
+                $log.error("MediaDetailCtrl::getLikes: " + err);
+                callback && callback(err, null);
+            } else {
+                activity.liked = (entities.length > 0);
+                activity.likes = entities;
+                callback && callback(null, activity);
+            }
         });
     }
 
     $scope.like = function() {
         if ($scope.activity) {
             $ionicLoading.show({
-                template: "Loading..."
+                template: "<i class=\"icon ion-loading-a\"></i>Loading..."
             });
             if ($scope.activity.liked ) {
                 MediaFeed.unlike($scope.activity, function(err, result) {
                     if (err) {
-                        $log.error(err);
+                        $log.error("MediaDetailCtrl::unlike: " + err);
                     } else {
-                        $log.debug(result)
+                        // $log.debug(result)
                     }
                     getLikes($scope.activity);
                 });
             } else {
                 MediaFeed.like($scope.activity, function(err, result) {
                     if (err) {
-                        $log.error(err);
+                        $log.error("MediaDetailCtrl::like: " + err);
                     } else {
                         $log.debug(result);
                     }
@@ -124,24 +129,24 @@ angular.module('hotbar.controllers', [])
         }
     };
     $scope.submitComment = function() {
-        MediaFeed.comment($scope.activity, function(err, result) {
+        MediaFeed.submitComment($scope.activity, function(err, result) {
             if (err) {
-                $log.error(err);
+                $log.error("MediaDetailCtrl::submitComment: " + err);
             } else {
                 $log.debug(result);
             }
         });
-        $scope.clearComment();
+        $scope.activity.comment = '';
     };
     $scope.clearComment = function() { $scope.activity.comment = ''; }
 
     $ionicLoading.show({
-        template: 'Loading...'
+        template: '<i class=\"icon ion-loading-a\"></i>Loading...'
     });
     MediaFeed.get($stateParams.mediaId, function(err, activity) {
         var _activity = {};
         if (err) {
-            $log.error(err);
+            $log.error("MediaDetailCtrl::get: " + err);
         } else {
             var email = ''
               , avatar = ''
@@ -170,46 +175,59 @@ angular.module('hotbar.controllers', [])
             _activity.formattedTime = Util.prettyDate(_activity.created);
             _activity.likes = [];
             _activity.liked = false;
-            $scope.activity = _activity;
-            getLikes($scope.activity);
+            getLikes(_activity, function(err, activity) {
+                if (err) {
+                    $log.error("MediaDetailCtrl::getLikes: " + err);
+                } else {
+                    $timeout(function() {
+                        $scope.activity = activity;
+                    });
+                }
+            });
         }
         // $ionicLoading.hide();
     });
 })
 
-.controller('HomeCtrl', function($scope, $ionicLoading, $state, $log, $ionicModal,
-                                 Global, MediaFeed, Users, Util, S3) {
-    var client = Global.client;
-    var user = Global.user;
+.controller('HomeCtrl', function($scope, $ionicLoading, $state, $log, $ionicModal, 
+                                 $timeout, Global, MediaFeed, Users, Util, S3) {
     var navigator = window.navigator;
 
-    /* var cameraSuccess = function(imageData) {
-        $scope.$apply(function() {
+    var cameraSuccess = function(imageData) {
+        var _user = Global.getUser();
+        $timeout(function() {
             $scope.media = {
-                filename: Global.user.username+"_" + 
+                filename: _user.get('username') + "_" + 
                     Math.round(new Date().getTime()/1000)+".jpg",
                 bar: Global.bar,
                 // data: imageData
-                data: "data:image/jpeg;base64,"+imageData
-            };            
-        });       
-    } */
-    var cameraSuccess = function(imageFile) {
-        $scope.$apply(function() {
-            $scope.media = {
-                filename: Global.user.username + "_" +
-                    Math.round(new Date().getTime()/1000) + "_" +
-                    imageFile,
-                bar: Global.bar,
-                path: imageFile
-                // src: "data:image/jpeg;base64,"+imageData
+                data: "data:image/jpeg;base64," + imageData,
+                type: "image/jpeg"
             };            
         });       
     }
-    var captureSuccess = function(mediaFiles) {
+    /* var cameraSuccess = function(imageFile) {
+        var _user = Global.getUser();
         $scope.$apply(function() {
+            var index = imageFile.lastIndexOf('/') + 1;
             $scope.media = {
-                filename: Global.user.username + "_" +
+                filename: _user.get('username') + "_" +
+                    imageFile.substr(index),
+                bar: Global.bar,
+                path: imageFile,
+                type: 'image/jpeg'
+                // src: "data:image/jpeg;base64,"+imageData
+            };
+            // debug
+            navigator.notification.alert(imageFile, null, "CameraSuccess");
+            navigator.notification.alert($scope.media.filename, null, "CameraSuccess");
+        });
+    }; */
+    var captureSuccess = function(mediaFiles) {
+        var _user = Global.getUser();
+        $timeout(function() {
+            $scope.media = {
+                filename: _user.get('username') + "_" +
                     mediaFiles[0].name,
                 path: mediaFiles[0].fullPath,
                 type: mediaFiles[0].type,
@@ -218,76 +236,134 @@ angular.module('hotbar.controllers', [])
             };
             $scope.message = mediaFiles[0].type;
         });
-        // uploadMedia(mediaFiles[0]);
-    }
+        navigator.notification.alert($scope.media.filename, null, "CameraSuccess:filename");
+    };
     var captureError = function(error) {
         navigator.notification.alert('Error code: ' + error.code, null,
                                      'Capture Error');
-    }
+    };
 
-
-    /* $scope.captureImage = function() {
-        navigator.camera.getPicture(cameraSuccess, captureError,
-                                    { quality: 75,
-                                      // destinationType: Camera.DestinationType.DATA_URL});
-                                      destinationType: Camera.DestinationType.FILE_URI });
-    } */
     $scope.captureImage = function() {
+        navigator.camera.getPicture(cameraSuccess, captureError,
+                                    { quality: 50,
+                                      destinationType: Camera.DestinationType.DATA_URL});
+                                      //destinationType: Camera.DestinationType.FILE_URI });
+    };
+    /* $scope.captureImage = function() {
         navigator.device.capture.captureImage(captureSuccess,
                                               captureError);
                                               // { limit: 1 });
-    }
+    } */
     $scope.captureVideo = function() {
         navigator.device.capture.captureVideo(captureSuccess,
                                               captureError,
                                               { duration: 20 });
-    }
+    };
     $scope.getImage = function() {
         navigator.camera.getPicture(cameraSuccess, captureError,
-                                    { // destinationType: Camera.DestinationType.DATA_URL,
-                                      destinationType: Camera.DestinationType.FILE_URI,
+                                    { destinationType: Camera.DestinationType.DATA_URL,
+                                      // destinationType: Camera.DestinationType.FILE_URI,
+                                      quality: 50,
                                       sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
                                       encodingType: Camera.EncodingType.JPEG });
+    };
+
+    function onFail(error) {
+        $log.error("resolveLocalFileSystemURL: " + error.code);
+        navigator.notification.alert('HomeCtrl::uploadMedia::onFaile:' + 
+                                     error.code, null);
     }
+
     $scope.uploadMedia = function() {
+        $ionicLoading.show({
+            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+        });
+        S3.put($scope.media, function(err, data) {
+            if (err) {
+                $ionicLoading.hide();
+                $log.error("HomeCtrl::uploadMedia: " + err);
+                navigator.notification
+                    .alert('HomeCtrl::uploadMedia::Error', null);
+                $scope.message;
+                $scope.cleanup();
+            }
+            else {
+                // $log.debug(data);
+                // set media url
+                $scope.media.url =
+                    "http://d2x86vdxy89a0s.cloudfront.net/" +
+                    $scope.media.filename;
+                $scope.media.data = null;
+                MediaFeed.create($scope.media, function(err, entity) {
+                    $ionicLoading.hide();
+                    if (err) {
+                        $log.error("HomeCtrl::create: " + err);
+                        navigator.notification
+                            .alert('HomeCtrl::create::Error', null);
+                    } else {
+                        // $log.debug(entity);
+                        $state.go("tab.home");
+                    }
+                    $scope.cleanup();
+                });
+            }
+        });
+    };
+
+    /* $scope.uploadMedia = function() {
         $ionicLoading.show({
             template: "Loading..."
         });
-        
-        var reader = new FileReader();
-        reader.onloadend = function() {
-            $scope.media.data = reader.result;
-            S3.put($scope.media, function(err, data) {
-                $ionicLoading.hide();
-                if (err) {
-                    $log.error(err);
-                    $scope.message;
-                }
-                else {
-                    $log.debug(data);
-                    // set media url
-                    $scope.media.url =
-                        "http://d2x86vdxy89a0s.cloudfront.net/"+$scope.media.filename;
-                    MediaFeed.create($scope.media, function(err, entity) {
-                        if (err) {
-                            $log.error(err);
-                        } else {
-                            $log.debug(entity);
-                            $state.go("tab.media");
-                        }
-                    });
-                }
-            });
-            $scope.$apply();
-        };
-        reader.readAsBinaryString($scope.media.path);
-    }
-    $scope.cancelUpload = function() {
+        $log.debug("media.path = " + $scope.media.path);
+        window.resolveLocalFileSystemURL($scope.media.path, function(fileEntry) {
+            $log.debug("fileEntry.toURL()");
+            $log.debug(fileEntry.toURL());
+            fileEntry.file(function(file) {
+                var reader = new FileReader();
+                    reader.onloadend = function() {
+                        navigator.notification
+                            .alert('HomeCtrl::uploadMedia::FileReader', null);
+                        $scope.media.data = reader.result;
+                        S3.put($scope.media, function(err, data) {
+                            if (err) {
+                                $ionicLoading.hide();
+                                $log.error("HomeCtrl::uploadMedia: " + err);
+                                navigator.notification
+                                    .alert('HomeCtrl::uploadMedia::Error', null);
+                                $scope.message;
+                            }
+                            else {
+                                $log.debug(data);
+                                // set media url
+                                $scope.media.url =
+                                    "http://d2x86vdxy89a0s.cloudfront.net/" +
+                                    $scope.media.filename;
+                                MediaFeed.create($scope.media, function(err, entity) {
+                                    $ionicLoading.hide();
+                                    if (err) {
+                                        $log.error("HomeCtrl::create: " + err);
+                                        navigator.notification
+                                            .alert('HomeCtrl::create::Error', null);
+                                    } else {
+                                        $log.debug(entity);
+                                        $state.go("tab.media");
+                                    }
+                                });
+                            }
+                        });
+                        $scope.$apply();
+                    };
+                    reader.readAsDataURL(file);
+            }, onFail);
+        }, onFail);
+    }; */
+
+    $scope.cleanup = function() {
         $scope.media = null;
         navigator.camera.cleanup(function() { $log.debug("Camera cleanup success"); },
                                  function(message) { $log.debug("Failed because: " + 
                                                                 message); });
-    }
+    };
     $scope.filesChanged = function(elm) {
         $scope.files = elm.files;
         $scope.$apply();
@@ -295,26 +371,29 @@ angular.module('hotbar.controllers', [])
     $scope.uploadImage = function() {
         $log.info("uploading image...");
         $log.debug($scope.files);
+        $log.debug($scope.files[0]);
+        var _user = Global.getUser();
         // Resize the image to get thumbnail
-        var img = new Image();
+        /* var img = new Image();
         img.src = $scope.files[0];
         img.onload = function() {
             var canvas = document.createElement("canvas");
             new thumbnailer(canvas, img, 188, 3);
             var data = canvas.toDataURL();
-        }
+        } */
         var reader = new FileReader();
         reader.onloadend = function() {
             $scope.media = {
-                filename: Global.user.username + "_" +
-                    Math.round(new Date().getTime()/1000)+".jpg",
+                filename: _user.get('username') + "_" + $scope.files[0].name,
+                    // Math.round(new Date().getTime()/1000)+".jpg",
                 bar: Global.bar,
+                path: null,
                 data: reader.result
             };
-            S3.put($scope.media, function(err, data) {
+            /* S3.put($scope.media, function(err, data) {
                 $ionicLoading.hide();
                 if (err) {
-                    $log.error(err);
+                    $log.error("HomeCtrl::uploadImage: " + err);
                     $scope.message;
                 }
                 else {
@@ -324,32 +403,30 @@ angular.module('hotbar.controllers', [])
                         "http://d2x86vdxy89a0s.cloudfront.net/"+$scope.media.filename;
                     MediaFeed.create($scope.media, function(err, entity) {
                         if (err) {
-                            $log.error(err);
+                            $log.error("HomeCtrl::create: " + err);
                         } else {
                             $log.debug(entity);
                             $state.go("tab.media");
                         }
                     });
                 }
-            });
+            }); */
             $scope.$apply();
         };
         reader.readAsDataURL($scope.files[0]);
     };
 
     function getAvatar() {
+        var _user = Global.getUser();
         var email = ''
         , avatar = '';
-        if (Global.user && Global.user.email) {
-            email = Global.user.email;
+        if (_user && _user.get('email')) {
+            email = _user.get('email');
             avatar = 'http://www.gravatar.com/avatar/' +
                 Util.MD5(email.toLowerCase()) + '?s=' + 50;
         }
         if (!email) {
-            if ( Global.user && Global.user.image &&
-                 Global.user.image.url ) {
-                avatar = Global.user.image.url;
-            }
+            avatar = _user && _user.get('image') && _user.get('image').url;
         }
         if (!avatar) {
             avatar = 'http://www.gravatar.com/avatar/' +
@@ -358,20 +435,16 @@ angular.module('hotbar.controllers', [])
         $scope.avatar = avatar;
     }
 
-    function getLikes(activity) {
+    function getLikes(activity, callback) {
+        var _user = Global.getUser();
         MediaFeed.getLikes(activity, function(err, entities) {
             if (err) {
-                $log.error(err);
+                $log.error("HomeCtrl::getLikes: " + err);
+                callback && callback(err, null);
             } else {
-                activity.liked = false;
-                for (var i=0; i < entities.length; ++i) {
-                    if (entities[i].uuid === Global.user.uuid) {
-                        activity.liked = true;
-                        break;
-                    }
-                }
+                activity.liked = entities.length > 0;
                 activity.likes = entities;
-                $scope.$apply();
+                callback && callback(null, activity);
             }
             $ionicLoading.hide();
         });
@@ -380,12 +453,12 @@ angular.module('hotbar.controllers', [])
     $scope.like = function(activity) {
         if (activity) {
             $ionicLoading.show({
-                template: "Loading..."
+                template: "<i class=\"icon ion-loading-a\"></i>Loading..."
             });
             if (activity.liked ) {
                 MediaFeed.unlike(activity, function(err, result) {
                     if (err) {
-                        $log.error(err);
+                        $log.error("HomeCtrl::unlike: " + err);
                     } else {
                         $log.debug(result)
                     }
@@ -394,7 +467,7 @@ angular.module('hotbar.controllers', [])
             } else {
                 MediaFeed.like(activity, function(err, result) {
                     if (err) {
-                        $log.error(err);
+                        $log.error("HomeCtrl::like: " + err);
                     } else {
                         $log.debug(result);
                     }
@@ -403,46 +476,51 @@ angular.module('hotbar.controllers', [])
             }
         }
     };
-    $scope.comment = function(activity) {
-        MediaFeed.comment(activity, function(err, result) {
+    $scope.submitComment = function(activity) {
+        MediaFeed.submitComment(activity, function(err, result) {
             if (err) {
-                $log.error(err);
+                $log.error("HomeCtrl::comment: " + err);
             } else {
                 $log.debug(result);
             }
         });
     };
+
     getAvatar();
     $ionicLoading.show({
-        template: "Loading..."
+        template: "<i class=\"icon ion-loading-a\"></i>Loading..."
     });
     Users.getActivityFeed(function(err, entities) {
         if (err)
-            $log.error(err);
+            $log.error("HomeCtrl::getActivityFeed: " + err);
         else {
             $scope.activities = [];
             for(var i = 0; i < entities.length; ++i) {
+                if (entities[i].object.type == 'media') {
                 var _activity = {};
-                _activity.uuid = entities[i].uuid;
-                _activity.created = entities[i].created;
-                _activity.media = entities[i].object;
-                _activity.content = entities[i].content;
-                _activity.formattedTime = Util.prettyDate(_activity.created);
-                getLikes(_activity, function(err, data) {
-                    if (err) {
-                    } else {
-                        $scope.activities.push(data);
-                    }
-                });
-                
+                    _activity.uuid = entities[i].uuid;
+                    _activity.created = entities[i].created;
+                    _activity.media = entities[i].object;
+                    _activity.content = entities[i].content;
+                    _activity.formattedTime = Util.prettyDate(_activity.created);
+                    getLikes(_activity, function(err, data) {
+                        if (err) {
+                            $log.error("HomeCtrl::getActivityFeed::getLikes: " + err);
+                        } else {
+                            $timeout(function() {
+                                $scope.activities.push(data)
+                            });
+                        }
+                    });
+                }
             }
-            $scope.$apply();
+            // $scope.$apply();
         }
         $ionicLoading.hide();
     });
 })
 
-.controller('BarsCtrl', function($scope, $ionicLoading, $log, Bars, Global) {
+.controller('BarsCtrl', function($scope, $ionicLoading, $log, $timeout, Bars, Global) {
     var _infowindow = new google.maps.InfoWindow();
     var _map;
    
@@ -468,11 +546,11 @@ angular.module('hotbar.controllers', [])
     }
 
     $scope.getBarDistance = function(bar) {
-        return getDistance(Global.position, bar.geometry.location);
+        return getDistance(Global.getPosition(), bar.geometry.location);
     }
 
     function callback(results, status) {
-        $scope.$apply(function(){
+        $timeout(function(){
             $scope.bars = results;
             Global.bars = results;
         });
@@ -500,7 +578,7 @@ angular.module('hotbar.controllers', [])
     function findBars(map) {
         _map = map;
         var request = {
-            location: Global.position,
+            location: Global.getPosition(),
             radius: Global.radius,
             types: ['bar']
         };
@@ -509,8 +587,8 @@ angular.module('hotbar.controllers', [])
     };
     $scope.map = {
         center: {
-            latitude: Global.position.lat(),
-            longitude: Global.position.lng()
+            latitude: Global.getPosition().lat(),
+            longitude: Global.getPosition().lng()
         },
         zoom: 12,
         events: {
@@ -521,7 +599,7 @@ angular.module('hotbar.controllers', [])
     };
 
     $ionicLoading.show({
-        template: "Loading..."
+        template: "<i class=\"icon ion-loading-a\"></i>Loading..."
     });
 
     /* Bars.all(function(err, bars) {
@@ -536,7 +614,8 @@ angular.module('hotbar.controllers', [])
     }); */
 })
 
-.controller('BarDetailCtrl', function($scope, $stateParams, $ionicLoading, $log, Bars, Global) {
+.controller('BarDetailCtrl', function($scope, $stateParams, $ionicLoading, $log,
+                                      Bars, Global) {
     if (!Global.bars) alert( "no bars" );
     var _infowindow = new google.maps.InfoWindow();
     var _map;
@@ -567,8 +646,22 @@ angular.module('hotbar.controllers', [])
         }
     };
 
+    $scope.checkin = function() {
+        $ionicLoading.show({
+            template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+        });
+        Bars.checkin($scope.bar, function(err, data) {
+            if (err) {
+                $log.error("BarDetailCtrl::checkin: " + err);
+            } else {
+                $log.debug("BarDetailCtrl::checkin: " + data);
+                $state.go('tab.media');
+            }
+        });
+    };
+
     $ionicLoading.show({
-        template: 'Loading...'
+        template: '<i class=\"icon ion-loading-a\"></i>Loading...'
     });
     createMarker($scope.bar);
     $ionicLoading.hide();
@@ -584,18 +677,18 @@ angular.module('hotbar.controllers', [])
     // });
 })
 
-.controller('AccountCtrl', function($scope, $ionicLoading, $log, $state, Global, Users,Util) {
-    var client = Global.client;
-    var user = Global.user;
+.controller('AccountCtrl', function($scope, $ionicLoading, $log, $state,
+                                    Global, Users,Util) {
+    var user = Global.getUser();
     $ionicLoading.show({
-        template: "Loading..."
+        template: "<i class=\"icon ion-loading-a\"></i>Loading..."
     });
     $ionicLoading.hide();
     $scope.update = function() {
-        users.update($scope.username, $scope.oldPass, $scope.newPass,
+        Users.update($scope.username, $scope.oldPass, $scope.newPass,
                      $scope.email, $scope.name, function(err) {
                          if (err) {
-                             $log.error(err);
+                             $log.error("AccountCtrl: " + err);
                              Users.logout();
                              $state.go("login");
                          } else {
@@ -610,14 +703,14 @@ angular.module('hotbar.controllers', [])
 })
 
 .controller('LoginCtrl', function($scope, $ionicLoading, $state, $log, Global, Users) {
-    var client = Global.client;
+    var client = Global.getClient();
     client.getLoggedInUser(function(err, data, user) {
         if (err) {
-            $log.error(data);
+            $log.error("LoginCtrl: " + data);
             client.logout();
         } else {
             if (client.isLoggedIn()) {
-                Global.setUser( user._data );
+                Global.setUser( user );
                 $state.go('tab.media');
             } else {
                 Global.setUser( null );
@@ -633,17 +726,19 @@ angular.module('hotbar.controllers', [])
         var username = user.username;
         var password = user.password;
         $ionicLoading.show({
-            template: "Loading..."
+            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
         });
         if (username && password) {
             Users.login(username, password, function(err, user) {
                 if (err) {
-                    $log.error(err);
+                    $log.error("LoginCtrl::login: " + err);
                 } else {
                     $state.go('tab.media');
                 }
                 $ionicLoading.hide();
             });
+        } else {
+            $ionicLoading.hide();
         }
     };
     $scope.signup = function() {
@@ -657,12 +752,12 @@ angular.module('hotbar.controllers', [])
         var email = user.email;
         var name = user.name;
         $ionicLoading.show({
-            template: "Loading..."
+            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
         });
         if (username && password && email) {
             Users.signup(username, password, email, name, function(err, user) {
                 if (err) {
-                    $log.error(err);
+                    $log.error("SignupCtrl::signup: " + err);
                 } else {
                     $state.go('tab.media');
                 }

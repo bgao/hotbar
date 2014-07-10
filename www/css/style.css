@@ -8,40 +8,35 @@
 } */
 
 .scroll-content{
-  background-image: url('../img/content_bg.png');
+  /* background-image: url('../img/content_bg.png'); */
+    background-color: #222;
 }
 
-/* .item.thumb-right img:nth-child(4){
+.item.thumb-right img:nth-child(5){
   position: absolute !important;
   top: 10px !important;
   right: 10px !important;
-  max-width: 80px !important;
-  max-height: 80px !important;
+  max-width: 100px !important;
+  max-height: 100px !important;
   width: 100%  !important;
-} */
-
-/* text styles */
-.text1 {
-    font-family: "Myriad Pro";
-    font-size: 17px;
-    font-weight: normal;
-    color: #d5dae0;
 }
 
-.text2 {
+.terms-label {
+    font-style: italic;
+    font-size: 17px;
+    color: #abb1b5;
+    background-color: transparent;
+    border: 0;
+}
+
+.terms-text {
     text-align: left;
     font-family: "Myriad Pro";
     font-style: italic;
-    text-shadow: none;
     color: #abb1b5;
-    font-weight: 200;
 }
 
-.label1 {
-    font-style: italic;font-size: 19px;color: #abb1b5;
-}
-
-.terms_container{
+.terms-container{
     border: 1px solid #fff;
     padding: 5px 15px;
     height: 90px;
