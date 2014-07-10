@@ -338,7 +338,15 @@ public class FileUtils extends CordovaPlugin {
                 }
             }, callbackContext);
         }
-        else if (action.equals("requestFileSystem")) {
+        else if (action.equals("requestAllFileSystems")) {
+            threadhelper( new FileOp( ){
+                public void run() throws IOException, JSONException {
+                    callbackContext.success(requestAllFileSystems());
+                }
+            }, callbackContext);
+        } else if (action.equals("requestAllPaths")) {
+            callbackContext.success(requestAllPaths());
+        } else if (action.equals("requestFileSystem")) {
             final int fstype=args.getInt(0);
             final long size = args.optLong(1);
             threadhelper( new FileOp( ){
@@ -819,9 +827,47 @@ public class FileUtils extends CordovaPlugin {
         if (rootFs == null) {
             throw new IOException("No filesystem of type requested");        	
         }
+        LocalFilesystemURL rootURL = new LocalFilesystemURL(LocalFilesystemURL.FILESYSTEM_PROTOCOL + "://localhost/"+rootFs.name+"/");
+
         fs.put("name", rootFs.name);
-        fs.put("root", Filesystem.makeEntryForPath("/", rootFs.name, true));
+        fs.put("root", rootFs.getEntryForLocalURL(rootURL));
         return fs;
+    }
+
+
+    /**
+     * Requests a filesystem in which to store application data.
+     *
+     * @param type of file system requested
+     * @return a JSONObject representing the file system
+     * @throws IOException
+     * @throws JSONException
+     */
+    private JSONArray requestAllFileSystems() throws IOException, JSONException {
+        JSONArray ret = new JSONArray();
+        for (Filesystem fs : filesystems) {
+            LocalFilesystemURL rootURL = new LocalFilesystemURL(LocalFilesystemURL.FILESYSTEM_PROTOCOL + "://localhost/"+fs.name+"/");
+            ret.put(fs.getEntryForLocalURL(rootURL));
+        }
+        return ret;
+    }
+
+    private static String toDirUrl(File f) {
+        return Uri.fromFile(f).toString() + '/';
+    }
+    
+    private JSONObject requestAllPaths() throws JSONException {
+        Context context = cordova.getActivity();
+        JSONObject ret = new JSONObject();
+        ret.put("applicationDirectory", "file:///android_asset/");
+        ret.put("applicationStorageDirectory", toDirUrl(context.getFilesDir().getParentFile()));
+        ret.put("dataDirectory", toDirUrl(context.getFilesDir()));
+        ret.put("cacheDirectory", toDirUrl(context.getCacheDir()));
+        ret.put("externalApplicationStorageDirectory", toDirUrl(context.getExternalFilesDir(null).getParentFile()));
+        ret.put("externalDataDirectory", toDirUrl(context.getExternalFilesDir(null)));
+        ret.put("externalCacheDirectory", toDirUrl(context.getExternalCacheDir()));
+        ret.put("externalRootDirectory", toDirUrl(Environment.getExternalStorageDirectory()));
+        return ret;
     }
 
    /**

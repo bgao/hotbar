@@ -24,6 +24,7 @@ var argscheck = require('cordova/argscheck'),
     FileEntry = require('./FileEntry'),
     FileError = require('./FileError'),
     exec = require('cordova/exec');
+var fileSystems = require('./fileSystems');
 
 /**
  * Look up file system Entry referred to by local URI.
@@ -39,6 +40,7 @@ module.exports.resolveLocalFileSystemURL = function(uri, successCallback, errorC
     };
     // sanity check for 'not:valid:filename'
     if(!uri || uri.split(":").length > 2) {
+        console.log("::invalid file name");
         setTimeout( function() {
             fail(FileError.ENCODING_ERR);
         },0);
@@ -50,9 +52,10 @@ module.exports.resolveLocalFileSystemURL = function(uri, successCallback, errorC
             if (successCallback) {
                 // create appropriate Entry object
                 var fsName = entry.filesystemName || (entry.filesystem == window.PERSISTENT ? 'persistent' : 'temporary');
-                var fs = new FileSystem(fsName, {name:"", fullPath:"/"});
-                var result = (entry.isDirectory) ? new DirectoryEntry(entry.name, entry.fullPath, fs, entry.nativeURL) : new FileEntry(entry.name, entry.fullPath, fs, entry.nativeURL);
-                successCallback(result);
+                fileSystems.getFs(fsName, function(fs) {
+                    var result = (entry.isDirectory) ? new DirectoryEntry(entry.name, entry.fullPath, fs, entry.nativeURL) : new FileEntry(entry.name, entry.fullPath, fs, entry.nativeURL);
+                    successCallback(result);
+                });
             }
         }
         else {
@@ -60,7 +63,7 @@ module.exports.resolveLocalFileSystemURL = function(uri, successCallback, errorC
             fail(FileError.NOT_FOUND_ERR);
         }
     };
-
+    console.log("::calling cordova::exec");
     exec(success, fail, "File", "resolveLocalFileSystemURI", [uri]);
 };
 module.exports.resolveLocalFileSystemURI = function() {

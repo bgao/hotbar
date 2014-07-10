@@ -37,10 +37,6 @@
                             "count": 1
                         },
                         {
-                            "xml": "<feature name=\"FileTransfer\"><param name=\"ios-package\" value=\"CDVFileTransfer\" /></feature>",
-                            "count": 1
-                        },
-                        {
                             "xml": "<feature name=\"StatusBar\"><param name=\"ios-package\" onload=\"true\" value=\"CDVStatusBar\" /></feature>",
                             "count": 1
                         },
@@ -55,6 +51,18 @@
                         {
                             "xml": "<preference name=\"StatusBarStyle\" value=\"lightcontent\" />",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"NetworkStatus\"><param name=\"ios-package\" value=\"CDVConnection\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Vibration\"><param name=\"ios-package\" value=\"CDVVibration\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"Notification\"><param name=\"ios-package\" value=\"CDVNotification\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -64,7 +72,7 @@
                     "AssetsLibrary.framework": [
                         {
                             "xml": "false",
-                            "count": 3
+                            "count": 2
                         }
                     ],
                     "MobileCoreServices.framework": [
@@ -90,6 +98,18 @@
                             "xml": "false",
                             "count": 1
                         }
+                    ],
+                    "SystemConfiguration.framework": [
+                        {
+                            "xml": "true",
+                            "count": 1
+                        }
+                    ],
+                    "AudioToolbox.framework": [
+                        {
+                            "xml": "true",
+                            "count": 2
+                        }
                     ]
                 }
             }
@@ -114,10 +134,16 @@
         "org.apache.cordova.inappbrowser": {
             "PACKAGE_NAME": "mobi.hotbar"
         },
-        "org.apache.cordova.file-transfer": {
+        "org.apache.cordova.statusbar": {
             "PACKAGE_NAME": "mobi.hotbar"
         },
-        "org.apache.cordova.statusbar": {
+        "org.apache.cordova.network-information": {
+            "PACKAGE_NAME": "mobi.hotbar"
+        },
+        "org.apache.cordova.vibration": {
+            "PACKAGE_NAME": "mobi.hotbar"
+        },
+        "org.apache.cordova.dialogs": {
             "PACKAGE_NAME": "mobi.hotbar"
         }
     },
