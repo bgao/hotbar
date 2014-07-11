@@ -598,6 +598,25 @@ angular.module('hotbar.controllers', [])
         }
     };
 
+    $scope.filesChanged = function(elm) {
+        $scope.files = elm.files;
+        $scope.$apply();
+    };
+
+    $scope.upload = function() {
+        var reader = new FileReader();
+        $ionicLoading.show({
+            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+        });
+        reader.onloadend = function() {
+            $log.debug("Loaded file: " + $scope.files[0].name);
+            Bars.upload(reader.result, function(err, entity) {
+                $ionicLoading.hide();
+            });
+        };
+        reader.readAsText($scope.files[0]);
+    };
+
     $ionicLoading.show({
         template: "<i class=\"icon ion-loading-a\"></i>Loading..."
     });
