@@ -191,21 +191,155 @@ angular.module('hotbar.services', [])
     }
 }])
 .factory('Bars', ['Global', function(Global) {
+    // ref: http://stackoverflow.com/a/1293163/2343
+    // This will parse a delimited string into an array of
+    // arrays. The default delimiter is the comma, but this
+    // can be overriden in the second argument.
+    function CSVToArray( strData, strDelimiter ){
+        // Check to see if the delimiter is defined. If not,
+        // then default to comma.
+        strDelimiter = (strDelimiter || ",");
+        // Create a regular expression to parse the CSV values.
+        var objPattern = new RegExp(
+            (
+                // Delimiters.
+                "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+                // Quoted fields.
+                "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+                // Standard fields.
+                "([^\"\\" + strDelimiter + "\\r\\n]*))"
+            ),
+            "gi"
+            );
+        // Create an array to hold our data. Give the array
+        // a default empty first row.
+        var arrData = [[]];
+        // Create an array to hold our individual pattern
+        // matching groups.
+        var arrMatches = null;
+        // Keep looping over the regular expression matches
+        // until we can no longer find a match.
+        while (arrMatches = objPattern.exec( strData )) {
+            // Get the delimiter that was found.
+            var strMatchedDelimiter = arrMatches[ 1 ];
+            // Check to see if the given delimiter has a length
+            // (is not the start of string) and if it matches
+            // field delimiter. If id does not, then we know
+            // that this delimiter is a row delimiter.
+            if (strMatchedDelimiter.length &&
+                strMatchedDelimiter !== strDelimiter) {
+                // Since we have reached a new row of data,
+                // add an empty row to our data array.
+                arrData.push( [] );
+            }
+            var strMatchedValue;
+            // Now that we have our delimiter out of the way,
+            // let's check to see which kind of value we
+            // captured (quoted or unquoted).
+            if (arrMatches[ 2 ]) {
+                // We found a quoted value. When we capture
+                // this value, unescape any double quotes.
+                strMatchedValue = arrMatches[ 2 ]
+                    .replace(new RegExp( "\"\"", "g" ),
+                             "\"");
+            } else {
+                // We found a non-quoted value.
+                strMatchedValue = arrMatches[ 3 ];
+            }
+            // Now that we have our value string, let's add
+            // it to the data array.
+            arrData[ arrData.length - 1 ].push( strMatchedValue );
+        }
+        // Return the parsed data.
+        return( arrData );
+    }
+
+    function getDistance(p1, p2) {
+        var R = 6378137; // Earth's mean radiu in meter
+        var dLat = rad(p2.lat() - p1.lat());
+        var dLng = rad(p2.lng() - p1.lng());
+        var a = Math.sin(dLat / 2)*Math.sin(dLat / 2)+
+            Math.cos(rad(p1.lat())) * Math.cos(rad(p2.lat())) *
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var d = R * c;
+        return (d/1600).toFixed(2); // returns the distance in miles
+    }
+
+    function findBars(allBars) {
+        var _user = Global.getUser();
+        var radius = _user.get('radius');
+        if (!radius) {
+            radius = Global.getRadius();
+        }
+        var position = Global.getPosition();
+        var bars = [];
+        while (allBars.hasNextEntity()) {
+            var bar = allBars.getNextEntity();
+            var barLoc = bar.get('location');
+            if (barLoc && getDistance(position, barLoc) < radius) {
+                // find connections
+                bars.push(bar);
+            }
+        }
+        return bars;
+    }
     return {
+        upload: function(barData, callback) {
+            var _client = Global.getClient();
+            var geocoder = new google.maps.Geocoder();
+            var arrData = CSVToArray(barData);
+            // Ignore the first row, which is the header
+            for (var i = 1; i < arrData.length; ++i) {
+                var options = {
+                    type: "bars",
+                    name: arrData[i][1],
+                    address: arrData[i][2],
+                    region: arrData[i][0],
+                    website: arrData[i][3]
+                };
+                $timeout(function() {
+                geocoder.geocode({ 'address': options.address }, function(results, status) {
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        options.location = results[0].geometry.location;
+                    } else {
+                        console.error("Error getting location for " +
+                                   options.address +
+                                   ": " + status);
+                        callback(status, null);
+                    }
+                    _client.createEntity(options, function(err, entity, data) {
+                        if (err) {
+                            console.error("Unable to create new bar: " + err );
+                            callback(err, null);
+                        } else {
+                            console.debug("Created bar: " + entity.get('uuid'));
+                            callback(null, entity);
+                        }
+                    });
+                });
+                }, 150);
+            }
+        },
         all: function(callback) {
             var _client = Global.getClient();
+            var allBars = Global.getBars();
+            if (allBars) {
+                allBars.resetPaging();
+                callback(null, findBars(allBars));
+            }
             if(_client) {
                 var options = {
                     type: 'bars'
                     // qs: { "ql": "order by created desc" }
                 };
-                _client.createCollection(options, function(err, collectionObj) {
+                _client.createCollection(options, function(err, bars) {
                     if (err) {
                         callback(err, null);
                     } else {
-                        allBars = collectionObj;
-                        allBars.resetPaging();
-                        callback(null, allBars);
+                        bars.resetPaging();
+                        Global.setBars(bars);
+                        callback(null, findBars(bars));
                     }
                 });
             } else {
@@ -227,9 +361,6 @@ angular.module('hotbar.services', [])
                 callback(null, null);
             }
         },
-        getBar: function(position, callback) {
-            
-        },
         checkin: function(bar, callback) {
             var _client = Global.getClient();
             var _user = Global.getUser();
@@ -248,7 +379,7 @@ angular.module('hotbar.services', [])
                 client: _client,
                 data: {
                     type:'bars',
-                    uuid: bar.uuid
+                    uuid: bar.get('uuid')
                 }
             };
             var connected_entity = new Apigee.Entity(connected_entity_options);
@@ -257,9 +388,9 @@ angular.module('hotbar.services', [])
             connecting_entity.connect('checkin', connected_entity, function (err, result) {
                 if (err) { 
                     callback(err, null);
-	        } else { 
+	            } else { 
                     callback(null, result);
-	        }
+	            }
             });
         }
     }
