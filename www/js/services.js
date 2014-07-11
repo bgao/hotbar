@@ -446,39 +446,47 @@ angular.module('hotbar.services', [])
         submitComment: function(mediaFeed, callback) {
             var _user = Global.getUser();
             var _client = Global.getClient();
-            var object = {
-                type: "comment",
-                media: mediaFeed.uuid,
-                comment: mediaFeed.comment
+            var options = {
+                type: 'activities',
+                uuid: mediaFeed.uuid
             };
-            if (mediaFeed && mediaFeed.comment) {
-                var options = {
-                    "actor": {
-                        "displayName": _user.get('username'),
-                        "uuid": _user.get('uuid'),
-                        "username": _user.get('username'),
-                        "image" : {
-                            "duration" : 0,
-                            "height" : 80,
-                            "url" : "http://www.gravatar.com/avatar/",
-                            "width" : 80
-                        },
-                        "email" : _user.get('email'),
-                        // "picture": "fred"
-                    },
-                    "verb": "post",
-                    "object": object,
-                    "lat": Global.getPosition().lat() || null,
-                    "lon": Global.getPosition().lng() || null
-                };
-                _client.createUserActivity('me', options, function(err, activity) {
-                    if (err) {
-                        callback(err, null);
-                    } else {
-                        callback(null, activity);
-                    }
-                });
+            if (!_client || !_user) {
+                callback(true, null);
             }
+            _client.getEntity(options, function(err, entity) {
+                if (err) {
+                    callback(err, null);
+                } else {
+                    var object = {
+                        type: 'comment',
+                        content: mediaFeed.comment,
+                        lat: Global.getPosition().lat() || null,
+                        lon: Global.getPosition().lng() || null,
+                        actor: {
+                            "displayName": _user.get('username'),
+                            "uuid": _user.get('uuid'),
+                            "username": _user.get('username'),
+                            "image" : {
+                                "duration" : 0,
+                                "height" : 80,
+                                "url" : "http://www.gravatar.com/avatar/",
+                                "width" : 80
+                            },
+                            "email" : _user.get('email')
+                        }
+                    };
+                    var comments = entity.get("comments") || [];
+                    comments.push(object);
+                    entity.set("comments", comments);
+                    entity.save(function(error, result) {
+                        if (error) {
+                            callback(error, null);
+                        } else {
+                            callback(null, result);
+                        }
+                    });
+                }
+            });
         }
     }
 }])

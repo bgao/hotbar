@@ -34,7 +34,7 @@ angular.module('hotbar.controllers', [])
         } else {
             if (feed) {
                 var media = [];
-                var comments = [];
+                // var comments = [];
                 while(feed.hasNextEntity()) {
                     var _feed = {};
                     var message = feed.getNextEntity();
@@ -67,17 +67,26 @@ angular.module('hotbar.controllers', [])
                     }
                     _feed.avatar = avatar;
                     _feed.formattedTime = Util.prettyDate(_feed.created);
-                    if (object.type == 'comment') {
+                    /* if (object.type == 'comment') {
                         _feed.comment = object;
                         comments.push(_feed);
-                    } else if (object.type == 'media') {
+                    } else */ if (object.type == 'media') {
                         _feed.media = object;
+                        _feed.comments = [];
                         media.push(_feed);
                     }
                 }
                 $timeout(function() {
                     $scope.media = media;
-                    $scope.comments = comments;
+                    /* for (var i = 0; i < comments.length; ++i) {
+                        for (var j = 0; j < media.length; ++j) {
+                            if (comments[i].comment.media ==
+                                media[j].uuid) {
+                                media[j].comments.push(comments[i]);
+                                break;
+                            }
+                        }
+                    } */
                     $ionicLoading.hide();
                 }, 500);
             }
@@ -129,7 +138,11 @@ angular.module('hotbar.controllers', [])
         }
     };
     $scope.submitComment = function() {
+        $ionicLoading.show({
+            template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+        });
         MediaFeed.submitComment($scope.activity, function(err, result) {
+            $ionicLoading.hide();
             if (err) {
                 $log.error("MediaDetailCtrl::submitComment: " + err);
             } else {
