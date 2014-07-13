@@ -533,7 +533,8 @@ angular.module('hotbar.controllers', [])
     });
 })
 
-.controller('BarsCtrl', function($scope, $ionicLoading, $log, $timeout, Bars, Global) {
+.controller('BarsCtrl', function($scope, $ionicLoading, $log, $timeout,
+                                 Bars, Global) {
     var _infowindow = new google.maps.InfoWindow();
     var _map;
    
@@ -616,7 +617,7 @@ angular.module('hotbar.controllers', [])
         $scope.$apply();
     };
 
-    $scope.upload = function() {
+    /* $scope.upload = function() {
         var reader = new FileReader();
         $ionicLoading.show({
             template: "<i class=\"icon ion-loading-a\"></i>Loading..."
@@ -628,7 +629,7 @@ angular.module('hotbar.controllers', [])
             });
         };
         reader.readAsText($scope.files[0]);
-    };
+    }; */
 
     $ionicLoading.show({
         template: "<i class=\"icon ion-loading-a\"></i>Loading..."

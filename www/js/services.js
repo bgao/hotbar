@@ -42,7 +42,6 @@ angular.module('hotbar.services', [])
     function clearAll() {
         window.user = null;
         window.position = null;
-        window.client = null;
         window.allFeed = null;
     }
     function getUser() {
@@ -52,7 +51,10 @@ angular.module('hotbar.services', [])
         window.user = user;
     }
     function getClient() {
-        var client = window.client;
+        var client = null;
+        if (window.user) {
+            client = window.user._client;
+        }
         if (!client) {
             var client_creds = {
                 orgName: 'hotbar',
@@ -60,7 +62,6 @@ angular.module('hotbar.services', [])
                 logging: false // true
             };
             client = new window.Apigee.Client(client_creds);
-            window.client = client;
         }
         return client;
     }
@@ -96,7 +97,8 @@ angular.module('hotbar.services', [])
         getAllFeed: getAllFeed,
         setAllFeed: setAllFeed,
         bar: "f03d4a00-ce79-11e3-a710-7f3db49e4552", // hacking
-        radius: 5*1.6*1000 // 5 miles = 8000 meters
+        radius: 5*1.6*1000, // 5 miles = 8000 meters
+        accessToken: "YWMtnekleAonEeSH-dG5VyT8wgAAAUdRPymuFp0ziGcriOSp5YDN2Z28SXUcwvY"
     };
 }])
 .factory('S3', [function() {
@@ -146,15 +148,9 @@ angular.module('hotbar.services', [])
                 Body: buf
             };
             bucket.putObject(params, function(err, data) {
-                if (err) callback(err, null);
-                else {
-                    // return the pre-signed URL
-                    /* var param = { Bucket: 'hotbar',
-                                   Key: media.filename,
-                                   Expires: 60 };
-                    AWS.S3.getSignedUrl('getObject', param, function(err,ulr) {
-                        callback(null, url);
-                    }); */
+                if (err) {
+                    callback(err, null);
+                } else {
                     callback(null, data);
                 }
             });
@@ -190,7 +186,7 @@ angular.module('hotbar.services', [])
         }
     }
 }])
-.factory('Bars', ['Global', function(Global) {
+.factory('Bars', ['$interval', 'Global', function($interval, Global) {
     // ref: http://stackoverflow.com/a/1293163/2343
     // This will parse a delimited string into an array of
     // arrays. The default delimiter is the comma, but this
@@ -284,43 +280,50 @@ angular.module('hotbar.services', [])
         }
         return bars;
     }
+    /* var stop = null;
+    function stopCreate() {
+        if (stop) {
+            $interval.cancel(stop);
+            stop = null;
+        }
+    } */
     return {
-        upload: function(barData, callback) {
-            var _client = Global.getClient();
-            var geocoder = new google.maps.Geocoder();
+        /* upload: function(barData, callback) {
             var arrData = CSVToArray(barData);
-            // Ignore the first row, which is the header
-            for (var i = 1; i < arrData.length; ++i) {
+            var index = 0;
+            var geocoder = new google.maps.Geocoder();
+            var _client = Global.getClient();
+            stop = $interval(function() {
+                if (++index >= arrData.length)
+                    stopCreate();
                 var options = {
                     type: "bars",
-                    name: arrData[i][1],
-                    address: arrData[i][2],
-                    region: arrData[i][0],
-                    website: arrData[i][3]
+                    name: arrData[index][1],
+                    address: arrData[index][2],
+                    region: arrData[index][0],
+                    website: arrData[index][3]
                 };
-                $timeout(function() {
+                console.debug(options.address);
+                // if (options.address === '235 Albany St, Cambridge, MA 02139') {
                 geocoder.geocode({ 'address': options.address }, function(results, status) {
                     if (status == google.maps.GeocoderStatus.OK) {
                         options.location = results[0].geometry.location;
                     } else {
                         console.error("Error getting location for " +
-                                   options.address +
-                                   ": " + status);
-                        callback(status, null);
+                                      options.address +
+                                      ": " + status);
                     }
                     _client.createEntity(options, function(err, entity, data) {
                         if (err) {
                             console.error("Unable to create new bar: " + err );
-                            callback(err, null);
                         } else {
                             console.debug("Created bar: " + entity.get('uuid'));
-                            callback(null, entity);
                         }
                     });
                 });
-                }, 150);
-            }
-        },
+                // }
+            }, 2000);
+        }, */
         all: function(callback) {
             var _client = Global.getClient();
             var allBars = Global.getBars();
@@ -677,13 +680,47 @@ angular.module('hotbar.services', [])
         signup: function(username, password, email, name, callback) {
             var _client = Global.getClient();
             if (_client) {
-                _client.signup(username, password, email, name, function (err, user) {
+                _client.signup(username, password, email, name, function (err,entity) {
                     if (err) {
                         Global.setUser(null);
-                        callback(user, null);
+                        callback(err, null);
                     } else {
-                        Global.setUser(user);
-                        callback(null, user);
+                        // Add new user to the free_memeber group
+                        _client.setToken(Global.accessToken);
+                        var groupOptions = {
+                            client: _client,
+                            path: "free_memeber"
+                        }
+                        var group = new Apigee.Group(groupOptions);
+                        group.add( {user: entity}, function(err, data, entities) {
+                            if (err) {
+                                Global.setUser(null);
+                                callback(err, null);
+                            } else {
+                                _client.logout();
+                                _client.login(username, password, function(err, data){
+                                    if (err) {
+                                        Global.setUser(null);
+                                        callback(err, null);
+                                    } else {
+                                        _client.getLoggedInUser(function(err,data,user){
+                                            if (err) {
+                                                Global.setUser(null);
+                                                callback(err, null);
+                                            } else {
+                                                if (_client.isLoggedIn()) {
+                                                    Global.setUser(user);
+                                                    callback(null, user);
+                                                } else {
+                                                    Global.setUser(null);
+                                                    callback(null, null);
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
                     }
                 });
             } else {

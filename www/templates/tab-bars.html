@@ -26,7 +26,7 @@
         </label>
       </div>
     </div>
-    <div class="card">
+    <!-- <div class="card">
       <div class="item">
         <input type="file"
                onchange="angular.element(this).scope().filesChanged(this)"
@@ -34,13 +34,9 @@
         <button ng-click="upload()">Upload</button>
       </div>
       <li ng-repeat="file in files">{{file.name}}</li>
-    </div>
+      <input ng-model="iterations" />
+    </div> -->
     <div class="list">
-      <!-- <a class="item"
-         collection-repeat="bar in bars"
-         collection-item-wdith="'100%'"
-         collection-item-height="100"
-         ng-href="#/tab/bars/0"> -->
       <a class="item" ng-repeat="bar in bars" ng-href="#/tab/bars/{{$index}}">
         <h2>{{bar.name}}</h2>
         <div class="row">
