@@ -39,65 +39,56 @@ angular.module('hotbar.services', [])
     };
 }])
 .factory('Global', ['$log', function($log, localStorageService) {
+    function set(key, value) {
+        window[key] = value;
+    }
+    function get(key) {
+        if (key === "client") {
+            var client = null;
+            if (window.user) {
+                client = window.user._client;
+            }
+            if (!client) {
+                var client_creds = {
+                    orgName: 'hotbar',
+                    appName: 'hotbar',
+                    logging: false // true
+                };
+                client = new Apigee.Client(client_creds);
+            }
+            return client;
+        } else if (key === "position") {
+            var position;
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    position = new google.maps.LatLng(pos.coords.latitude,
+                                                      pos.coords.longitude);
+                    window.position = position;
+                });
+            } else {
+                position = window.position;
+            }
+            // hacking
+            if (!position)
+                position = new google.maps.LatLng(42.358431, -71.059773); // boston
+            return position;
+        } else {
+            return window[key];
+        }
+    }
     function clearAll() {
+        if (window.user && window.user._client)
+            window.user._client.logout();
         window.user = null;
         window.position = null;
         window.allFeed = null;
     }
-    function getUser() {
-        return window.user;
-    }
-    function setUser(user) {
-        window.user = user;
-    }
-    function getClient() {
-        var client = null;
-        if (window.user) {
-            client = window.user._client;
-        }
-        if (!client) {
-            var client_creds = {
-                orgName: 'hotbar',
-                appName: 'hotbar',
-                logging: false // true
-            };
-            client = new window.Apigee.Client(client_creds);
-        }
-        return client;
-    }
-    function getPosition() {
-        $log.debug( "Getting device position" );
-        var position;
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                position = new google.maps.LatLng(pos.coords.latitude,
-                                                  pos.coords.longitude);
-                window.position = position;
-            });
-        } else {
-            position = window.position;
-        }
-        // hacking
-        if (!position)
-            position = new google.maps.LatLng(42.358431, -71.059773);
-        return position;
-    }
-    function getAllFeed() {
-        return window.allFeed;
-    }
-    function setAllFeed(allFeed) {
-        window.allFeed = allFeed;
-    }
     return {
         clearAll: clearAll,
-        getUser: getUser,
-        setUser: setUser,
-        getClient: getClient,
-        getPosition: getPosition,
-        getAllFeed: getAllFeed,
-        setAllFeed: setAllFeed,
+        get: get,
+        set: set,
         bar: "f03d4a00-ce79-11e3-a710-7f3db49e4552", // hacking
-        radius: 5*1.6*1000, // 5 miles = 8000 meters
+        radius: 1, // 5 miles
         accessToken: "YWMtnekleAonEeSH-dG5VyT8wgAAAUdRPymuFp0ziGcriOSp5YDN2Z28SXUcwvY"
     };
 }])
@@ -136,7 +127,6 @@ angular.module('hotbar.services', [])
             
         },
         put: function(media, callback) {
-            var navigator = window.navigator;
             var bucket = new AWS.S3({params: {Bucket: 'hotbar'}});
             // var buf = dataURItoBlob(media.data.replace(/^data:image\/\w+;base64,/, ""));
             var buf = dataURItoBlob(media.data);
@@ -187,170 +177,46 @@ angular.module('hotbar.services', [])
     }
 }])
 .factory('Bars', ['$interval', 'Global', function($interval, Global) {
-    // ref: http://stackoverflow.com/a/1293163/2343
-    // This will parse a delimited string into an array of
-    // arrays. The default delimiter is the comma, but this
-    // can be overriden in the second argument.
-    function CSVToArray( strData, strDelimiter ){
-        // Check to see if the delimiter is defined. If not,
-        // then default to comma.
-        strDelimiter = (strDelimiter || ",");
-        // Create a regular expression to parse the CSV values.
-        var objPattern = new RegExp(
-            (
-                // Delimiters.
-                "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
-                // Quoted fields.
-                "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
-                // Standard fields.
-                "([^\"\\" + strDelimiter + "\\r\\n]*))"
-            ),
-            "gi"
-            );
-        // Create an array to hold our data. Give the array
-        // a default empty first row.
-        var arrData = [[]];
-        // Create an array to hold our individual pattern
-        // matching groups.
-        var arrMatches = null;
-        // Keep looping over the regular expression matches
-        // until we can no longer find a match.
-        while (arrMatches = objPattern.exec( strData )) {
-            // Get the delimiter that was found.
-            var strMatchedDelimiter = arrMatches[ 1 ];
-            // Check to see if the given delimiter has a length
-            // (is not the start of string) and if it matches
-            // field delimiter. If id does not, then we know
-            // that this delimiter is a row delimiter.
-            if (strMatchedDelimiter.length &&
-                strMatchedDelimiter !== strDelimiter) {
-                // Since we have reached a new row of data,
-                // add an empty row to our data array.
-                arrData.push( [] );
-            }
-            var strMatchedValue;
-            // Now that we have our delimiter out of the way,
-            // let's check to see which kind of value we
-            // captured (quoted or unquoted).
-            if (arrMatches[ 2 ]) {
-                // We found a quoted value. When we capture
-                // this value, unescape any double quotes.
-                strMatchedValue = arrMatches[ 2 ]
-                    .replace(new RegExp( "\"\"", "g" ),
-                             "\"");
-            } else {
-                // We found a non-quoted value.
-                strMatchedValue = arrMatches[ 3 ];
-            }
-            // Now that we have our value string, let's add
-            // it to the data array.
-            arrData[ arrData.length - 1 ].push( strMatchedValue );
-        }
-        // Return the parsed data.
-        return( arrData );
-    }
-
-    function getDistance(p1, p2) {
-        var R = 6378137; // Earth's mean radiu in meter
-        var dLat = rad(p2.lat() - p1.lat());
-        var dLng = rad(p2.lng() - p1.lng());
-        var a = Math.sin(dLat / 2)*Math.sin(dLat / 2)+
-            Math.cos(rad(p1.lat())) * Math.cos(rad(p2.lat())) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        var d = R * c;
-        return (d/1600).toFixed(2); // returns the distance in miles
-    }
-
-    function findBars(allBars) {
-        var _user = Global.getUser();
-        var radius = _user.get('radius');
-        if (!radius) {
-            radius = Global.getRadius();
-        }
-        var position = Global.getPosition();
-        var bars = [];
-        while (allBars.hasNextEntity()) {
-            var bar = allBars.getNextEntity();
-            var barLoc = bar.get('location');
-            if (barLoc && getDistance(position, barLoc) < radius) {
-                // find connections
-                bars.push(bar);
-            }
-        }
-        return bars;
-    }
-    /* var stop = null;
-    function stopCreate() {
-        if (stop) {
-            $interval.cancel(stop);
-            stop = null;
-        }
-    } */
     return {
-        /* upload: function(barData, callback) {
-            var arrData = CSVToArray(barData);
-            var index = 0;
-            var geocoder = new google.maps.Geocoder();
-            var _client = Global.getClient();
-            stop = $interval(function() {
-                if (++index >= arrData.length)
-                    stopCreate();
-                var options = {
-                    type: "bars",
-                    name: arrData[index][1],
-                    address: arrData[index][2],
-                    region: arrData[index][0],
-                    website: arrData[index][3]
-                };
-                console.debug(options.address);
-                // if (options.address === '235 Albany St, Cambridge, MA 02139') {
-                geocoder.geocode({ 'address': options.address }, function(results, status) {
-                    if (status == google.maps.GeocoderStatus.OK) {
-                        options.location = results[0].geometry.location;
-                    } else {
-                        console.error("Error getting location for " +
-                                      options.address +
-                                      ": " + status);
-                    }
-                    _client.createEntity(options, function(err, entity, data) {
-                        if (err) {
-                            console.error("Unable to create new bar: " + err );
-                        } else {
-                            console.debug("Created bar: " + entity.get('uuid'));
-                        }
-                    });
-                });
-                // }
-            }, 2000);
-        }, */
         all: function(callback) {
-            var _client = Global.getClient();
-            var allBars = Global.getBars();
+            var _client = Global.get("client");
+            /* var allBars = Global.get("bars");
             if (allBars) {
                 allBars.resetPaging();
-                callback(null, findBars(allBars));
-            }
+                callback(null, allBars);
+            } */
             if(_client) {
                 var options = {
-                    type: 'bars'
-                    // qs: { "ql": "order by created desc" }
+                    type: 'bars',
+                    // qs: { limit: 300 }
+                    qs: { "ql": "location within 1600 of " +
+                          Global.get("position").lat() + ", " +
+                          Global.get("position").lng() }
                 };
+                /* var bars = new Apigee.Collection(options);
+                bars.fetch(function(err, response) {
+                    if (err) {
+                        callback(err, null);
+                    } else {
+                        // Global.set("bars", bars);
+                        callback(null, response);
+                    }
+                }); */
                 _client.createCollection(options, function(err, bars) {
                     if (err) {
                         callback(err, null);
                     } else {
                         bars.resetPaging();
-                        Global.setBars(bars);
-                        callback(null, findBars(bars));
+                        // Global.set("bars", bars);
+                        callback(null, bars);
                     }
                 });
             } else {
-                callback(null, null);
+                callback("no client", null);
             }
         },
         get: function(uuid, callback) {
-            var _client = Global.getClient();
+            var _client = Global.get("client");
             var options = {
                 type: 'bars',
                 uuid: uuid
@@ -365,8 +231,8 @@ angular.module('hotbar.services', [])
             }
         },
         checkin: function(bar, callback) {
-            var _client = Global.getClient();
-            var _user = Global.getUser();
+            var _client = Global.get("client");
+            var _user = Global.get("user");
             // create an Entity object that models the connecting entity
             var connecting_entity_options = {
                 client: _client,
@@ -398,22 +264,24 @@ angular.module('hotbar.services', [])
         }
     }
 }])
-.factory('MediaFeed', ['$window', '$http', '$log', 'Global',
-                       function($window, $http, $log, Global) {
+.factory('MediaFeed', ['$http', '$log', 'Global', function($http, $log, Global) {
     return {
         all: function(callback) {
-            var allFeed = Global.getAllFeed();
+            var allFeed = Global.get("allFeed");
             if (allFeed) {
                 allFeed.fetch();
                 allFeed.resetPaging();
                 callback(null, allFeed);
                 return;
             }
-            var _client = Global.getClient();
+            var _client = Global.get("client");
             if(_client) {
                 var options = {
                     type: 'activities',
-                    qs: { "ql": "order by created desc" }
+                    // qs: { "ql": "order by created desc" }
+                    qs: { "ql": "location within 1600 of " +
+                          Global.get("position").lat() + ", " +
+                          Global.get("position").lng() }
                 };
                 _client.createCollection(options, function(err, collectionObj) {
                     if (err) {
@@ -421,7 +289,7 @@ angular.module('hotbar.services', [])
                     } else {
                         allFeed = collectionObj;
                         allFeed.resetPaging();
-                        Global.setAllFeed(allFeed);
+                        Global.set("allFeed", allFeed);
                         callback(null, allFeed);
                     }
                 });
@@ -430,8 +298,8 @@ angular.module('hotbar.services', [])
             }
         },
         get: function(uuid, callback) {
-            var _client = Global.getClient();
-            var allMediaFeed = Global.getAllFeed();
+            var _client = Global.get("client");
+            var allMediaFeed = Global.get("allFeed");
             if (allMediaFeed) {
                 allMediaFeed.getEntityByUUID(uuid, function(err, feed) {
                     if (err) callback(err, null);
@@ -447,7 +315,7 @@ angular.module('hotbar.services', [])
                         if (err) {
                             callback(err, null);
                         } else {
-                            Global.setAllFeed(data);
+                            Global.set("allFeed", data);
                             data.getEntityByUUID(uuid, function(err, feed) {
                                 if (err) callback(err, null);
                                 else callback(null, feed);
@@ -460,8 +328,8 @@ angular.module('hotbar.services', [])
             }
         },
         create: function(media, callback) {
-            var _user = Global.getUser();
-            var _client = Global.getClient();
+            var _user = Global.get("user");
+            var _client = Global.get("client");
             media.type = "media";
             var options = {
                 "actor": {
@@ -478,8 +346,8 @@ angular.module('hotbar.services', [])
                 },
                 "verb": "post",
                 "object": media,
-                "lat": Global.getPosition().lat() || null,
-                "lon": Global.getPosition().lng() || null
+                "lat": Global.get("position").lat() || null,
+                "lon": Global.get("position").lng() || null
             };
             _client.createUserActivity('me', options, function(err, activity) {
                 if (err) {
@@ -490,8 +358,8 @@ angular.module('hotbar.services', [])
             });
         },
         like: function(mediaFeed, callback) {
-            var _client = Global.getClient();
-            var _user = Global.getUser();
+            var _client = Global.get("client");
+            var _user = Global.get("user");
             // create an Entity object that models the connecting entity
             var connecting_entity_options = {
                 client: _client,
@@ -522,8 +390,8 @@ angular.module('hotbar.services', [])
             });
         },
         unlike: function(mediaFeed, callback) {
-            var _client = Global.getClient();
-            var _user = Global.getUser();
+            var _client = Global.get("client");
+            var _user = Global.get("user");
             // create an Entity object that models the connecting entity
             var connecting_entity_options = {
                 client: _client,
@@ -554,7 +422,7 @@ angular.module('hotbar.services', [])
             });
         },
         getLikes: function(mediaFeed, callback) {
-            var _client = Global.getClient();
+            var _client = Global.get("client");
             var options = {
                 client: _client,
                 data: {
@@ -578,8 +446,8 @@ angular.module('hotbar.services', [])
             });
         },
         submitComment: function(mediaFeed, callback) {
-            var _user = Global.getUser();
-            var _client = Global.getClient();
+            var _user = Global.get("user");
+            var _client = Global.get("client");
             var options = {
                 type: 'activities',
                 uuid: mediaFeed.uuid
@@ -594,8 +462,8 @@ angular.module('hotbar.services', [])
                     var object = {
                         type: 'comment',
                         content: mediaFeed.comment,
-                        lat: Global.getPosition().lat() || null,
-                        lon: Global.getPosition().lng() || null,
+                        lat: Global.get("position").lat() || null,
+                        lon: Global.get("position").lng() || null,
                         actor: {
                             "displayName": _user.get('username'),
                             "uuid": _user.get('uuid'),
@@ -627,7 +495,7 @@ angular.module('hotbar.services', [])
 .factory('Users', ['Global', function(Global) {
     return {
         get: function(uuid, callback) {
-            var _client = Global.getClient();
+            var _client = Global.get("client");
             var options = {
                 'type': 'users',
                 'uuid': uuid
@@ -644,10 +512,10 @@ angular.module('hotbar.services', [])
                 callback(null, null);
             }
         },
-        login: function(username, password, callback) {
-            var _client = Global.getClient();
+        login: function(email, password, callback) {
+            var _client = Global.get("client");
             if (_client) {
-                _client.login(username, password, function(err, data) {
+                _client.login(email, password, function(err, data) {
                     if (err) {
                         callback(data, null);
                     } else {
@@ -656,10 +524,10 @@ angular.module('hotbar.services', [])
                                 callback(err, null);
                             } else {
                                 if (_client.isLoggedIn()) {
-                                    Global.setUser( user );
+                                    Global.set("user",  user);
                                     callback(null, user);
                                 } else {
-                                    Global.setUser(null);
+                                    Global.set("user", null);
                                     callback(null, null);
                                 }
                             }
@@ -671,18 +539,18 @@ angular.module('hotbar.services', [])
             }
         },
         logout: function() {
-            var _client = Global.getClient();
+            var _client = Global.get("client");
             if (_client) {
                 _client.logout();
             }
             Global.clearAll();
         },
         signup: function(username, password, email, name, callback) {
-            var _client = Global.getClient();
+            var _client = Global.get("client");
             if (_client) {
                 _client.signup(username, password, email, name, function (err,entity) {
                     if (err) {
-                        Global.setUser(null);
+                        Global.set("user", null);
                         callback(err, null);
                     } else {
                         // Add new user to the free_memeber group
@@ -694,25 +562,25 @@ angular.module('hotbar.services', [])
                         var group = new Apigee.Group(groupOptions);
                         group.add( {user: entity}, function(err, data, entities) {
                             if (err) {
-                                Global.setUser(null);
+                                Global.set("user", null);
                                 callback(err, null);
                             } else {
                                 _client.logout();
                                 _client.login(username, password, function(err, data){
                                     if (err) {
-                                        Global.setUser(null);
+                                        Global.set("user", null);
                                         callback(err, null);
                                     } else {
                                         _client.getLoggedInUser(function(err,data,user){
                                             if (err) {
-                                                Global.setUser(null);
+                                                Global.set("user", null);
                                                 callback(err, null);
                                             } else {
                                                 if (_client.isLoggedIn()) {
-                                                    Global.setUser(user);
+                                                    Global.set("user", user);
                                                     callback(null, user);
                                                 } else {
-                                                    Global.setUser(null);
+                                                    Global.set("user", null);
                                                     callback(null, null);
                                                 }
                                             }
@@ -724,12 +592,12 @@ angular.module('hotbar.services', [])
                     }
                 });
             } else {
-                callback(null, null);
+                callback("no client", null);
             }
         },
         update: function(username, oldPass, newPass, email, name, callback) {
-            var _client = Global.getClient();
-            var _user = Global.getUser();
+            var _client = Global.get("client");
+            var _user = Global.get("user");
             if (_client && _user) {
                 _user.set({ "name": name, "username": username, "email": email,
                             "oldpassword": oldPass, "newpassword": newPass });
@@ -745,8 +613,8 @@ angular.module('hotbar.services', [])
             }
         },
         getActivityFeed: function(callback) {
-            var _user = Global.getUser();
-            var _client = Global.getClient();
+            var _user = Global.get("user");
+            var _client = Global.get("client");
             if (_client && _user) {
                 _client.getFeedForUser(_user.get('username'),
                     function(err, data, entities) {

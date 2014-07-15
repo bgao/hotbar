@@ -24,7 +24,7 @@ angular.module('hotbar.controllers', [])
 
     // Load all media activities
     $ionicLoading.show({
-        template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+        template: '<i class=\"icon ion-loading-a\"></i> Loading...'
     });
     MediaFeed.all(function(err, feed) {
         if (err) {
@@ -33,6 +33,7 @@ angular.module('hotbar.controllers', [])
             $ionicLoading.hide();
         } else {
             if (feed) {
+                feed.resetPaging();
                 var media = [];
                 // var comments = [];
                 while(feed.hasNextEntity()) {
@@ -97,7 +98,7 @@ angular.module('hotbar.controllers', [])
 .controller('MediaDetailCtrl', function($scope, $stateParams, $ionicLoading, $log,
                                         $timeout, Global, MediaFeed, Users, Bars, Util) {
     function getLikes(activity, callback) {
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         MediaFeed.getLikes(activity, function(err, entities) {
             $ionicLoading.hide();
             if (err) {
@@ -114,7 +115,7 @@ angular.module('hotbar.controllers', [])
     $scope.like = function() {
         if ($scope.activity) {
             $ionicLoading.show({
-                template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+                template: "<i class=\"icon ion-loading-a\"></i> Loading..."
             });
             if ($scope.activity.liked ) {
                 MediaFeed.unlike($scope.activity, function(err, result) {
@@ -139,7 +140,7 @@ angular.module('hotbar.controllers', [])
     };
     $scope.submitComment = function() {
         $ionicLoading.show({
-            template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+            template: '<i class=\"icon ion-loading-a\"></i> Loading...'
         });
         MediaFeed.submitComment($scope.activity, function(err, result) {
             $ionicLoading.hide();
@@ -154,7 +155,7 @@ angular.module('hotbar.controllers', [])
     $scope.clearComment = function() { $scope.activity.comment = ''; }
 
     $ionicLoading.show({
-        template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+        template: '<i class=\"icon ion-loading-a\"></i> Loading...'
     });
     MediaFeed.get($stateParams.mediaId, function(err, activity) {
         var _activity = {};
@@ -204,10 +205,10 @@ angular.module('hotbar.controllers', [])
 
 .controller('HomeCtrl', function($scope, $ionicLoading, $state, $log, $ionicModal, 
                                  $timeout, Global, MediaFeed, Users, Util, S3) {
-    var navigator = window.navigator;
+    // var navigator = window.navigator;
 
     var cameraSuccess = function(imageData) {
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         $timeout(function() {
             $scope.media = {
                 filename: _user.get('username') + "_" + 
@@ -220,7 +221,7 @@ angular.module('hotbar.controllers', [])
         });       
     }
     /* var cameraSuccess = function(imageFile) {
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         $scope.$apply(function() {
             var index = imageFile.lastIndexOf('/') + 1;
             $scope.media = {
@@ -237,7 +238,7 @@ angular.module('hotbar.controllers', [])
         });
     }; */
     var captureSuccess = function(mediaFiles) {
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         $timeout(function() {
             $scope.media = {
                 filename: _user.get('username') + "_" +
@@ -258,7 +259,7 @@ angular.module('hotbar.controllers', [])
 
     $scope.captureImage = function() {
         navigator.camera.getPicture(cameraSuccess, captureError,
-                                    { quality: 50,
+                                    { quality: 40,
                                       destinationType: Camera.DestinationType.DATA_URL});
                                       //destinationType: Camera.DestinationType.FILE_URI });
     };
@@ -289,7 +290,7 @@ angular.module('hotbar.controllers', [])
 
     $scope.uploadMedia = function() {
         $ionicLoading.show({
-            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+            template: "<i class=\"icon ion-loading-a\"></i> Loading..."
         });
         S3.put($scope.media, function(err, data) {
             if (err) {
@@ -385,7 +386,7 @@ angular.module('hotbar.controllers', [])
         $log.info("uploading image...");
         $log.debug($scope.files);
         $log.debug($scope.files[0]);
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         // Resize the image to get thumbnail
         /* var img = new Image();
         img.src = $scope.files[0];
@@ -430,7 +431,7 @@ angular.module('hotbar.controllers', [])
     };
 
     function getAvatar() {
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         var email = ''
         , avatar = '';
         if (_user && _user.get('email')) {
@@ -449,7 +450,7 @@ angular.module('hotbar.controllers', [])
     }
 
     function getLikes(activity, callback) {
-        var _user = Global.getUser();
+        var _user = Global.get("user");
         MediaFeed.getLikes(activity, function(err, entities) {
             if (err) {
                 $log.error("HomeCtrl::getLikes: " + err);
@@ -466,7 +467,7 @@ angular.module('hotbar.controllers', [])
     $scope.like = function(activity) {
         if (activity) {
             $ionicLoading.show({
-                template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+                template: "<i class=\"icon ion-loading-a\"></i> Loading..."
             });
             if (activity.liked ) {
                 MediaFeed.unlike(activity, function(err, result) {
@@ -501,7 +502,7 @@ angular.module('hotbar.controllers', [])
 
     getAvatar();
     $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
     });
     Users.getActivityFeed(function(err, entities) {
         if (err)
@@ -533,7 +534,7 @@ angular.module('hotbar.controllers', [])
     });
 })
 
-.controller('BarsCtrl', function($scope, $ionicLoading, $log, $timeout,
+.controller('BarsCtrl', function($scope, $ionicLoading, $log, $timeout, $rootScope,
                                  Bars, Global) {
     var _infowindow = new google.maps.InfoWindow();
     var _map;
@@ -543,11 +544,11 @@ angular.module('hotbar.controllers', [])
         return (index % 2) === 0 ? 50 : 60;
     };
 
-    function rad(x) {
+    var rad = function(x) {
         return x*Math.PI/180;
     }
 
-    function getDistance(p1, p2) {
+    var getDistance = function(p1, p2) {
         var R = 6378137; // Earth's mean radiu in meter
         var dLat = rad(p2.lat() - p1.lat());
         var dLng = rad(p2.lng() - p1.lng());
@@ -560,7 +561,7 @@ angular.module('hotbar.controllers', [])
     }
 
     $scope.getBarDistance = function(bar) {
-        return getDistance(Global.getPosition(), bar.geometry.location);
+        return getDistance(Global.get("position"), bar.location);
     }
 
     function callback(results, status) {
@@ -589,10 +590,10 @@ angular.module('hotbar.controllers', [])
         });
     }
 
-    function findBars(map) {
+    function findBarsOnMap(map) {
         _map = map;
         var request = {
-            location: Global.getPosition(),
+            location: Global.get("position"),
             radius: Global.radius,
             types: ['bar']
         };
@@ -601,74 +602,79 @@ angular.module('hotbar.controllers', [])
     };
     $scope.map = {
         center: {
-            latitude: Global.getPosition().lat(),
-            longitude: Global.getPosition().lng()
+            latitude: Global.get("position").lat(),
+            longitude: Global.get("position").lng()
         },
         zoom: 12,
         events: {
             tilesloaded: function (map) {
-                findBars(map);
+                // findBarsOnMap(map);
             }
         }
     };
 
-    $scope.filesChanged = function(elm) {
-        $scope.files = elm.files;
-        $scope.$apply();
-    };
-
-    /* $scope.upload = function() {
-        var reader = new FileReader();
-        $ionicLoading.show({
-            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
-        });
-        reader.onloadend = function() {
-            $log.debug("Loaded file: " + $scope.files[0].name);
-            Bars.upload(reader.result, function(err, entity) {
-                $ionicLoading.hide();
-            });
-        };
-        reader.readAsText($scope.files[0]);
-    }; */
-
     $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
     });
 
-    /* Bars.all(function(err, bars) {
+    function findBars(allBars) {
+        var _user = Global.get("user");
+        var radius = _user.get('radius');
+        if (!radius) {
+            radius = Global.radius;
+        }
+        var position = Global.get("position");
+        var bars = [];
+        while (allBars.hasNextEntity()) {
+            var bar = allBars.getNextEntity();
+            var barLoc = bar.get('location');
+            bar.location = new google.maps.LatLng(barLoc.k, barLoc.B);
+            if (getDistance(position, bar.location) < radius) {
+                // find connections
+                bars.push(bar);
+            }
+        }
+        return bars;
+    }
+
+    Bars.all(function(err, bars) {
         var _bars = [];
         if (err) {
             $log.error(err);
         } else {
-            _bars = bars;
+            _bars = findBars(bars);
         }
-        $scope.$apply(function(){ $scope.bars = _bars; });
+        $timeout(function(){ $scope.bars = _bars; $rootScope.bars = _bars;});
         $ionicLoading.hide();
-    }); */
+    });
 })
 
 .controller('BarDetailCtrl', function($scope, $stateParams, $ionicLoading, $log,
-                                      Bars, Global) {
-    if (!Global.bars) alert( "no bars" );
+                                      $rootScope, Bars, Global) {
     var _infowindow = new google.maps.InfoWindow();
     var _map;
-    function createMarker(place) {
-        var placeLoc = place.geometry.location;
+    function createMarker(bar) {
         var marker = new google.maps.Marker({
             map: _map,
-            position: place.geometry.location
+            position: bar.location
         });
         
         google.maps.event.addListener(marker, 'click', function() {
-            _infowindow.setContent(place.name);
+            _infowindow.setContent(bar.name);
             _infowindow.open(_map, this);
         });
     }
-    $scope.bar = Global.bars[$stateParams.barId];
+    var bar = $rootScope.bars[$stateParams.barId];
+    $scope.bar = {
+        name: bar.get("name"),
+        address: bar.get("address"),
+        website: bar.get("website"),
+        location: bar.location
+    };
     $scope.map = {
         center: {
-            latitude: $scope.bar.geometry.location.lat(),
-            longitude: $scope.bar.geometry.location.lng()
+            latitude: bar.location.lat(),
+            longitude: bar.location.lng()
         },
         zoom: 12,
         events: {
@@ -681,7 +687,7 @@ angular.module('hotbar.controllers', [])
 
     $scope.checkin = function() {
         $ionicLoading.show({
-            template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+            template: '<i class=\"icon ion-loading-a\"></i> Loading...'
         });
         Bars.checkin($scope.bar, function(err, data) {
             if (err) {
@@ -694,7 +700,7 @@ angular.module('hotbar.controllers', [])
     };
 
     $ionicLoading.show({
-        template: '<i class=\"icon ion-loading-a\"></i>Loading...'
+        template: '<i class=\"icon ion-loading-a\"></i> Loading...'
     });
     createMarker($scope.bar);
     $ionicLoading.hide();
@@ -712,9 +718,9 @@ angular.module('hotbar.controllers', [])
 
 .controller('AccountCtrl', function($scope, $ionicLoading, $log, $state,
                                     Global, Users,Util) {
-    var user = Global.getUser();
+    var user = Global.get("user");
     $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
     });
     $ionicLoading.hide();
     $scope.update = function() {
@@ -736,17 +742,17 @@ angular.module('hotbar.controllers', [])
 })
 
 .controller('LoginCtrl', function($scope, $ionicLoading, $state, $log, Global, Users) {
-    var client = Global.getClient();
+    var client = Global.get("client");
     client.getLoggedInUser(function(err, data, user) {
         if (err) {
             $log.error("LoginCtrl: " + data);
             client.logout();
         } else {
             if (client.isLoggedIn()) {
-                Global.setUser( user );
+                Global.set("user", user);
                 $state.go('tab.media');
             } else {
-                Global.setUser( null );
+                Global.set("user", null);
                 $log.debug("No logged in user");
             }
         }
@@ -756,22 +762,24 @@ angular.module('hotbar.controllers', [])
         Users.logout();
     };
     $scope.login = function(user) {
-        var username = user.username;
+        var email = user.email;
         var password = user.password;
         $ionicLoading.show({
-            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+            template: "<i class=\"icon ion-loading-a\"></i> Loading..."
         });
-        if (username && password) {
+        if (email && password) {
             Users.login(username, password, function(err, user) {
+                $ionicLoading.hide();
                 if (err) {
                     $log.error("LoginCtrl::login: " + err);
+                    navigator.notification.alert("Invalid email or password", null);
                 } else {
                     $state.go('tab.media');
                 }
-                $ionicLoading.hide();
             });
         } else {
             $ionicLoading.hide();
+            navigator.notification.alert("Missing email or password!", null);
         }
     };
     $scope.signup = function() {
@@ -785,19 +793,22 @@ angular.module('hotbar.controllers', [])
         var email = user.email;
         var name = user.name;
         $ionicLoading.show({
-            template: "<i class=\"icon ion-loading-a\"></i>Loading..."
+            template: "<i class=\"icon ion-loading-a\"></i> Loading..."
         });
         if (username && password && email) {
             Users.signup(username, password, email, name, function(err, user) {
+                $ionicLoading.hide();
                 if (err) {
                     $log.error("SignupCtrl::signup: " + err);
+                    navigator.notification.alert("Signup failed.", null);
                 } else {
                     $state.go('tab.media');
                 }
-                $ionicLoading.hide();
             });
         } else {
             $ionicLoading.hide();
+            navigator.notification.alert("Username, email and password are required.",
+                                         null);
         }
     }
 })
