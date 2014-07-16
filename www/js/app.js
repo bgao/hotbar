@@ -54,6 +54,11 @@ angular.module('hotbar', ['ionic', 'hotbar.controllers', 'hotbar.services',
                 templateUrl: "templates/signup.html",
                 controller: "SignupCtrl"
             })
+            .state('retrievePass', {
+                url: "/login/retrievePass",
+                templateUrl: "templates/retrievePass.html",
+                controller: "RetrievePassCtrl"
+            })
         
         // setup an abstract state for the tabs directive
             .state('tab', {

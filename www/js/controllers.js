@@ -812,6 +812,20 @@ angular.module('hotbar.controllers', [])
         }
     }
 })
+.controller('RetrievePassCtrl', function($scope, $ionicLoading) {
+    $scope.getPassword = function() {
+        $ionicLoading.show({
+            template: "<i class=\"icon ion-loading-a\"></i> Loading..."
+        });
+        if ($scope.email) {
+            $timeout(function() {
+                $ionicLoading.hide();
+                navigator.notification.alert("An email with temporary password will be sent to your email box.",
+                                             null);
+            },500);
+        }
+    }
+})
 .controller('ProfileCtrl', function($scope, $ionicLoading) {
 })
 .controller('RewardsCtrl', function($scope, $ionicLoading) {

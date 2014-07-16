@@ -189,8 +189,8 @@ angular.module('hotbar.services', [])
                 var options = {
                     type: 'bars',
                     // qs: { limit: 300 }
-                    qs: { "ql": "location within 1600 of " +
-                          Global.get("position").lat() + ", " +
+                    qs: { "ql": "location%20within%201600%20of%20" +
+                          Global.get("position").lat() + "," +
                           Global.get("position").lng() }
                 };
                 /* var bars = new Apigee.Collection(options);
@@ -333,15 +333,9 @@ angular.module('hotbar.services', [])
             media.type = "media";
             var options = {
                 "actor": {
-                    "displayName": _user.get('username'),
                     "uuid": _user.get('uuid'),
                     "username": _user.get('username'),
-                    "image" : {
-                        "duration" : 0,
-                        "height" : 80,
-                        "url" : "http://www.gravatar.com/avatar/",
-                        "width" : 80
-                    },
+                    "picture": _user.get('picture'),
                     "email": _user.get('email')
                 },
                 "verb": "post",
