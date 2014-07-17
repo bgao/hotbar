@@ -26,24 +26,37 @@
         </label>
       </div>
     </div>
-    <div class="list">
-      <a class="item" ng-repeat="bar in bars" ng-href="#/tab/bars/{{$index}}">
+    <ion-list>
+      <ion-item ng-repeat="bar in bars" ng-href="#/tab/bars/{{$index}}" type="item-link">
+        <h2>{{bar.name}}</h2>
+        <div class="row">
+          <div class="col col-25"><i class="icon ion-clock"></i> Close</div>
+          <div class="col col-25"><i class="icon ion-thumbsup"></i> 0</div>
+          <div class="col col-25"><i class="icon ion-person-stalker"></i> 0</div>
+          <div class="col col-25">
+            <i class="icon ion-location"></i>
+            <span>{{getBarDistance(bar)}} miles</span>
+          </div>
+        </div>
+    </ion-list>
+    <ion-infinite-scroll on-infinite="loadMore()" distance="10%"></ion-infinite-scroll>
+    <!-- <div class="list">
+      <a class="item" ng-repeat="bar in bars" >
         <h2>{{bar.name}}</h2>
         <div class="row">
           <div class="col col-50">
             <i class="icon ion-clock"></i>
-          </div>
+          </div> -->
             <!-- <span ng-show="bar.opening_hours.open_now">Open</span>
             <span ng-show="!bar.opening_hours.open_now">Close</span></div> -->
           <!-- <div class="col col-33 ui-bar-hot">
                <i class="icon ion-wineglass"></i>
                <span>0 <font color="red">Hot</font> barers</span></div> -->
-          <div class="col col-50">
-            <i class="icon ion-location"></i>
-            <span>{{getBarDistance(bar)}} miles</span>
+          <!-- <div class="col col-50">
+            
           </div>
         </div>
       </a>
-    </div>
+    </div> -->
   </ion-content>
 </ion-view>

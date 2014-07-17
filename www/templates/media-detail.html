@@ -10,10 +10,16 @@
       <div class="item item-avatar">
         <img src="{{activity.avatar}}">
         <h2>{{activity.media.caption}}</h2>
-        <div>{{activity.formattedTime}}</div>
+        <p>{{activity.username}}</p>
+        <p>{{activity.formattedTime}}</p>
       </div>
       <div class="item item-image">
         <img class="full-image" src="{{activity.media.url}}">
+      </div>
+      <div class="list">
+        <div ng-repeat="comment in activity.comments" class="item">
+          <a href="#">comment.actor.username</a> {{comment.content}}
+        </div>
       </div>
       <div class="item tabs tabs-secondary tabs-icon-left">
         <a class="tab-item" ng-click="like()">

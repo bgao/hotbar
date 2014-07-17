@@ -33,7 +33,7 @@ angular.module('hotbar.controllers', [])
             $ionicLoading.hide();
         } else {
             if (feed) {
-                feed.resetPaging();
+                // feed.resetPaging();
                 var media = [];
                 // var comments = [];
                 while(feed.hasNextEntity()) {
@@ -68,26 +68,12 @@ angular.module('hotbar.controllers', [])
                     }
                     _feed.avatar = avatar;
                     _feed.formattedTime = Util.prettyDate(_feed.created);
-                    /* if (object.type == 'comment') {
-                        _feed.comment = object;
-                        comments.push(_feed);
-                    } else */ if (object.type == 'media') {
-                        _feed.media = object;
-                        _feed.comments = [];
-                        media.push(_feed);
-                    }
+                    _feed.media = object;
+                    _feed.comments = message.get("comments") || [];
+                    media.push(_feed);
                 }
                 $timeout(function() {
                     $scope.media = media;
-                    /* for (var i = 0; i < comments.length; ++i) {
-                        for (var j = 0; j < media.length; ++j) {
-                            if (comments[i].comment.media ==
-                                media[j].uuid) {
-                                media[j].comments.push(comments[i]);
-                                break;
-                            }
-                        }
-                    } */
                     $ionicLoading.hide();
                 }, 500);
             }
@@ -250,7 +236,9 @@ angular.module('hotbar.controllers', [])
             };
             $scope.message = mediaFiles[0].type;
         });
-        navigator.notification.alert($scope.media.filename, null, "CameraSuccess:filename");
+        /* navigator.notification.alert($scope.media.filename,
+                                     null,
+                                     "CameraSuccess:filename"); */
     };
     var captureError = function(error) {
         navigator.notification.alert('Error code: ' + error.code, null,
@@ -258,10 +246,16 @@ angular.module('hotbar.controllers', [])
     };
 
     $scope.captureImage = function() {
-        navigator.camera.getPicture(cameraSuccess, captureError,
-                                    { quality: 40,
-                                      destinationType: Camera.DestinationType.DATA_URL});
-                                      //destinationType: Camera.DestinationType.FILE_URI });
+        if (!Global.get("hotbar")){
+            navigator.notification.alert("You must check in a HotBar first.", null);
+        } else {
+            var options = {
+                quality: 40,
+                destinationType: Camera.DestinationType.DATA_URL
+                //destinationType: Camera.DestinationType.FILE_URI
+            };
+            navigator.camera.getPicture(cameraSuccess, captureError, options);
+        }
     };
     /* $scope.captureImage = function() {
         navigator.device.capture.captureImage(captureSuccess,
@@ -269,17 +263,27 @@ angular.module('hotbar.controllers', [])
                                               // { limit: 1 });
     } */
     $scope.captureVideo = function() {
-        navigator.device.capture.captureVideo(captureSuccess,
-                                              captureError,
-                                              { duration: 20 });
+        if (!Global.get("hotbar")){
+            navigator.notification.alert("You must check in a HotBar first.", null);
+        } else {
+            navigator.device.capture.captureVideo(captureSuccess,
+                                                  captureError,
+                                                  { duration: 20 });
+        }
     };
     $scope.getImage = function() {
-        navigator.camera.getPicture(cameraSuccess, captureError,
-                                    { destinationType: Camera.DestinationType.DATA_URL,
-                                      // destinationType: Camera.DestinationType.FILE_URI,
-                                      quality: 50,
-                                      sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-                                      encodingType: Camera.EncodingType.JPEG });
+        if (!Global.get("hotbar")){
+            navigator.notification.alert("You must check in a HotBar first.", null);
+        } else {
+            var options = {
+                destinationType: Camera.DestinationType.DATA_URL,
+                // destinationType: Camera.DestinationType.FILE_URI,
+                quality: 50,
+                sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+                encodingType: Camera.EncodingType.JPEG
+            };
+            navigator.camera.getPicture(cameraSuccess, captureError, options);
+        }
     };
 
     function onFail(error) {
@@ -561,7 +565,9 @@ angular.module('hotbar.controllers', [])
     }
 
     $scope.getBarDistance = function(bar) {
-        return getDistance(Global.get("position"), bar.location);
+        return getDistance(Global.get("position"),
+                           new google.maps.LatLng(bar.location.latitude,
+                                                  bar.location.longitude));
     }
 
     function callback(results, status) {
@@ -577,15 +583,17 @@ angular.module('hotbar.controllers', [])
         $ionicLoading.hide();
     }
     
-    function createMarker(place) {
-        var placeLoc = place.geometry.location;
+    function createMarker(bar) {
+        // var placeLoc = place.geometry.location;
         var marker = new google.maps.Marker({
             map: _map,
-            position: place.geometry.location
+            //position: place.geometry.location
+            position: new google.maps.LatLng(bar.location.latitude,
+                                             bar.location.longitude)
         });
         
         google.maps.event.addListener(marker, 'click', function() {
-            _infowindow.setContent(place.name);
+            _infowindow.setContent(bar.name);
             _infowindow.open(_map, this);
         });
     }
@@ -612,40 +620,63 @@ angular.module('hotbar.controllers', [])
             }
         }
     };
+    $scope.loadMore = function() {
+        var bars = Global.get("hotbars");
+        if (bars && bars.hasNextPage()) {
+            var _bars = [];
+            bars.getNextPage(function (err, data, entities) {
+                while (entities.hasNextEntity()) {
+                    var bar = entities.getNextEntity();
+                    var _bar = {
+                        uuid: bar.get("uuid"),
+                        name: bar.get("name"),
+                        address: bar.get("address"),
+                        website: bar.get("website"),
+                        location: bar.get("location")
+                        // get likes
+                        // get hotbar users
+                    };
+                    createMarker(_bar);
+                    _bars.push(_bar);
+                }
+            });
+            $timeout(function() {
+                $scope.bars = ($scope.bars||[]).concat(_bars);
+                $rootScope.bars = $scope.bars;
+                $scope.$broadcast('scroll.infiniteScrollComplete');
+                // $scope.$broadcast('scroll.resize');
+                $ionicLoading.hide();
+            });
+        }
+    };
 
     $ionicLoading.show({
         template: "<i class=\"icon ion-loading-a\"></i> Loading..."
     });
 
-    function findBars(allBars) {
-        var _user = Global.get("user");
-        var radius = _user.get('radius');
-        if (!radius) {
-            radius = Global.radius;
-        }
-        var position = Global.get("position");
-        var bars = [];
-        while (allBars.hasNextEntity()) {
-            var bar = allBars.getNextEntity();
-            var barLoc = bar.get('location');
-            bar.location = new google.maps.LatLng(barLoc.k, barLoc.B);
-            if (getDistance(position, bar.location) < radius) {
-                // find connections
-                bars.push(bar);
-            }
-        }
-        return bars;
-    }
-
     Bars.all(function(err, bars) {
-        var _bars = [];
+        $scope.bars = [];
         if (err) {
-            $log.error(err);
+            $log.error("BarsCtrl::all: " + err);
         } else {
-            _bars = findBars(bars);
+            $timeout(function() {
+                while (bars.hasNextEntity()) {
+                    var bar = bars.getNextEntity();
+                    var _bar = {
+                        uuid: bar.get("uuid"),
+                        name: bar.get("name"),
+                        address: bar.get("address"),
+                        website: bar.get("website"),
+                        location: bar.get("location")
+                        // get likes
+                        // get hotbar users
+                    };
+                    createMarker(_bar);
+                    $scope.bars.push(_bar);
+                }
+                $ionicLoading.hide();
+            });
         }
-        $timeout(function(){ $scope.bars = _bars; $rootScope.bars = _bars;});
-        $ionicLoading.hide();
     });
 })
 
@@ -656,7 +687,8 @@ angular.module('hotbar.controllers', [])
     function createMarker(bar) {
         var marker = new google.maps.Marker({
             map: _map,
-            position: bar.location
+            position: new google.maps.LatLng(bar.location.latitude,
+                                             bar.location.longitude)
         });
         
         google.maps.event.addListener(marker, 'click', function() {
@@ -664,17 +696,11 @@ angular.module('hotbar.controllers', [])
             _infowindow.open(_map, this);
         });
     }
-    var bar = $rootScope.bars[$stateParams.barId];
-    $scope.bar = {
-        name: bar.get("name"),
-        address: bar.get("address"),
-        website: bar.get("website"),
-        location: bar.location
-    };
+    $scope.bar = $rootScope.bars[$stateParams.barId];
     $scope.map = {
         center: {
-            latitude: bar.location.lat(),
-            longitude: bar.location.lng()
+            latitude: $scope.bar.location.latitude,
+            longitude: $scope.bar.location.longitude
         },
         zoom: 12,
         events: {

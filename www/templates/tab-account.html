@@ -1,6 +1,11 @@
 <ion-view title="ACCOUNT">
   <ion-content has-header="true" padding="true">
     <div>
+      <!--
+          number of posts
+          bars checked in
+          
+        -->
       <div class="list">
         <label class="item item-input">
           <input type="text" placeholder="Username">
@@ -11,7 +16,15 @@
         <label class="item item-input">
           <input type="text" placeholder="Name">
         </label>
-        <button class="button button-full button-assertive" ng-click="logout()">LOG OUT</button>
+        <label class="item item-input">
+          <input type="password" placeholder="Password">
+        </label>
+        <button class="button button-full button-assertive" ng-click="update()">
+          UPDATE
+        </button>
+        <button class="button button-full button-assertive" ng-click="logout()">
+          LOG OUT
+        </button>
         <!-- <label>Password</label>
         <a href="#popup_change_password" data-rel="popup"  id="profile_change_password" class="ui-btn-red" style="margin-top: 10px" data-transition="pop" data-position-to="window">Change</a>
         

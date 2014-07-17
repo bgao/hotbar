@@ -81,7 +81,7 @@ angular.module('hotbar.services', [])
             window.user._client.logout();
         window.user = null;
         window.position = null;
-        window.allFeed = null;
+        window.activities = null;
     }
     return {
         clearAll: clearAll,
@@ -180,40 +180,27 @@ angular.module('hotbar.services', [])
     return {
         all: function(callback) {
             var _client = Global.get("client");
-            /* var allBars = Global.get("bars");
-            if (allBars) {
-                allBars.resetPaging();
-                callback(null, allBars);
-            } */
-            if(_client) {
+            var bars = Global.get("hotbars");
+            if (bars) {
+                bars.resetPaging();
+            } else {
                 var options = {
+                    client: _client,
                     type: 'bars',
-                    // qs: { limit: 300 }
-                    qs: { "ql": "location within 1600 of " +
-                          Global.get("position").lat() + ", " +
+                    qs: { "ql": "location%20within%201600%20of%20" +
+                          Global.get("position").lat() + "," +
                           Global.get("position").lng() }
                 };
-                /* var bars = new Apigee.Collection(options);
-                bars.fetch(function(err, response) {
-                    if (err) {
-                        callback(err, null);
-                    } else {
-                        // Global.set("bars", bars);
-                        callback(null, response);
-                    }
-                }); */
-                _client.createCollection(options, function(err, bars) {
-                    if (err) {
-                        callback(err, null);
-                    } else {
-                        bars.resetPaging();
-                        // Global.set("bars", bars);
-                        callback(null, bars);
-                    }
-                });
-            } else {
-                callback("no client", null);
+                bars = new Apigee.Collection(options);
+                Global.set("hotbars", bars);
             }
+            bars.fetch(function(err, data, entities) {
+                if (err) {
+                    callback(err, null);
+                } else {
+                    callback(null, entities);
+                }
+            });
         },
         get: function(uuid, callback) {
             var _client = Global.get("client");
@@ -267,39 +254,30 @@ angular.module('hotbar.services', [])
 .factory('MediaFeed', ['$http', '$log', 'Global', function($http, $log, Global) {
     return {
         all: function(callback) {
-            var allFeed = Global.get("allFeed");
-            if (allFeed) {
-                allFeed.fetch();
-                allFeed.resetPaging();
-                callback(null, allFeed);
-                return;
-            }
+            var activities = Global.get("activities");
             var _client = Global.get("client");
-            if(_client) {
-                var options = {
-                    type: 'activities',
-                    // qs: { "ql": "order by created desc" }
-                    qs: { "ql": "location within 1600 of " +
-                          Global.get("position").lat() + ", " +
-                          Global.get("position").lng() }
-                };
-                _client.createCollection(options, function(err, collectionObj) {
-                    if (err) {
-                        callback(err, null);
-                    } else {
-                        allFeed = collectionObj;
-                        allFeed.resetPaging();
-                        Global.set("allFeed", allFeed);
-                        callback(null, allFeed);
-                    }
-                });
+            if (activities) {
+                activities.resetPaging();
             } else {
-                callback(null, null);
+                var options = {
+                    client: _client,
+                    type: 'activities',
+                    qs: { "ql": "order by created desc" }
+                };
+                activities = new Apigee.Collection(options);
+                Global.set("activities", activities);
             }
+            activities.fetch(function(err, data, entities) {
+                if (err) {
+                    callback(err, null);
+                } else {
+                    callback(null, activities);
+                }
+            });
         },
         get: function(uuid, callback) {
             var _client = Global.get("client");
-            var allMediaFeed = Global.get("allFeed");
+            var allMediaFeed = Global.get("activities");
             if (allMediaFeed) {
                 allMediaFeed.getEntityByUUID(uuid, function(err, feed) {
                     if (err) callback(err, null);
@@ -315,7 +293,7 @@ angular.module('hotbar.services', [])
                         if (err) {
                             callback(err, null);
                         } else {
-                            Global.set("allFeed", data);
+                            Global.set("activities", data);
                             data.getEntityByUUID(uuid, function(err, feed) {
                                 if (err) callback(err, null);
                                 else callback(null, feed);
@@ -330,7 +308,6 @@ angular.module('hotbar.services', [])
         create: function(media, callback) {
             var _user = Global.get("user");
             var _client = Global.get("client");
-            media.type = "media";
             var options = {
                 "actor": {
                     "displayName": _user.get('username'),
@@ -346,8 +323,11 @@ angular.module('hotbar.services', [])
                 },
                 "verb": "post",
                 "object": media,
-                "lat": Global.get("position").lat() || null,
-                "lon": Global.get("position").lng() || null
+                "location": {
+                    "latitude": Global.get("position").lat() || null,
+                    "longitude": Global.get("position").lng() || null
+                },
+                "hotbar": Global.get("hotbar")
             };
             _client.createUserActivity('me', options, function(err, activity) {
                 if (err) {
