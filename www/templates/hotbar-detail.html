@@ -1,0 +1,71 @@
+<ion-view title="{{hotbar.name}}">
+  <ion-content has-header="true" padding="false">
+    <ion-scroll class="cover">
+      <div class="full-image">
+        <img src="{{hotbar.coverpicture}}">
+      </div>
+    </ion-scroll>
+    <ion-list>
+      <!-- <div class="item">
+        <google-map center="map.center" zoom="map.zoom" draggable="true"
+                    events="map.events"></google-map>
+      </div> -->
+      <ion-item class="item-button-right">
+        <h2 class="assertive">{{hotbar.name}}</h2>
+        <button class="button button-small button-assertive"
+                ng-click="toggleFollow()">
+          {{ hotbar.following && 'Unfollow' || 'Follow' }}
+        </button>
+        <p><a class="subdued" href="geo:" + {{hotbar.location.latitude}} + "," +
+           {{hotbar.location.longitude}}>
+          <i class="icon ion-map"></i>
+          {{hotbar.address}}</a></p>
+        <p><a class="subdued" href="" ng-click="openLink(hotbar.url)">
+          <i class="icon ion-earth"></i>
+          {{hotbar.url}}</a></p>
+        <div class="row">
+          <a class="subdued">
+            <i class="icon ion-ios7-location-outline"></i>
+            {{getBarDistance(hotbar)}} miles
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-clock-outline"></i> Close
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-people-outline"></i> 
+            {{hotbar.followers.length}} Followers
+          </a>
+        </div>
+      </ion-item>
+      <div class="list">
+        <!-- photos and videos for the bar -->
+        <a ng-repeat="activity in activities"
+           ng-href="#/tab/hotbars/{{hotbar.uuid}}/{{activity.uuid}}"
+           class="item item-avatar thumb-right">
+          <img ng-src="{{activity.avatar}}">
+          <h2>{{activity.media.caption}}</h2>
+          <p>{{activity.username}}</p>
+          <p>{{activity.created | prettyDate}}</p>
+          <img ng-src="{{activity.media.type === 'image/jpeg' ? activity.media.url : 'img/genericvideoicon.jpg'}}">
+        </a>
+      </div>
+    </ion-list>
+      <!-- <div class="ui-bar-phonenum"><i class="icon ion-ios7-telephone"></i><span>(617) 426-8888</span></div>
+      <div class="ui-bar-rate">
+        <i class="icon ion-ios7-star"></i>
+        <i class="icon ion-ios7-star"></i>
+        <i class="icon ion-ios7-star"></i>
+        <i class="icon ion-ios7-star-outline"></i>
+        <i class="icon ion-ios7-star-outline"></i>
+        <span>3.6</span>
+      </div>
+      <div>
+        <ion-scroll direction="x" class="wide-as-needed">
+        </ion-scroll>
+      </div>
+      <div class="ui-bar-status-time">
+        <div><i class="icon ion-clock"></i><span ng-show="bar.opening_hours.open_now">Open</span><span ng-show="!bar.opening_hours.open_now">Close</span></div>
+        <span class="ui-bar-time">Today 10:00 AM - 2:00 PM</span>
+      </div> -->
+  </ion-content>
+</ion-view>

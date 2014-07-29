@@ -1,31 +1,73 @@
 <ion-view title="ACCOUNT">
   <ion-content has-header="true" padding="true">
     <div>
-      <!--
-          number of posts
-          bars checked in
-          
-        -->
       <div class="list">
-        <label class="item item-input">
-          <input type="text" placeholder="Username">
+        <div class="item item-divider">
+          Activities
+        </div>
+        <label class="item item-input-inset">
+          <span class="input-label">Posts</span>
+          <input type="number" ng-model="user.posts.length"
+                 ng-disabled="true">
         </label>
-        <label class="item item-input">
-          <input type="email" placeholder="E-Mail">
+        <label class="item item-input-inset">
+          <span class="input-label">Following HotBars</span>
+          <input type="number" ng-model="user.followingHotbars.length"
+                 ng-disabled="true">
         </label>
-        <label class="item item-input">
-          <input type="text" placeholder="Name">
+        <div class="item item-divider">
+          Account Information
+        </div>
+        <label class="item item-input-inset">
+          <span class="input-label">Username</span>
+          <input type="text" ng-model="user.username" ng-disabled="true">
         </label>
-        <label class="item item-input">
-          <input type="password" placeholder="Password">
+        <label class="item item-input-inset">
+          <span class="input-label">Email</span>
+          <input type="email" ng-model="user.email" ng-disabled="true">
         </label>
-        <button class="button button-full button-assertive" ng-click="update()">
+        <label class="item item-input-inset">
+          <span class="input-label">Name</span>
+          <input type="text" ng-model="user.name">
+        </label>
+        <label class="item item-input-inset">
+          <span class="input-label">Password</span>
+          <button class="button button-clear button-assertive">
+            Change Password
+          </button>
+        </label>
+        <div class="item item-divider">
+          HotBar Settings
+        </div>
+        <label class="item item-input">
+          <span class="input-label">HotBar Search Radius</span>
+          <input type="number" min="0.1" max="50" ng-model="user.radius">
+          <span class="input-label">miles</span>
+        </label>
+        <label class="item item-toggle">
+          <span class="input-label">Push Notification</span>
+          <label class="toggle toggle-assertive">
+            <input type="checkbox" ng-model="user.pushNote">
+            <div class="track">
+              <div class="handle"></div>
+            </div>
+          </label>
+        </label>
+        <div class="item item-divider">
+          About
+        </div>
+        <div class="item">
+          <a href="" class="subdued">User Agreement & Terms of Use</a>
+        </div>
+      </div>
+      <div>
+        <!-- <button class="button button-full button-assertive" ng-click="update()">
           UPDATE
-        </button>
+        </button> -->
         <button class="button button-full button-assertive" ng-click="logout()">
           LOG OUT
         </button>
-        <!-- <label>Password</label>
+      <!-- <label>Password</label>
         <a href="#popup_change_password" data-rel="popup"  id="profile_change_password" class="ui-btn-red" style="margin-top: 10px" data-transition="pop" data-position-to="window">Change</a>
         
         <div data-role="popup" id="popup_change_password" data-overlay-theme="b">

@@ -7,6 +7,28 @@
   background-color: transparent;
 } */
 
+a:link {
+    color: #ef4e3a;
+}
+
+a:visited {
+    color: #ef4e3a;
+}
+
+.icon {
+    font-size: 20px
+}
+
+.cover {
+    /* position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    max-width: 300px !important; */
+    height: 220px;
+    width: 100%;
+    overflow: hidden;
+}
+
 .scroll-content{
   /* background-image: url('../img/content_bg.png'); */
     background-color: #222;
@@ -23,7 +45,7 @@
 
 .terms-label {
     font-style: italic;
-    font-size: 17px;
+    font-size: 14px;
     color: #abb1b5;
     background-color: transparent;
     border: 0;
@@ -47,6 +69,7 @@
     height: 220px;
 }
 
+/* deprecated */
 .ui-input-text {
     border-radius: 3px;
     border: 1px solid #de432f;

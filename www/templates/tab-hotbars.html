@@ -1,0 +1,73 @@
+<ion-view title="HOTBARS">
+  <ion-content has-header="true" padding="false">
+    <ion-list>
+      <div class="item">
+        <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map>
+      </div>
+      <!-- <div class="list">
+        <label class="item item-input">
+          <i class="icon ion-search placeholder-icon"></i>
+          <input type="search" placeholder="Search"
+                 ng-model="search" ng-focus="searchFocused = true"
+                 ng-blur="searchFocused = false" ng-change="scrollTop()">
+          <button ng-if="search.length"
+                  class="button button-icon ion-android-close input-button"
+                  ng-click="clearSearch()">
+          </button>
+        </label>
+      </div> -->
+      <div class="item item-divider">
+        HotBars
+      </div>
+      <div class="item" ng-show="hotbars.length == 0">
+        <p>No HotBar found nearby. You can change HotBar Radius in your
+          <a ng-href="#/tab/account">Settings</a>
+        </p>
+      </div>
+      <ion-item ng-repeat="hotbar in hotbars"
+                ng-href="#/tab/hotbars/{{hotbar.uuid}}" type="item-link">
+        <h2 class="assertive">{{hotbar.name}}</h2>
+        <p>{{hotbar.address}}</p>
+        <div class="row">
+          <a class="subdued">
+            <i class="icon ion-ios7-location-outline"></i>
+            {{getBarDistance(hotbar)}} miles
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-clock-outline"></i> Close
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-people-outline"></i> 
+            {{hotbar.followers.length}} Followers
+          </a>
+        </div>
+      </ion-item>
+      <div class="item">
+        <div align="center">
+          <a href="" class="subdued" ng-click="loadMore()">
+            <i class="icon ion-arrow-down-b"></i>
+            Show more
+          </a>
+        </div>
+      </div>
+      <div class="item item-divider" ng-show="hotbars.length == 0">
+        Other Bars
+      </div>
+      <ion-item ng-repeat="bar in bars" ng-show="hotbars.length == 0">
+        <h2 class="assertive">{{bar.name}}</h2>
+        <p>{{bar.vicinity}}</p>
+        <div class="row">
+          <a class="subdued">
+            <i class="icon ion-ios7-location-outline"></i>
+            {{getBarDistance(bar)}} miles
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-clock-outline"></i> Close
+          </a>
+        </div>
+      </ion-item>
+    </ion-list>
+    <!-- <ion-infinite-scroll on-infinite="loadMore()" distance="10%">
+    </ion-infinite-scroll> -->
+  </ion-content>
+</ion-view>

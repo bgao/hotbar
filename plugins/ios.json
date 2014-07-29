@@ -63,6 +63,14 @@
                         {
                             "xml": "<feature name=\"Notification\"><param name=\"ios-package\" value=\"CDVNotification\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"SplashScreen\"><param name=\"ios-package\" value=\"CDVSplashScreen\" /><param name=\"onload\" value=\"true\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"FileTransfer\"><param name=\"ios-package\" value=\"CDVFileTransfer\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -72,7 +80,7 @@
                     "AssetsLibrary.framework": [
                         {
                             "xml": "false",
-                            "count": 2
+                            "count": 3
                         }
                     ],
                     "MobileCoreServices.framework": [
@@ -84,7 +92,7 @@
                     "CoreGraphics.framework": [
                         {
                             "xml": "false",
-                            "count": 3
+                            "count": 4
                         }
                     ],
                     "ImageIO.framework": [
@@ -144,6 +152,12 @@
             "PACKAGE_NAME": "mobi.hotbar"
         },
         "org.apache.cordova.dialogs": {
+            "PACKAGE_NAME": "mobi.hotbar"
+        },
+        "org.apache.cordova.splashscreen": {
+            "PACKAGE_NAME": "mobi.hotbar"
+        },
+        "org.apache.cordova.file-transfer": {
             "PACKAGE_NAME": "mobi.hotbar"
         }
     },

@@ -1,14 +1,8 @@
 <ion-view title="LOGIN TO YOUR ACCOUNT">
   <ion-content class="has-header padding">
-    <!-- <h1>LOGIN TO YOUR ACCOUNT</h1> -->
-    <!-- <div class="row">
-      <div class="col col-20 col-offset-67">
-        <button class="button button-small button-assertive" ng-click="signup()"><b>SIGN UP</b></button>
-      </div>
-    </div> -->
     <div class="list list-inset">
       <label class="item item-input">
-        <i class="icon ion-ios7-person-outline placeholder-icon"></i>
+        <i class="icon ion-ios7-email-outline placeholder-icon"></i>
         <input type="email" placeholder="Email" ng-model="user.email" required>
       </label>
       <label class="item item-input">
@@ -19,14 +13,15 @@
     <div class="row">
       <div class="col col-33 col-offset-33">
         <button class="button button-full button-assertive" ng-click="login(user)">
-          <b>LOGIN</b>
+          LOGIN
         </button>
       </div>
       <div class="col col-33">
         <button class="button button-full button-assertive" ng-click="signup()">
-          <b>SIGNUP</b>
+          SIGNUP
         </button>
       </div>
     </div>
+    <div align="right"><a href="#/login/retrievePass">Forget your password?</a></div>
   </ion-content>
 </ion-view>

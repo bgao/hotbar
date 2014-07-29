@@ -1,21 +1,46 @@
 <ion-view title="HOME">
-  <ion-content has-header="true" padding="true">
-    <div class="row home_header">
-      <div class="col col-33 user-photo"><i class="icon ion-person"></i></div>
-      <div class="col col-66">
-        <div class="row">
-          <div class="col col-33">
-            <button class="button button-icon icon ion-ios7-camera" ng-click="captureImage()"></button>
-          </div>
-          <!-- <div class="col col-33">
-            <button class="button button-icon icon ion-ios7-videocam" ng-click="captureVideo()"></button>
-          </div> -->
-          <div class="col col-33">
-            <button class="button button-icon icon ion-ios7-photos" ng-click="getImage()"></button>
-          </div>
-        </div>
-      </div>
+  <ion-nav-buttons side="right">
+    <!-- <button class="button button-icon icon ion-ios7-camera" ion-popover>
+      <ion-list>
+        <ion-item class="button button-icon icon ion-ios7-camera"
+                  ng-click="captureImage()"></ion-item>
+        <ion-item class="button button-icon icon ion-ios7-videocam"
+                  ng-click=""></ion-item>
+        <ion-item class="button button-icon icon ion-ios7-photos"
+                  ng-click="getImage()"></ion-item>
+      </ion-list>
+    </button> -->
+    <button class="button icon ion-ios7-camera"
+            ng-click="captureImage()"></button>
+    <button class="button icon ion-ios7-videocam"
+            ng-click="captureVideo()"></button>
+    <!-- <a class="button button-icon icon ion-ios7-photos" href=""
+         ng-click="getImage()"></a> -->
+  </ion-nav-buttons>
+  <!-- <div class="bar bar-subheader">
+    <div class="button-bar">
+      <button class="button button-icon icon ion-ios7-camera"
+              ng-click="captureImage()"></button>
+      <button class="button button-icon icon ion-ios7-videocam"></button>
+      <button class="button button-icon icon ion-ios7-photos"
+              ng-click="getImage()"></button>
     </div>
+  </div> -->
+  <ion-content has-header="true" padding="false">
+    <!-- <div class="button-bar">
+      <button class="button button-icon icon ion-ios7-camera assertive"
+              ng-click="captureImage()"></button>
+      <button class="button button-icon icon ion-ios7-videocam assertive">
+      </button>
+      <button class="button button-icon icon ion-ios7-photos assertive"
+              ng-click="getImage()"></button>
+    </div> -->
+    <ion-scroll class="cover">
+      <a class="full-image" href="" ng-click="changeCover()">
+        <!-- <img src="{{coverpicture}}"> -->
+        <img src="http://d2x86vdxy89a0s.cloudfront.net/20131204140105_D5VXY6PX.jpg">
+      </a>
+    </ion-scroll>
     <!-- <div class="card">
       <div class="item">
         <input type="file"
@@ -26,46 +51,39 @@
       <li ng-repeat="file in files">{{file.name}}</li>
     </div> -->
     <div class="list" ng-show="media">
-      <div class="item item-input">
-        <input type="text" placeholder="Caption" ng-model="media.caption">
-      </div>
       <div class="item item-body">
-        <!-- <img class="full-image" src="{{media.path}}"> -->
-        <video width="320" height="240" ng-show="media.type!='image/jpeg'">
-          <source src="{{media.path}}" type="{{media.type}}" />
+        <video class="full-image" ng-show="media.type!='image/jpeg'"
+               webkit-playsinline controls>
+          <source src="{{mediaSrc}}" type="{{media.type}}" />
           Your browser does not support the video tag.
         </video>
-        <img class="full-image" src="{{media.data}}" ng-show="media.type=='image/jpeg'">
+        <img class="full-image" ng-src="{{media.data}}"
+             ng-show="media.type=='image/jpeg'">
       </div>
-      <div class="item row">
-        <div class="col col-50">
-          <button class="button button-full button-assertive" ng-disabled="!media.caption" ng-click="uploadMedia()">Upload</button>
-        </div>
-        <div class="col col-50">
-          <button class="button button-full button-assertive" ng-click="cleanup()">Cancel</button>
-        </div>
+      <div class="item item-input-inset">
+        <label class="item-input-wrapper">
+          <input type="text"
+                 placeholder="Photo/video description and @ a Hotbar"
+                 ng-model="media.caption">
+        </label>
+        <button class="button button-icon icon ion-checkmark-round"
+                ng-disabled="!media.caption" ng-click="uploadMedia()">
+        </button>
+        <button class="button button-icon icon ion-close-round"
+                ng-click="cleanup()">
+        </button>
       </div>
-      <div class="item"><p>{{message}}</p></div>
     </div>
-    <div class="list" ng-hide="false">
-      <div ng-repeat="f in activities">
-        <div class="item item-avatar">
-          <h2>{{f.media.caption}}</h2>
-          <p>{{f.formattedTime}}</p>
-        </div>
-        <div class="item item-body">
-          <img class="full-image" src="{{f.media.url}}">
-          <div class="item tabs tabs-secondary tabs-icon-left">
-            <div class="tab-item" ng-click="like(f)">
-              <i class="icon ion-thumbsup"></i>
-              {{f.likes.length}}
-            </div>
-            <div class="tab-item" ng-click="openModal()">
-              <i class="icon ion-chatbox"></i>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="list" ng-show="media == null">
+      <a ng-repeat="activity in activities"
+         ng-href="#/tab/home/{{activity.uuid}}"
+         class="item item-avatar thumb-right">
+        <img src="{{activity.avatar}}">
+        <h2>{{activity.media.caption}}</h2>
+        <p>{{activity.username}}</p>
+        <p>{{activity.created | prettyDate}}</p>
+        <img ng-src="{{activity.media.type === 'image/jpeg' ? activity.media.url : 'img/genericvideoicon.jpg'}}">
+      </a>
     </div>
   </ion-content>
 </ion-view>

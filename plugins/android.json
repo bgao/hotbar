@@ -43,6 +43,14 @@
                         {
                             "xml": "<feature name=\"Notification\"><param name=\"android-package\" value=\"org.apache.cordova.dialogs.Notification\" /></feature>",
                             "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"SplashScreen\"><param name=\"android-package\" value=\"org.apache.cordova.splashscreen.SplashScreen\" /></feature>",
+                            "count": 1
+                        },
+                        {
+                            "xml": "<feature name=\"FileTransfer\"><param name=\"android-package\" value=\"org.apache.cordova.filetransfer.FileTransfer\" /></feature>",
+                            "count": 1
                         }
                     ]
                 }
@@ -52,7 +60,7 @@
                     "/*": [
                         {
                             "xml": "<uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />",
-                            "count": 3
+                            "count": 4
                         },
                         {
                             "xml": "<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\" />",
@@ -117,6 +125,12 @@
             "PACKAGE_NAME": "mobi.hotbar"
         },
         "org.apache.cordova.dialogs": {
+            "PACKAGE_NAME": "mobi.hotbar"
+        },
+        "org.apache.cordova.splashscreen": {
+            "PACKAGE_NAME": "mobi.hotbar"
+        },
+        "org.apache.cordova.file-transfer": {
             "PACKAGE_NAME": "mobi.hotbar"
         }
     },
