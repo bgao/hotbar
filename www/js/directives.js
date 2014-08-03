@@ -14,4 +14,13 @@ angular.module('hotbar.directives', [])
         })
       }
     }
+  }])
+  .directive('media', ['$window', function($window) {
+    return {
+      restrict: 'C',
+      link: function(scope, elm, attr) {
+        var size = ($window.outerWidth / 3) - 2;
+        elm.css('width', size + 'px');
+      }
+    }
   }]);

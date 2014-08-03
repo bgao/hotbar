@@ -3,7 +3,38 @@
 
 angular.module('hotbar.controllers')
   .controller('AccountCtrl', function($scope, $ionicLoading, $log, $state, $timeout,
-                                      $rootScope, Global, Users) {
+                                      $rootScope, $ionicModal, Global, Users) {
+
+    $ionicModal.fromTemplateUrl('change-password-modal.html', function($ionicModal) {
+      $scope.passwordModal = $ionicModal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
+
+    $ionicModal.fromTemplateUrl('user-agreement-modal.html', function($ionicModal) {
+      $scope.userAgreementModal = $ionicModal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
+
+    $scope.changePassword = function(oldpassword, newpassword) {
+      var _user = Global.get("user");
+      _user.changePassword(oldpassword, newpassword, function(err, user) {
+        if (err) {
+          navigator.notification.alert(err.message, null, "Error");
+        } else {
+          navigator.notification.confirm("Password change succeeded", null, "Success");
+          $scope.passwordModal.hide();
+        }
+      });
+    };
+
+    $scope.$on('$destroy', function() {
+      $scope.passwordModal.remove();
+      $scope.userAgreementModal.remove();
+    });
 
     (function() {
       $ionicLoading.show({
@@ -46,7 +77,7 @@ angular.module('hotbar.controllers')
       });
     })();
 
-    $rootScope.$on('$locationChangeStart', function(event) {
+    $scope.$on('$destroy', function(event) {
       var _user = Global.get("user");
       if (_user && $scope.user) {
         _user.set("radius", $scope.user.radius * 1600);
@@ -127,7 +158,15 @@ angular.module('hotbar.controllers')
     };
   })
 
-  .controller('SignupCtrl', function($scope, $ionicLoading, $state, $log, Users) {
+  .controller('SignupCtrl', function($scope, $ionicLoading, $state, $log,
+                                     $ionicModal, Users) {
+
+    $ionicModal.fromTemplateUrl('user-agreement-modal.html', function($ionicModal) {
+      $scope.userAgreementModal = $ionicModal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
     $scope.signup = function(user) {
       var username = user.username;
       var password = user.password;
@@ -170,4 +209,10 @@ angular.module('hotbar.controllers')
         $ionicLoading.hide();
       }
     }
+  })
+
+  .controller('PasswordModalCtrl', function($scope, Users) {
+    $scope.changePassword = function() {
+      $scope.modal.hide();
+    };
   });

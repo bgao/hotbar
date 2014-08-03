@@ -8,12 +8,12 @@
         <p>{{activity.created | prettyDate}}</p>
       </div>
       <div class="item item-body">
-        <img class="full-image" ng-src="{{activity.media.url}}" ng-show="activity.media.type == 'image/jpeg'">
+        <img class="full-image" ng-src="{{activity.media.url}}" 
+             ng-show="activity.media.type == 'image/jpeg'">
         <video class="full-image" ng-show="activity.media.type != 'image/jpeg'"
-               webkit-playsinline controls>
-          <source src="{{mediaUrl}}"
-                  type="{{activity.media.type}}">
-            Your browser does not support the video tag.
+               onclick="this.play()" controls>
+          <source src="{{mediaUrl}}">
+          Your browser does not support the video tag.
         </video>
         <p>
           <a class="subdued">
@@ -37,9 +37,11 @@
             <!-- <i class="icon ion-ios7-close placeholder-icon"
                ng-click="clearComment()"></i> -->
           </label>
-          <button class="button button-icon icon ion-arrow-right-b"
-             ng-click="submitComment()"
-             ng-disabled="!activity.comment">
+          <button class="button icon ion-checkmark-round"
+                  ng-disabled="!activity.comment" ng-click="submitComment()">
+          </button>
+          <button class="button icon ion-close-round"
+                  ng-click="clearComment()">
           </button>
         </div>
         <div ng-repeat="comment in activity.comments" class="item item-avatar">

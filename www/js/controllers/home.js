@@ -1,6 +1,6 @@
 angular.module('hotbar.controllers')
   .controller('HomeCtrl', function($scope, $ionicLoading, $log, $timeout, $sce,
-                                   Global, Activities, Users, S3, HotBars) {
+                                   $ionicModal,Global,Activities,Users,S3,HotBars) {
 
     /* var cameraSuccess = function(imageData) {
       var _user = Global.get("user");
@@ -19,8 +19,7 @@ angular.module('hotbar.controllers')
       $timeout(function() {
         var index = imageFile.lastIndexOf('/') + 1;
         $scope.media = {
-          filename: _user.get('username') + "_" +
-            imageFile.substr(index),
+          filename: _user.get('username') + "_" + imageFile.substr(index),
           data: imageFile,
           type: 'image/jpeg'
           // src: "data:image/jpeg;base64,"+imageData
@@ -30,13 +29,21 @@ angular.module('hotbar.controllers')
         navigator.notification.alert($scope.media.filename, null, "CameraSuccess");
       });
     };
+    var cameraError = function(error) {
+      if (error && error.code) {
+        $log.error("Capture error: " + error.code);
+        navigator.notification.alert('Error code: ' + error.code, null,
+                                     'Capture Error');
+      }
+      $scope.cleanup();
+    };
     var captureSuccess = function(mediaFiles) {
       var _user = Global.get("user");
       // $scope.mediaSrc = $scope.trustSrc(mediaFiles[0].fullPath);
-      navigator.notification.alert(mediaFiles, null, "CaptureSuccess");
-      navigator.notification.alert(mediaFiles.length, null, "CaptureSuccess");
       $scope.mediaSrc = mediaFiles[0].fullPath;
       $timeout(function() {
+        navigator.notification.alert(mediaFiles, null, "CaptureSuccess");
+        navigator.notification.alert(mediaFiles.length, null, "CaptureSuccess");
         $scope.media = {
           filename: _user.get('username') + "_" +
             mediaFiles[0].name,
@@ -44,14 +51,14 @@ angular.module('hotbar.controllers')
           type: mediaFiles[0].type,
           size: mediaFiles[0].size
         };
+        // debug
+        navigator.notification.alert(mediaFiles[0].fullPath,
+                                     null,
+                                     "CameraSuccess:fullpath");
+        navigator.notification.alert($scope.media.filename,
+                                     null,
+                                     "CameraSuccess:filename");
       });
-      // debug
-      navigator.notification.alert(mediaFiles[0].fullPath,
-                                   null,
-                                   "CameraSuccess:fullpath");
-      navigator.notification.alert($scope.media.filename,
-                                   null,
-                                   "CameraSuccess:filename");
     };
     var captureError = function(error) {
       if (error && error.code) {
@@ -59,7 +66,6 @@ angular.module('hotbar.controllers')
         navigator.notification.alert('Error code: ' + error.code, null,
                                      'Capture Error');
       }
-      $scope.cleanup();
     };
 
     $scope.captureImage = function() {
@@ -69,7 +75,7 @@ angular.module('hotbar.controllers')
         destinationType: Camera.DestinationType.FILE_URI,
         sourceType: Camera.PictureSourceType.CAMERA
       };
-      navigator.camera.getPicture(cameraSuccess, captureError, options);
+      navigator.camera.getPicture(cameraSuccess, cameraError, options);
     };
     /* $scope.captureImage = function() {
        navigator.device.capture.captureImage(captureSuccess,
@@ -105,7 +111,7 @@ angular.module('hotbar.controllers')
       console.assert($scope.media);
 
       // Get hotbar by name
-      if ($scope.media.caption && $scope.media.caption.indexOf("@") >= 0) {
+      /* if ($scope.media.caption && $scope.media.caption.indexOf("@") >= 0) {
         var caption = $scope.media.caption;
         var idx = caption.indexOf("@");
         $scope.media.caption = caption.substr(0, idx).trim();
@@ -120,9 +126,13 @@ angular.module('hotbar.controllers')
             }
           });
         }
-      }
-      navigator.notification.alert($scope.media.size, null);
+      } */
+      // navigator.notification.alert($scope.media.size, null);
       navigator.notification.alert($scope.media.data, null);
+      if (!$scope.media.hotbar || !$scope.media.hotbar.uuid) {
+        navigator.notification.alert("Invalid HotBar", null);
+        return;
+      }
       S3.put($scope.media, function(err, data) {
         if (err) {
           $ionicLoading.hide();
@@ -151,67 +161,23 @@ angular.module('hotbar.controllers')
                 $ionicLoading.hide();
               });
             }
-            $scope.cleanup();
+            // cleanup for image
+            if ($scope.media.type === 'image/jpeg')
+              $scope.cleanup();
           });
         }
       });
     };
-
-    /* $scope.uploadMedia = function() {
-       $ionicLoading.show({
-       template: "Loading..."
-       });
-       $log.debug("media.path = " + $scope.media.path);
-       window.resolveLocalFileSystemURL($scope.media.path, function(fileEntry) {
-       $log.debug("fileEntry.toURL()");
-       $log.debug(fileEntry.toURL());
-       fileEntry.file(function(file) {
-       var reader = new FileReader();
-       reader.onloadend = function() {
-       navigator.notification
-       .alert('HomeCtrl::uploadMedia::FileReader', null);
-       $scope.media.data = reader.result;
-       S3.put($scope.media, function(err, data) {
-       if (err) {
-       $ionicLoading.hide();
-       $log.error("HomeCtrl::uploadMedia: " + err);
-       navigator.notification
-       .alert('HomeCtrl::uploadMedia::Error', null);
-       $scope.message;
-       }
-       else {
-       $log.debug(data);
-       // set media url
-       $scope.media.url =
-       "https://d2x86vdxy89a0s.cloudfront.net/" +
-       $scope.media.filename;
-       Activities.create($scope.media, function(err, entity) {
-       $ionicLoading.hide();
-       if (err) {
-       $log.error("HomeCtrl::create: " + err);
-       navigator.notification
-       .alert('HomeCtrl::create::Error', null);
-       } else {
-       $log.debug(entity);
-       $state.go("tab.activities");
-       }
-       });
-       }
-       });
-       $scope.$apply();
-       };
-       reader.readAsDataURL(file);
-       }, onFail);
-       }, onFail);
-       }; */
 
     $scope.cleanup = function() {
       $scope.media = null;
       if (navigator.camera) {
         navigator.camera.cleanup(function() {
           $log.debug("Camera cleanup success");
+          navigator.notification.alert("Camera cleanup success", null);
         }, function(message) {
           $log.debug("Failed because: " + message);
+          navigator.notification.alert("Camera cleanup fail", null);
         });
       }
     };
@@ -242,27 +208,6 @@ angular.module('hotbar.controllers')
             type: "image/jpeg"
           };
         });
-        /* S3.put($scope.media, function(err, data) {
-           $ionicLoading.hide();
-           if (err) {
-           $log.error("HomeCtrl::uploadImage: " + err);
-           $scope.message;
-           }
-           else {
-           $log.debug(data);
-           // set media url
-           $scope.media.url =
-           "https://d2x86vdxy89a0s.cloudfront.net/"+$scope.media.filename;
-           Activities.create($scope.media, function(err, entity) {
-           if (err) {
-           $log.error("HomeCtrl::create: " + err);
-           } else {
-           $log.debug(entity);
-           $state.go("tab.media");
-           }
-           });
-           }
-           }); */
       };
       reader.readAsDataURL($scope.files[0]);
     };
@@ -368,12 +313,62 @@ angular.module('hotbar.controllers')
       return $sce.trustAsResourceUrl(src);
     };
 
+    function rad(x) {
+      return x*Math.PI/180;
+    }
+
+    function getDistance(p1, p2) {
+      var R = 6378137; // Earth's mean radiu in meter
+      var dLat = rad(p2.lat() - p1.lat());
+      var dLng = rad(p2.lng() - p1.lng());
+      var a = Math.sin(dLat / 2)*Math.sin(dLat / 2)+
+        Math.cos(rad(p1.lat())) * Math.cos(rad(p2.lat())) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      var d = R * c;
+      return d.toFixed(2); // returns the distance in meters
+    }
+
     (function() {
       // Load all media activities
       $ionicLoading.show({
         template: '<i class=\"icon ion-loading-a\"></i> Loading...'
       });
       var _user = Global.get('user');
+      // Get cover picture
+      $scope.coverpicture = _user.get("coverpicture") || "img/coverpicture.jpg";
+      // Get nearby hotbars
+      HotBars.all(function(err, entities) {
+        var _hotbars = [];
+        if (err) {
+          $log.error("HomeCtrl::HotBars.all:");
+          $log.error(err);
+        } else {
+          while (entities.hasNextEntity()) {
+            var hotbar = entities.getNextEntity();
+            var adr = hotbar.get("adr");
+            var _hotbar = {
+              uuid: hotbar.get("uuid"),
+              name: hotbar.get("name"),
+              address: adr.addr1 + ", " + adr.city + ", " + adr.state + " " + adr.zip,
+              url: hotbar.get("url"),
+              location: hotbar.get("location")
+            };
+            // Check the distance between the bar and current location
+            if (getDistance(Global.get("position"),
+                            new google.maps.LatLng(_hotbar.location.latitude,
+                                                   _hotbar.location.longitude)) < 30){
+              _hotbars.push(_hotbar);
+            }
+          }
+          $timeout(function() {
+            $scope.hotbars = _hotbars;
+            if ($scope.hotbars.length == 0) {
+              $scope.hotbars.push({name: "No HotBar found"});
+            }
+          });
+        }
+      });
       // Get user following hotbars
       Users.getFollowing(function(err, hotbars) {
         if (err) {

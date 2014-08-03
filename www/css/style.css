@@ -69,6 +69,15 @@ a:visited {
     height: 220px;
 }
 
+.media {
+    max-width: 100px;
+    max-height: 100px;
+    width: 100%;
+    margin: 1px;
+    float: left;
+    overflow: hidden;
+}
+
 /* deprecated */
 .ui-input-text {
     border-radius: 3px;

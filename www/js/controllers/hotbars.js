@@ -126,7 +126,7 @@ angular.module('hotbar.controllers')
                     latitude: loc.lat(),
                     longitude: loc.lng()
                   },
-                  coverpicture: entity.get("coverpicture")
+                  coverpicture: entity.get("coverpicture") || "img/hotbarcoverpicture.jpg"
                 };
                 
                 if (_hotbars.length == 0) {
@@ -294,7 +294,7 @@ angular.module('hotbar.controllers')
             address: entity.get("address") || $rootScope.hotbars[0].address,
             url: entity.get("url"),
             location: entity.get("location") || $rootScope.hotbars[0].location,
-            coverpicture: entity.get("coverpicture"),
+            coverpicture: entity.get("coverpicture") || "img/hotbarcoverpicture.jpg",
             following: false
           };
 

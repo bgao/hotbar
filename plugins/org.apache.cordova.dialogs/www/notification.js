@@ -105,7 +105,6 @@ module.exports = {
      * @param {Integer} count       The number of beeps.
      */
     beep: function(count) {
-        var defaultedCount = count || 1;
-        exec(null, null, "Notification", "beep", [ defaultedCount ]);
+        exec(null, null, "Notification", "beep", [count]);
     }
 };

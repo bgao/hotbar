@@ -26,7 +26,7 @@ angular.module('hotbar.services', [])
       }, function(err) {
         console.error("Watch device position error");
         console.error(err);
-      });
+      }, { enableHighAccuracy: true });
     }
     
     function set(key, value) {
@@ -331,7 +331,7 @@ angular.module('hotbar.services', [])
             "latitude": Global.get("position").lat() || null,
             "longitude": Global.get("position").lng() || null
           },
-          "hotbar": media.hotbar.uuid
+          "hotbar": (media.hotbar && media.hotbar.uuid) || null
         };
         _client.createUserActivity('me', options, function(err, activity) {
           if (err) {

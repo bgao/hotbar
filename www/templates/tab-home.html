@@ -27,18 +27,9 @@
     </div>
   </div> -->
   <ion-content has-header="true" padding="false">
-    <!-- <div class="button-bar">
-      <button class="button button-icon icon ion-ios7-camera assertive"
-              ng-click="captureImage()"></button>
-      <button class="button button-icon icon ion-ios7-videocam assertive">
-      </button>
-      <button class="button button-icon icon ion-ios7-photos assertive"
-              ng-click="getImage()"></button>
-    </div> -->
     <ion-scroll class="cover">
       <a class="full-image" href="" ng-click="changeCover()">
-        <!-- <img src="{{coverpicture}}"> -->
-        <img src="http://d2x86vdxy89a0s.cloudfront.net/20131204140105_D5VXY6PX.jpg">
+        <img src="{{coverpicture}}">
       </a>
     </ion-scroll>
     <!-- <div class="card">
@@ -53,23 +44,31 @@
     <div class="list" ng-show="media">
       <div class="item item-body">
         <video class="full-image" ng-show="media.type!='image/jpeg'"
-               webkit-playsinline controls>
-          <source src="{{mediaSrc}}" type="{{media.type}}" />
+               onclick="this.play()" controls>
+          <source src="{{mediaSrc}}">
           Your browser does not support the video tag.
         </video>
         <img class="full-image" ng-src="{{media.data}}"
              ng-show="media.type=='image/jpeg'">
       </div>
+      <label class="item item-input-inset item-select">
+        <div class="input-label">
+          Where're you taking the photo/video?
+        </div>
+        <select ng-model="media.hotbar">
+          <option ng-repeat="hotbar in hotbars" ng-selected="$index == 0">
+            {{hotbar.name}}
+          </option>
+        </select>
+      </label>
       <div class="item item-input-inset">
         <label class="item-input-wrapper">
-          <input type="text"
-                 placeholder="Photo/video description and @ a Hotbar"
-                 ng-model="media.caption">
+          <input type="text" placeholder="Add Description">
         </label>
-        <button class="button button-icon icon ion-checkmark-round"
-                ng-disabled="!media.caption" ng-click="uploadMedia()">
+        <button class="button button-small icon ion-checkmark-round"
+                ng-disabled="!media.hotbar" ng-click="uploadMedia()">
         </button>
-        <button class="button button-icon icon ion-close-round"
+        <button class="button button-small icon ion-close-round"
                 ng-click="cleanup()">
         </button>
       </div>
