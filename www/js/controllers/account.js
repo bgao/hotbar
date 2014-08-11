@@ -1,9 +1,116 @@
-
 "use strict";
 
-angular.module('hotbar.controllers')
-  .controller('AccountCtrl', function($scope, $ionicLoading, $log, $state, $timeout,
-                                      $rootScope, $ionicModal, Global, Users) {
+angular.module("hotbar.controllers")
+  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal,
+                                    AuthManager, LocalStorage) {
+    var notification = navigator.notification ? navigator.notification : window;
+
+    $ionicModal.fromTemplateUrl('reset-password-modal.html', function($ionicModal) {
+      $scope.resetPasswordModal = $ionicModal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
+
+    $scope.login = function(user) {
+      if (user && user.email && user.password) {
+        AuthManager.login(user)
+          .then(function(user) {
+            $log.debug("Logged in as: ", user.uid);
+            $state.go("tab.sparks");
+          }, function(error) {
+            $log.error("Login failed: ", error);
+            var message = error.message.substr(error.message.indexOf(":")+1);
+            notification.alert(message, null, "Login failed");
+          });
+      } else {
+        notification.alert("Missing email or password!", null, "Error");
+      }
+    };
+    $scope.loginFacebook = function() {
+      AuthManager.loginFacebook().then(function(user) {
+        $log.debug("Logged in with Facebook: ", user);
+        $state.go("tab.sparks");
+      }, function(err) {
+        $log.error("Login with Facebook error: ", err);
+      });
+    };
+    $scope.loginTwitter = function() {
+      AuthManager.loginTwitter().then(function(user) {
+        $log.debug("Logged in with Twitter: ", user);
+        $state.go("tab.sparks");
+      }, function(err) {
+        $log.error("Login with Twitter error: ", err);
+      });
+    };
+    $scope.signup = function() {
+      $state.go("signup");
+    };
+    $scope.resetPassword = function(email) {
+      AuthManager.resetPassword(email).then(function() {
+        notification.alert("A temporary password has been sent to your email box",
+                           null, "Reset password succeeded");
+        resetPasswordModal.hide();
+      }, function(err) {
+        $log.error("Reset password failed: ", err);
+        var message = err.message.substr(err.message.lastIndexOf(":")+1);
+        notification.alert(message, null, "Reset password failed");
+      });
+    };
+    $scope.$on("$destroy", function(event) {
+      $scope.resetPasswordModal.remove();
+    });
+
+    (function() {
+      if (LocalStorage.get("user")) {
+        $log.debug(LocalStorage.get("user"));
+        $state.go("tab.sparks");
+      }
+    })();
+  })
+
+  .controller("SignupCtrl", function($scope, $state, $log, $ionicModal,
+                                     AuthManager, People) {
+    var notification = navigator.notification ? navigator.notification : window;
+
+    $ionicModal.fromTemplateUrl('user-agreement-modal.html', function($ionicModal) {
+      $scope.userAgreementModal = $ionicModal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
+    $scope.signup = function(user) {
+      if (user && user.email && user.password && user.name) {
+        AuthManager.signup(user)
+          .then(function(user) {
+            $log.debug("Created user: ", user.uid);
+            // Updated user info
+            var info = {
+              name: user.name,
+              searchRadius: 1609,
+              picture: "http://www.stay.com/images/default-user-profile.png"
+            };
+            People.set(uid, info, function(err) {
+              if (err) {
+                $log.error("SignupCtrl.People.set error: ", err);
+              } else {
+                $log.debug("Set user info for user: " + uid);
+              }
+            });
+          }, function(error) {
+            $log.error("Signup failed: ", error);
+            var message = error.message.substr(error.message.indexOf(":")+1);
+            notification.alert(message, null, "Signup failed");
+          });
+      } else {
+        notification.alert("Missing required information!", null, "Error");
+      }
+    };
+  })
+
+  .controller("AccountCtrl", function($scope, $log, $state, $timeout, $ionicModal,
+                                      $ionicLoading, AuthManager, LocalStorage) {
+    var notification = navigator.notification ? navigator.notification : window;
 
     $ionicModal.fromTemplateUrl('change-password-modal.html', function($ionicModal) {
       $scope.passwordModal = $ionicModal;
@@ -20,23 +127,20 @@ angular.module('hotbar.controllers')
     });
 
     $scope.changePassword = function(oldpassword, newpassword) {
-      var _user = Global.get("user");
-      _user.changePassword(oldpassword, newpassword, function(err, user) {
-        if (err) {
-          navigator.notification.alert(err.message, null, "Error");
-        } else {
-          navigator.notification.confirm("Password change succeeded", null, "Success");
+      var _user = LocalStorage.get("user");
+      console.assert(_user);
+      AuthManager.changePassword(_user.email, oldpassword, newpassword)
+      .then(function(success) {
+          notification.alert("Password change succeeded", null, "Success");
           $scope.passwordModal.hide();
-        }
+      }, function(error) {
+        $log.error("Password change failed: ", error);
+        var message = error.message.substr(error.message.indexOf(":")+1);
+        notification.alert(message, null, "Password change failed");
       });
     };
 
-    $scope.$on('$destroy', function() {
-      $scope.passwordModal.remove();
-      $scope.userAgreementModal.remove();
-    });
-
-    (function() {
+    /* (function() {
       $ionicLoading.show({
         template: "<i class=\"icon ion-loading-a\"></i> Loading..."
       });
@@ -75,144 +179,20 @@ angular.module('hotbar.controllers')
           });
         }
       });
-    })();
+    })(); */
 
     $scope.$on('$destroy', function(event) {
-      var _user = Global.get("user");
+      /* var _user = Global.get("user");
       if (_user && $scope.user) {
         _user.set("radius", $scope.user.radius * 1600);
         _user.set("pushnote", $scope.user.pushNote);
-      }
+      } */
+      // Remove modals
+      $scope.passwordModal.remove();
+      $scope.userAgreementModal.remove();
     });
 
-    $scope.update = function() {
-      Users.update($scope.user.username, $scope.user.currentPass, 
-                   $scope.user.password, $scope.user.email,
-                   $scope.user.name, function(err) {
-                     if (err) {
-                       $log.error("AccountCtrl: " + err);
-                       Users.logout();
-                       $state.go("login");
-                     } else {
-                       navigator.notification.alert("Updated successfully", null);
-                       $log.debug("updated");
-                     }
-                   });
-    }
     $scope.logout = function() {
-      Users.logout();
-      $state.go("login");
+      AuthManager.logout(function() { $state.go("login"); });
     }
-  })
-
-  .controller('LoginCtrl', function($scope, $ionicLoading, $state, $log,
-                                    Global, Users) {
-    // hide splash screen
-    // navigator.splashscreen.hide();
-
-    (function() {
-      var _client = Global.get("client");
-      _client.getLoggedInUser(function(err, data, user) {
-        if (err) {
-          $log.error("LoginCtrl: " + data);
-          _client.logout();
-        } else {
-          if (_client.isLoggedIn()) {
-            Global.set("user", user);
-            $state.go('tab.activities');
-          } else {
-            Global.set("user", null);
-            $log.debug("No logged in user");
-          }
-        }
-      });
-    })();
-
-
-    $scope.logout = function() {
-      Users.logout();
-    };
-    $scope.login = function(user) {
-      var email = user.email;
-      var password = user.password;
-      $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
-      });
-      if (email && password) {
-        Users.login(email, password, function(err, user) {
-          $ionicLoading.hide();
-          if (err) {
-            $log.error("LoginCtrl::login: " + err);
-            navigator.notification.alert("Invalid email or password", null);
-          } else {
-            $state.go('tab.activities');
-          }
-        });
-      } else {
-        $ionicLoading.hide();
-        navigator.notification.alert("Missing email or password!", null);
-      }
-    };
-    $scope.signup = function() {
-      $state.go('signup');
-    };
-  })
-
-  .controller('SignupCtrl', function($scope, $ionicLoading, $state, $log,
-                                     $ionicModal, Users) {
-
-    $ionicModal.fromTemplateUrl('user-agreement-modal.html', function($ionicModal) {
-      $scope.userAgreementModal = $ionicModal;
-    }, {
-      scope: $scope,
-      animation: 'slide-in-up'
-    });
-    $scope.signup = function(user) {
-      var username = user.username;
-      var password = user.password;
-      var email = user.email;
-      var name = user.name;
-      $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
-      });
-      if (username && password && email) {
-        Users.signup(username, password, email, name, function(err, user) {
-          $ionicLoading.hide();
-          if (err) {
-            $log.error("SignupCtrl::signup: " + err);
-            navigator.notification.alert("Signup failed.", null);
-          } else {
-            $state.go('tab.activities');
-          }
-        });
-      } else {
-        $ionicLoading.hide();
-        navigator.notification.alert("Username, email and password are required.",
-                                     null);
-      }
-    }
-  })
-
-  .controller('RetrievePassCtrl', function($scope, $ionicLoading) {
-    $scope.getPassword = function() {
-      $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
-      });
-      if ($scope.email) {
-        $timeout(function() {
-          $ionicLoading.hide();
-          navigator.notification
-            .alert("An email with temporary password will be sent to " +
-                   "your email box.", null);
-        },500);
-      } else {
-        $ionicLoading.hide();
-      }
-    }
-  })
-
-  .controller('PasswordModalCtrl', function($scope, Users) {
-    $scope.changePassword = function() {
-      $scope.modal.hide();
-    };
   });

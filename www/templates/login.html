@@ -1,3 +1,33 @@
+<script id="reset-password-modal.html" type="text/ng-template">
+  <div class="modal">
+    <ion-header-bar class="bar bar-header bar-assertive">
+      Please enter your email and a temporary password will be sent to you.
+    </ion-header-bar>
+    <ion-content padding="true">
+      <div class="list list-inset">
+        <label class="item item-input">
+          <i class="icon ion-ios7-email-outline placeholder-icon"></i>
+          <input type="email" placeholder="Email" ng-model="email" required>
+        </label>
+      </div>
+      <div class="row">
+        <div class="col col-50">
+        <button class="button button-block button-assertive"
+                ng-click="resetPassword(email)">
+          RESET PASSWORD
+        </button>
+        </div>
+        <div class="col col-50">
+        <button class="button button-block button-assertive"
+                ng-click="resetPasswordModal.hide()">
+          CANCEL
+        </button>
+        </div>
+      </div>
+    </ion-content>
+  </div>
+</script>
+
 <ion-view title="LOGIN TO YOUR ACCOUNT">
   <ion-content class="has-header padding">
     <div class="list list-inset">
@@ -23,6 +53,11 @@
         </button>
       </div>
     </div>
-    <div align="right"><a href="#/login/retrievePass">Forgot password?</a></div>
+    <div align="right">
+      <a href="" ng-click="resetPasswordModal.show()">Forgot password?</a>
+    </div>
+    <div align="center">
+      <img src="img/facebook.png" ng-click="loginFacebook()">
+    </div>
   </ion-content>
 </ion-view>

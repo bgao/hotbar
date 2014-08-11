@@ -73,20 +73,19 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
   <ion-content class="has-header padding">
     <div class="list list-inset">
       <label class="item item-input">
-        <i class="icon ion-ios7-person-outline placeholder-icon"></i>
-        <input type="text" placeholder="Username (Required)" required ng-model="user.username">
-      </label>
-      <label class="item item-input">
         <i class="icon ion-ios7-email-outline placeholder-icon"></i>
-        <input type="email" placeholder="E-Mail (Required)" required ng-model="user.email">
+        <input type="email" placeholder="E-Mail (Required)"
+               ng-model="user.email" required>
       </label>
       <label class="item item-input">
         <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
-        <input type="password" placeholder="Password (8 characters minimum) (Required)" required ng-model="user.password">
+        <input type="password" placeholder="Password (8 characters minimum) (Required)"
+               ng-model="user.password" required>
       </label>
       <label class="item item-input">
-        <i class="icon ion-ios7-personadd-outline placeholder-icon"></i>
-        <input type="text" placeholder="Name (Optional)" ng-model="user.name">
+        <i class="icon ion-ios7-email-outline placeholder-icon"></i>
+        <input type="email" placeholder="Full Name (Required)"
+               ng-model="user.name" required>
       </label>
     </div>
     <div class="item item-checkbox terms-label">
@@ -101,23 +100,5 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
             ng-click="signup(user)">
       SIGN UP
     </button>
-
-    <!-- <div>
-      <label for="terms" class="terms-label"></label>
-      <div class="terms-container terms-text" id="terms">
-        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam no nummy nibh euismod tincidunt ut laoreet dolore magn euismod tincidunt ut laoreet dolore magn
-      </div>
-    </div>
-    <div class="row">
-      <div class="col">
-      </div>
-      <div class="col" align="right">
-        <button class="button button-default button-assertive"
-                ng-disabled="!checked"
-                ng-click="signup(user)">
-          SIGN UP
-        </button>
-      </div>
-    </div> -->
   </ion-content>
 </ion-view>

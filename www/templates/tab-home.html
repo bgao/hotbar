@@ -1,18 +1,8 @@
 <ion-view title="HOME">
   <ion-nav-buttons side="right">
-    <!-- <button class="button button-icon icon ion-ios7-camera" ion-popover>
-      <ion-list>
-        <ion-item class="button button-icon icon ion-ios7-camera"
-                  ng-click="captureImage()"></ion-item>
-        <ion-item class="button button-icon icon ion-ios7-videocam"
-                  ng-click=""></ion-item>
-        <ion-item class="button button-icon icon ion-ios7-photos"
-                  ng-click="getImage()"></ion-item>
-      </ion-list>
-    </button> -->
-    <button class="button icon ion-ios7-camera"
+    <button class="button-icon icon ion-ios7-camera button-light"
             ng-click="captureImage()"></button>
-    <button class="button icon ion-ios7-videocam"
+    <button class="button-icon icon ion-ios7-videocam button-light"
             ng-click="captureVideo()"></button>
     <!-- <a class="button button-icon icon ion-ios7-photos" href=""
          ng-click="getImage()"></a> -->
@@ -32,7 +22,7 @@
         <img src="{{coverpicture}}">
       </a>
     </ion-scroll>
-    <!-- <div class="card">
+    <div class="card">
       <div class="item">
         <input type="file"
                onchange="angular.element(this).scope().filesChanged(this)"
@@ -40,7 +30,7 @@
         <button ng-click="uploadImage()">Upload</button>
       </div>
       <li ng-repeat="file in files">{{file.name}}</li>
-    </div> -->
+    </div>
     <div class="list" ng-show="media">
       <div class="item item-body">
         <video class="full-image" ng-show="media.type!='image/jpeg'"
@@ -53,7 +43,7 @@
       </div>
       <label class="item item-input-inset item-select">
         <div class="input-label">
-          Where're you taking the photo/video?
+          Where are you taking the photo/video?
         </div>
         <select ng-model="media.hotbar">
           <option ng-repeat="hotbar in hotbars" ng-selected="$index == 0">
@@ -63,10 +53,11 @@
       </label>
       <div class="item item-input-inset">
         <label class="item-input-wrapper">
-          <input type="text" placeholder="Add Description">
+          <input type="text" placeholder="Add Description" ng-model="media.description">
         </label>
         <button class="button button-small icon ion-checkmark-round"
-                ng-disabled="!media.hotbar" ng-click="uploadMedia()">
+                ng-click="uploadMedia()">
+                <!-- ng-disabled="!media.hotbar" --> 
         </button>
         <button class="button button-small icon ion-close-round"
                 ng-click="cleanup()">

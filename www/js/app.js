@@ -10,10 +10,12 @@
 // 'hotbar.controllers' is found in controllers.js
 // 'hotbar.filters' is found in filters.js
 angular.module('hotbar', ['ionic',
+                          'hotbar.config',
                           'hotbar.controllers',
                           'hotbar.services',
                           'hotbar.filters',
-                          'google-maps'])
+                          'google-maps',
+                          'firebase'])
 
   .run(function($ionicPlatform) {
     $ionicPlatform.ready(function() {
@@ -33,14 +35,6 @@ angular.module('hotbar', ['ionic',
     $httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
   })
-
-/* .config(['localStorageServiceProvider', function(localStorageServiceProvider){
-   localStorageServiceProvider.setPrefix('hotbar');
-   }]) */
-
-/* .config(function(DropboxProvider) {
-   DropboxProvider.config("yampzvmdl79llfo", "http://localhost:8100");
-   }) */
 
   .config(function($stateProvider, $urlRouterProvider) {
 
@@ -76,21 +70,21 @@ angular.module('hotbar', ['ionic',
 
     // Each tab has its own nav history stack:
 
-      .state('tab.activities', {
-        url: '/activities',
+      .state('tab.sparks', {
+        url: '/sparks',
         views: {
-          'tab-activities': {
-            templateUrl: 'templates/tab-activities.html',
-            controller: 'ActivitiesCtrl'
+          'tab-sparks': {
+            templateUrl: 'templates/tab-sparks.html',
+            controller: 'SparksCtrl'
           }
         }
       })
-      .state('tab.activity-detail', {
-        url: '/activities/:activityId',
+      .state('tab.spark-detail', {
+        url: '/sparks/:sparkId',
         views: {
-          'tab-activities': {
-            templateUrl: 'templates/activity-detail.html',
-            controller: 'ActivityDetailCtrl'
+          'tab-sparks': {
+            templateUrl: 'templates/spark-detail.html',
+            controller: 'SparkDetailCtrl'
           }
         }
       })
@@ -113,12 +107,12 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('tab.hotbar-activity-detail', {
-        url: '/hotbars/:hotbarId/:activityId',
+      .state('tab.hotbar-spark-detail', {
+        url: '/hotbars/:hotbarId/:sparkId',
         views: {
           'tab-hotbars': {
-            templateUrl: 'templates/activity-detail.html',
-            controller: 'ActivityDetailCtrl'
+            templateUrl: 'templates/spark-detail.html',
+            controller: 'SparkDetailCtrl'
           }
         }
       })
@@ -132,11 +126,11 @@ angular.module('hotbar', ['ionic',
         }
       })
       .state('tab.home-detail', {
-        url: '/home/:activityId',
+        url: '/home/:sparkId',
         views: {
           'tab-home': {
-            templateUrl: 'templates/activity-detail.html',
-            controller: 'ActivityDetailCtrl'
+            templateUrl: 'templates/spark-detail.html',
+            controller: 'SparkDetailCtrl'
           }
         }
       })
@@ -146,15 +140,6 @@ angular.module('hotbar', ['ionic',
           'tab-account': {
             templateUrl: 'templates/tab-account.html',
             controller: 'AccountCtrl'
-          }
-        }
-      })
-      .state('tab.account.rewards', {
-        url: '/rewards',
-        view: {
-          'tab-account-rewards': {
-            templateUrl: 'templates/rewards.html',
-            controller: 'RewardsCtrl'
           }
         }
       });

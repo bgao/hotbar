@@ -2,7 +2,8 @@
   <ion-content has-header="true" padding="false">
     <ion-list>
       <div class="item">
-        <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map>
+        <google-map center="map.center" zoom="map.zoom" draggable="true"
+                    events="map.events"></google-map>
       </div>
       <!-- <div class="list">
         <label class="item item-input">
@@ -20,12 +21,12 @@
         HotBars
       </div>
       <div class="item" ng-show="hotbars.length == 0">
-        <p>No HotBar found nearby. You can change HotBar Radius in your
+        <p>No HotBar found nearby. You can change HotBar search radius in your
           <a ng-href="#/tab/account">Settings</a>
         </p>
       </div>
       <ion-item ng-repeat="hotbar in hotbars"
-                ng-href="#/tab/hotbars/{{hotbar.uuid}}" type="item-link">
+                ng-href="#/tab/hotbars/{{hotbar.uid}}" type="item-link">
         <h2 class="assertive">{{hotbar.name}}</h2>
         <p>{{hotbar.address}}</p>
         <div class="row">
@@ -42,19 +43,19 @@
           </a>
         </div>
       </ion-item>
-      <div class="item">
+      <!-- <div class="item">
         <div align="center">
           <a href="" class="subdued" ng-click="loadMore()">
             <i class="icon ion-arrow-down-b"></i>
             Show more
           </a>
         </div>
-      </div>
+      </div> -->
       <div class="item item-divider" ng-show="hotbars.length == 0">
         Other Bars
       </div>
       <ion-item ng-repeat="bar in bars" ng-show="hotbars.length == 0">
-        <h2 class="assertive">{{bar.name}}</h2>
+        <h2 class="positive">{{bar.name}}</h2>
         <p>{{bar.vicinity}}</p>
         <div class="row">
           <a class="subdued">
