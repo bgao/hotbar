@@ -1,0 +1,56 @@
+<ion-view title="{{post.media.description}}">
+  <ion-content has-header="true" padding="false">
+    <div class="list">
+      <div class="item item-avatar">
+        <img src="{{post.user.picture}}">
+        <h2>{{post.media.description}} @ {{post.hotbar.name}}</h2>
+        <p><a href="">{{post.user.displayName}}</a></p>
+        <p>{{post.createdAt | prettyDate}}</p>
+      </div>
+      <div class="item item-body">
+        <img class="full-image" ng-src="{{post.media.url}}" 
+             ng-show="post.media.type == 'image/jpeg'">
+        <video class="full-image" ng-show="post.media.type != 'image/jpeg'"
+               onclick="this.play()" controls>
+          <source src="{{mediaUrl}}">
+          Your browser does not support the video tag.
+        </video>
+        <p>
+          <a class="subdued">
+            <i class="icon ion-ios7-heart-outline"></i> 
+            {{post.likes.length}} Likes
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-chatbubble-outline"></i> 
+            {{post.comments.length}} Comments
+          </a>
+        </p>
+      </div>
+      <div class="list">
+        <div class="item item-input-inset">
+          <button class="button button-icon icon"
+                  ng-class="{'ion-ios7-heart': post.liked, 'ion-ios7-heart-outline': !post.liked}"
+                  ng-click="toggleLike()">
+          </button>
+          <label class="item-input-wrapper">
+            <input type="text" placeholder="Comment" ng-model="post.comment">
+            <!-- <i class="icon ion-ios7-close placeholder-icon"
+               ng-click="clearComment()"></i> -->
+          </label>
+          <button class="button-icon icon ion-checkmark-round"
+                  ng-disabled="!post.comment" ng-click="submitComment(post.comment)">
+          </button>
+          <button class="button-icon icon ion-close-round"
+                  ng-disabled="!post.comment"
+                  ng-click="post.comment=''">
+          </button>
+        </div>
+        <div ng-repeat="comment in post.comments" class="item item-avatar">
+          <img src="{{comment.user.picture}}">
+          <p><a href="">{{comment.user.displayName}}</a> posted {{comment.createdAt | prettyDate}}</p>
+          <p>{{comment.get('content')}}</p>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>
