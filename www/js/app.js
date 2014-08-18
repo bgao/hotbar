@@ -10,6 +10,7 @@
 // 'hotbar.controllers' is found in controllers.js
 // 'hotbar.filters' is found in filters.js
 angular.module('hotbar', ['ionic',
+                          'hotbar.config',
                           'hotbar.controllers',
                           'hotbar.services',
                           'hotbar.filters',
@@ -33,14 +34,6 @@ angular.module('hotbar', ['ionic',
     $httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
   })
-
-/* .config(['localStorageServiceProvider', function(localStorageServiceProvider){
-   localStorageServiceProvider.setPrefix('hotbar');
-   }]) */
-
-/* .config(function(DropboxProvider) {
-   DropboxProvider.config("yampzvmdl79llfo", "http://localhost:8100");
-   }) */
 
   .config(function($stateProvider, $urlRouterProvider) {
 
@@ -76,21 +69,21 @@ angular.module('hotbar', ['ionic',
 
     // Each tab has its own nav history stack:
 
-      .state('tab.activities', {
-        url: '/activities',
+      .state('tab.posts', {
+        url: '/posts',
         views: {
-          'tab-activities': {
-            templateUrl: 'templates/tab-activities.html',
-            controller: 'ActivitiesCtrl'
+          'tab-posts': {
+            templateUrl: 'templates/tab-posts.html',
+            controller: 'PostsCtrl'
           }
         }
       })
-      .state('tab.activity-detail', {
-        url: '/activities/:activityId',
+      .state('tab.post-detail', {
+        url: '/posts/:postId',
         views: {
-          'tab-activities': {
-            templateUrl: 'templates/activity-detail.html',
-            controller: 'ActivityDetailCtrl'
+          'tab-posts': {
+            templateUrl: 'templates/post-detail.html',
+            controller: 'PostDetailCtrl'
           }
         }
       })
@@ -113,12 +106,12 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('tab.hotbar-activity-detail', {
-        url: '/hotbars/:hotbarId/:activityId',
+      .state('tab.hotbar-post-detail', {
+        url: '/hotbars/:hotbarId/:postId',
         views: {
           'tab-hotbars': {
-            templateUrl: 'templates/activity-detail.html',
-            controller: 'ActivityDetailCtrl'
+            templateUrl: 'templates/post-detail.html',
+            controller: 'PostDetailCtrl'
           }
         }
       })
@@ -132,11 +125,11 @@ angular.module('hotbar', ['ionic',
         }
       })
       .state('tab.home-detail', {
-        url: '/home/:activityId',
+        url: '/home/:postId',
         views: {
           'tab-home': {
-            templateUrl: 'templates/activity-detail.html',
-            controller: 'ActivityDetailCtrl'
+            templateUrl: 'templates/post-detail.html',
+            controller: 'PostDetailCtrl'
           }
         }
       })
@@ -146,15 +139,6 @@ angular.module('hotbar', ['ionic',
           'tab-account': {
             templateUrl: 'templates/tab-account.html',
             controller: 'AccountCtrl'
-          }
-        }
-      })
-      .state('tab.account.rewards', {
-        url: '/rewards',
-        view: {
-          'tab-account-rewards': {
-            templateUrl: 'templates/rewards.html',
-            controller: 'RewardsCtrl'
           }
         }
       });
