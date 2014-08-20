@@ -218,6 +218,7 @@ angular.module('hotbar.services', [])
       },
       all: function(callback) {
         var query = new Parse.Query(Post);
+        query.descending("createdAt");
         query.find({
           success: function(posts) {
             callback(null, posts);

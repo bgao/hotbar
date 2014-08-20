@@ -141,6 +141,24 @@ angular.module('hotbar', ['ionic',
             controller: 'AccountCtrl'
           }
         }
+      })
+      .state('tab.user', {
+        url: '/posts/users/:userId',
+        views: {
+          'tab-posts': {
+            templateUrl: 'templates/tab-user.html',
+            controller: 'UserCtrl'
+          }
+        }
+      })
+      .state('user-post-detail', {
+        url: '/posts/users/:userId/:postId',
+        views: {
+          'tab-posts': {
+            templateUrl: 'templates/post-detail.html',
+            controller: 'PostDetailCtrl'
+          }
+        }
       });
 
     // if none of the above states are matched, use this as the fallback

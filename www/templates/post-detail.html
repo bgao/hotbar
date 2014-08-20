@@ -4,7 +4,7 @@
       <div class="item item-avatar">
         <img src="{{post.user.picture}}">
         <h2>{{post.media.description}}</h2>
-        <p><a href="">{{post.user.displayName}}</a> @ <a href="">{{post.hotbar.name}}</a></p>
+        <p><a ng-href="#/tab/posts/users/{{post.user.id}}">{{post.user.displayName}}</a> @ <a ng-href="#/tab/hotbars/{{post.hotbar.id}}">{{post.hotbar.name}}</a></p>
         <p>{{post.createdAt | prettyDate}}</p>
       </div>
       <div class="item item-body">

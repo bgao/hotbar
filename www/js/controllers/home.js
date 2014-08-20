@@ -19,6 +19,7 @@ angular.module("hotbar.controllers")
         var query2 = new Parse.Query(Post);
         query2.containedIn("hotbar", hotbars);
         var query = Parse.Query.or(query1, query2);
+        query.descending("createdAt");
         query.find({
           success: function(posts) {
             for (var i = 0; i < posts.length; ++i) {

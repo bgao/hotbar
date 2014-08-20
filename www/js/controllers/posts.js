@@ -11,7 +11,8 @@ angular.module("hotbar.controllers")
             post.user = {
               displayName: user.get("displayName"),
               email: user.get("email"),
-              picture: user.get("picture")
+              picture: user.get("picture"),
+              id: user.id
             };  
           });
         }
@@ -27,7 +28,8 @@ angular.module("hotbar.controllers")
               name: hotbar.get("name"),
               address: hotbar.get("address"),
               region: hotbar.get("region"),
-              url: hotbar.get("url")
+              url: hotbar.get("url"),
+              id: hotbar.id
             };
           });
         }
@@ -103,7 +105,8 @@ angular.module("hotbar.controllers")
             post.user = {
               displayName: user.get("displayName"),
               email: user.get("email"),
-              picture: user.get("picture")
+              picture: user.get("picture"),
+              id: user.id
             };  
           });
         }
@@ -119,7 +122,8 @@ angular.module("hotbar.controllers")
               name: hotbar.get("name"),
               address: hotbar.get("address"),
               region: hotbar.get("region"),
-              url: hotbar.get("url")
+              url: hotbar.get("url"),
+              id: hotbar.id
             };
           });
         }
