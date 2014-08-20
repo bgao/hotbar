@@ -1,8 +1,8 @@
 <ion-view title="HOME">
   <ion-nav-buttons side="right">
-    <button class="button-icon icon ion-ios7-camera-outline button-light"
+    <button class="button-icon icon ion-ios7-camera light"
             ng-click="captureImage()"></button>
-    <button class="button-icon icon ion-ios7-videocam-outline button-light"
+    <button class="button-icon icon ion-ios7-videocam light"
             ng-click="captureVideo()"></button>
     <!-- <a class="button button-icon icon ion-ios7-photos" href=""
          ng-click="getImage()"></a> -->
@@ -35,7 +35,7 @@
       <div class="item item-body">
         <video class="full-image" ng-show="media.type!='image/jpeg'"
                onclick="this.play()" controls>
-          <source src="{{mediaSrc}}">
+          <source src="{{media.data}}">
           Your browser does not support the video tag.
         </video>
         <img class="full-image" ng-src="{{media.data}}"
@@ -58,9 +58,9 @@
       <a ng-repeat="post in posts"
          ng-href="#/tab/home/{{post.id}}"
          class="item item-avatar thumb-right">
-        <img src="{{post.user.avatar}}">
+        <img src="{{post.user.picture}}">
         <h2>{{post.media.description}}</h2>
-        <p>{{post.user.displayName}}</p>
+        <p>{{post.user.displayName}} @ {{post.hotbar.name}}</p>
         <p>{{post.created | prettyDate}}</p>
         <img ng-src="{{post.media.type === 'image/jpeg' ? post.media.url : 'img/genericvideoicon.jpg'}}">
       </a>

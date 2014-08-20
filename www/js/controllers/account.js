@@ -133,53 +133,44 @@ angular.module("hotbar.controllers")
     $scope.changePassword = function(oldpassword, newpassword) {
     };
 
-    /* (function() {
-      $ionicLoading.show({
-        template: "<i class=\"icon ion-loading-a\"></i> Loading..."
-      });
-      var _user = Global.get("user");
-      $scope.user = {
-        username: _user.get("username"),
-        email: _user.get("email"),
-        picture: _user.get("picture"),
-        password: null,
-        name: _user.get("name"),
-        radius: _user.get("radius")/1600 || 1, // radius in meters
-        posts: null,
-        pushNote: _user.get("pushnote") || true,
-        followingHotbars: null
-      };
-      // Get number of user posts
-      Users.getActivities(function(err, activities) {
-        if (err) {
-          $log.error("AccountCtrl::Users.getActivities::error:");
-          $log.error(err);
-          $ionicLoading.hide();
-        } else {
-          // Get number of following hotbars
-          Users.getFollowing(function(err, hotbars) {
-            if (err) {
-              $log.error("AccountCtrl::Users.getFollowing");
-              $log.error(err);
-              $ionicLoading.hide();
-            } else {
-              $timeout(function() {
-                $scope.user.posts = activities;
-                $scope.user.followingHotbars = hotbars;
-                $ionicLoading.hide();
-              });
-            }
-          });
-        }
-      });
-    })(); */
+    var _user = Parse.User.current();
+    $scope.user = {
+      displayName: _user.get("displayName"),
+      email: _user.get("email"),
+      picture: _user.get("picture"),
+      radius: _user.get("radius") / 1609
+    };
+    // Get user posts
+    var Post = Parse.Object.extend("Post");
+    var query = new Parse.Query(Post);
+    query.equalTo("user", _user);
+    query.find({
+      success: function(posts) {
+        $timeout(function() {
+          $scope.user.posts = posts;
+        });
+      },
+      error: function(error) {
+        $log.error("Getting user posts error: ", error);
+      }
+    });
+    // Get user followed hotbars
+    var userRelation = _user.relation("following");
+    userRelation.query().find({
+      success: function(list) {
+        $timeout(function() {
+          $scope.user.followings = list;
+        });
+      },
+      error: function(error) {
+        $log.error("Getting user followings error: ", error);
+      }
+    });
 
     $scope.$on('$destroy', function(event) {
-      /* var _user = Global.get("user");
-      if (_user && $scope.user) {
-        _user.set("radius", $scope.user.radius * 1600);
-        _user.set("pushnote", $scope.user.pushNote);
-      } */
+      _user.set("radius", $scope.user.radius * 1609);
+      _user.set("pushnote", $scope.user.pushNote);
+      _user.save();
       // Remove modals
       $scope.passwordModal.remove();
       $scope.userAgreementModal.remove();

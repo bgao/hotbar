@@ -1,11 +1,63 @@
 "use strict";
 
 angular.module("hotbar.controllers")
-  .controller("HomeCtrl", function($scope, $log, $timeout, $ionicLoading, GeoService, S3) {
+  .controller("HomeCtrl", function($scope, $log, $timeout, $ionicLoading, GeoService, S3, HotBars) {
     var alert = typeof navigator.notification == "undefined" ?
       window.alert : navigator.notification.alert;
 
     var _user = Parse.User.current();
+    $scope.posts = [];
+
+    // get hotbars followed by user
+    var userRelation = _user.relation("following");
+    userRelation.query().find({
+      success: function(hotbars) {
+        // get user posts
+        var Post = Parse.Object.extend("Post");
+        var query1 = new Parse.Query(Post);
+        query1.equalTo("user", _user);
+        var query2 = new Parse.Query(Post);
+        query2.containedIn("hotbar", hotbars);
+        var query = Parse.Query.or(query1, query2);
+        query.find({
+          success: function(posts) {
+            for (var i = 0; i < posts.length; ++i) {
+              posts[i].media = posts[i].get("media");
+              getHotbar(posts[i]);
+              posts[i].user = {
+                displayName: _user.get("displayName"),
+                email: _user.get("email"),
+                picture: _user.get("picture")
+              };
+              $scope.posts.push(posts[i]);
+            }
+          },
+          error: function(error) {
+            $log.error("Retrieving user's posts error: ", error);
+          }
+        });
+      },
+      error: function(error) {
+        $log.error("Getting hotbars followed by user error: ", error);
+      }
+    });
+
+    function getHotbar(post) {
+      HotBars.get(post.get("hotbar").id, function(err, hotbar) {
+        if (err) {
+          $log.error("Getting post hotbar error: ", error);
+        } else {
+          $timeout(function() {
+            post.hotbar = {
+              name: hotbar.get("name"),
+              address: hotbar.get("address"),
+              region: hotbar.get("region"),
+              url: hotbar.get("url")
+            };
+          });
+        }
+      });
+    }
 
     function getHotbarNearby(callback) {
       var HotBar = Parse.Object.extend("HotBar");
@@ -58,8 +110,8 @@ angular.module("hotbar.controllers")
           size: mediaFiles[0].size
         };
         // debug
-        alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
-        alert($scope.media.filename, null, "CameraSuccess:filename");
+        // alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
+        // alert($scope.media.filename, null, "CameraSuccess:filename");
       });
     };
     var captureError = function(error) {
@@ -112,8 +164,8 @@ angular.module("hotbar.controllers")
       $ionicLoading.show();
       console.assert($scope.media);
 
-      alert($scope.media.size, null);
-      alert($scope.media.data, null);
+      // alert($scope.media.size, null);
+      // alert($scope.media.data, null);
 
       S3.put($scope.media, function(err, data) {
         if (err) {
@@ -164,6 +216,7 @@ angular.module("hotbar.controllers")
       $scope.files = elm.files;
       $scope.$apply();
     };
+
     $scope.uploadImage = function() {
       $log.info("uploading image...");
       $log.debug($scope.files);

@@ -110,6 +110,28 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
     <div>
       <div class="list">
         <div class="item item-divider">
+          Account Information
+        </div>
+        <label class="item item-thumbnail-right">
+          <img ng-src="{{user.picture}}">
+          <span class="input-label">Profile Picture</span>
+        </label>
+        <label class="item item-input-inset">
+          <span class="input-label">Name</span>
+          <input type="text" ng-model="user.displayName" ng-disabled="true">
+        </label>
+        <label class="item item-input-inset">
+          <span class="input-label">Email</span>
+          <input type="email" ng-model="user.email" ng-disabled="true">
+        </label>
+        <!-- <label class="item item-input-inset">
+          <span class="input-label">Password</span>
+          <button class="button button-small button-clear button-assertive"
+                  ng-click="passwordModal.show()">
+            Change Password
+          </button>
+        </label> -->
+        <div class="item item-divider">
           Activities
         </div>
         <label class="item item-input-inset">
@@ -119,38 +141,15 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         </label>
         <label class="item item-input-inset">
           <span class="input-label">Following HotBars</span>
-          <input type="number" ng-model="user.followingHotbars.length"
+          <input type="number" ng-model="user.followings.length"
                  ng-disabled="true">
-        </label>
-        <div class="item item-divider">
-          Account Information
-        </div>
-        <label class="item item-input-inset">
-          <span class="input-label">Name</span>
-          <input type="text" ng-model="user.name" ng-disabled="true">
-        </label>
-        <label class="item item-input-inset">
-          <span class="input-label">Email</span>
-          <input type="email" ng-model="user.email" ng-disabled="true">
-        </label>
-        <label class="item item-input-inset">
-          <span class="input-label">Name</span>
-          <input type="text" ng-model="user.name">
-        </label>
-        <label class="item item-input-inset">
-          <span class="input-label">Password</span>
-          <button class="button button-small button-clear button-assertive"
-                  ng-click="passwordModal.show()">
-            Change Password
-          </button>
         </label>
         <div class="item item-divider">
           HotBar Settings
         </div>
         <label class="item item-input">
-          <span class="input-label">HotBar Search Radius</span>
+          <span class="input-label">HotBar Search Radius (miles)</span>
           <input type="number" min="0.1" max="50" ng-model="user.radius">
-          <span class="input-label">miles</span>
         </label>
         <label class="item item-toggle">
           <span class="input-label">Push Notification</span>

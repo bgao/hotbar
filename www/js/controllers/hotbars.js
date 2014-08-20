@@ -132,7 +132,7 @@ angular.module("hotbar.controllers")
     }
   })
   .controller("HotBarDetailCtrl", 
-    function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService) {
+    function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, Users) {
 
       var _infowindow = new google.maps.InfoWindow();
       var _map;
@@ -200,6 +200,40 @@ angular.module("hotbar.controllers")
           }
         }
       };
+
+      // Get hotbar posts
+      $scope.hotbar.posts = [];
+      var Post = Parse.Object.extend("Post");
+      var query = new Parse.Query(Post);
+      query.equalTo("hotbar", $scope.hotbar);
+      query.find({
+        success: function(posts) {
+          for (var i = 0; i < posts.length; ++i) {
+            posts[i].media = posts[i].get("media");
+            getUser(posts[i]);
+            $scope.hotbar.posts.push(posts[i]);
+          }
+        },
+        error: function(error) {
+          $log.error("Getting hotbar posts error: ", error);
+        }
+      });
+
+      function getUser(post) {
+      Users.get(post.get("user").id, function(err, user) {
+        if (err) {
+          $log.error("Getting post user error: ", error);
+        } else {
+          $timeout(function(){
+            post.user = {
+              displayName: user.get("displayName"),
+              email: user.get("email"),
+              picture: user.get("picture")
+            };  
+          });
+        }
+      });
+    }
       /* HotBars.get($stateParams.hotbarId, function(err, hotbar) {
         if (err) {
           $log.error("HotBars get error: ", err);

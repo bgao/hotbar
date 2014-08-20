@@ -54,7 +54,7 @@ angular.module("hotbar.controllers")
       }
     });
   })
-  .controller("PostDetailCtrl", function($scope, $ionicLoading, $log, $timeout, $stateParams, Posts, Users, HotBars) {
+  .controller("PostDetailCtrl", function($scope, $ionicLoading, $log, $timeout, $stateParams, $sce, Posts, Users, HotBars) {
     var _user = Parse.User.current();
 
     $scope.toggleLike = function() {
@@ -126,6 +126,10 @@ angular.module("hotbar.controllers")
       });
     }
 
+    function trustSrc(src) {
+      return $sce.trustAsResourceUrl(src);
+    };
+
     $ionicLoading.show();
     Posts.get($stateParams.postId, function(err, post) {
       if (err) {
@@ -133,7 +137,8 @@ angular.module("hotbar.controllers")
         $ionicLoading.hide();
       } else {
         $scope.post = post;
-        $scope.post.media = $scope.post.get("media");
+        $scope.post.media = post.get("media");
+        $scope.post.mediaUrl = trustSrc($scope.post.media.url);
         getUser(post);
         getHotbar(post);
         // get likes
