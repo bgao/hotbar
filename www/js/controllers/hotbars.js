@@ -206,6 +206,7 @@ angular.module("hotbar.controllers")
       var Post = Parse.Object.extend("Post");
       var query = new Parse.Query(Post);
       query.equalTo("hotbar", $scope.hotbar);
+      query.descending("createdAt");
       query.find({
         success: function(posts) {
           for (var i = 0; i < posts.length; ++i) {

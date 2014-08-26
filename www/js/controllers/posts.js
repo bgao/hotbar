@@ -89,7 +89,10 @@ angular.module("hotbar.controllers")
       comment.set("post", $scope.post);
       comment.set("user", _user);
       comment.save();
-      comment.user = _user;
+      comment.user = {
+        displayName: _user.get("displayName"),
+        picture: _user.get("picture")
+      };
       $timeout(function() {
         $scope.post.comments.push(comment);
         $scope.post.comment = "";

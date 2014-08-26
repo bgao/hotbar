@@ -27,9 +27,9 @@
             <i class="icon ion-ios7-location-outline"></i>
             {{getBarDistance(hotbar)}} miles
           </a>
-          <a class="subdued">
+          <!-- <a class="subdued">
             <i class="icon ion-ios7-clock-outline"></i> Close
-          </a>
+          </a> -->
           <a class="subdued">
             <i class="icon ion-ios7-people-outline"></i> 
             {{hotbar.followers.length}} Followers
@@ -43,7 +43,8 @@
            class="item item-avatar thumb-right">
           <img ng-src="{{post.user.picture}}">
           <h2>{{post.media.description}}</h2>
-          <p>{{post.user.displayName}} @ {{hotbar.attributes.name}}</p>
+          <p>{{post.user.displayName}}</p>
+          <p>@ {{hotbar.attributes.name}}</p>
           <p>{{post.createdAt | prettyDate}}</p>
           <img ng-src="{{post.media.type === 'image/jpeg' ? post.media.url : 'img/genericvideoicon.jpg'}}">
         </a>

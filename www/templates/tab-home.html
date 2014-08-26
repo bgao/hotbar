@@ -27,17 +27,20 @@
         <input type="file"
                onchange="angular.element(this).scope().filesChanged(this)"
                multiple />
-        <button ng-click="uploadImage()">Upload</button>
+        <button ng-click="uploadImage()">Upload</button> 
+        <button ng-click="encodingRequest()">Encoding</button>
       </div>
       <li ng-repeat="file in files">{{file.name}}</li>
     </div> -->
     <div class="list" ng-show="media">
       <div class="item item-body">
-        <video class="full-image" ng-show="media.type!='image/jpeg'"
-               onclick="this.play()" controls>
+        <!-- <video class="full-image" ng-show="media.type!='image/jpeg'"
+          ng-click="playVideo()">
           <source src="{{media.data}}">
           Your browser does not support the video tag.
-        </video>
+        </video> -->
+        <img class="full-image" src="img/genericvideoicon.jpg" 
+             ng-show="media.type!='image/jpeg'" ng-click="playVideo()">
         <img class="full-image" ng-src="{{media.data}}"
              ng-show="media.type=='image/jpeg'">
       </div>
@@ -60,7 +63,8 @@
          class="item item-avatar thumb-right">
         <img src="{{post.user.picture}}">
         <h2>{{post.media.description}}</h2>
-        <p>{{post.user.displayName}} @ {{post.hotbar.name}}</p>
+        <p>{{post.user.displayName}}</p>
+        <p>@ {{post.hotbar.name}}</p>
         <p>{{post.createdAt | prettyDate}}</p>
         <img ng-src="{{post.media.type === 'image/jpeg' ? post.media.url : 'img/genericvideoicon.jpg'}}">
       </a>

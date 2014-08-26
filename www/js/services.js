@@ -1,8 +1,26 @@
 "use strict";
 
 angular.module('hotbar.services', [])
-  .run(["PARSE_APP_ID", "PARSE_JS_KEY", function(PARSE_APP_ID, PARSE_JS_KEY) {
+  .run(["PARSE_APP_ID", "PARSE_JS_KEY", "FACEBOOK_APP_ID", function(PARSE_APP_ID, PARSE_JS_KEY, FACEBOOK_APP_ID) {
     Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
+    Parse.FacebookUtils.init({
+        appId      : FACEBOOK_APP_ID, // Facebook App ID
+        // channelUrl : '//www.anyyolk.com/channel.html', // Channel File
+        // status     : true, // check login status
+        cookie     : true, // enable cookies to allow Parse to access the session
+        xfbml      : false  // parse XFBML
+    });
+    /* window.fbAsyncInit = function() {
+      // init the FB JS SDK
+      
+    };
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk')); */
   }])
   .factory("LocalStorage", [function() {
     var loc = {
@@ -55,45 +73,6 @@ angular.module('hotbar.services', [])
       }
     };
     return loc;
-  }])
-  .factory('Global', [function() {
-    // Initialization
-    var _position = null;
-    if (navigator.geolocation) {
-      /* navigator.geolocation.watchPosition(function(pos) {
-         _position = new google.maps.LatLng(pos.coords.latitude,
-         pos.coords.longitude);
-         }, function(err) {
-         console.error("Watch device position error");
-         console.error(err);
-         }, { maximumAge: 60000, timeout: 5000, enableHighAccuracy:true }); */
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        _position = new google.maps.LatLng(pos.coords.latitude,
-                                           pos.coords.longitude);
-      }, function(err) {
-        console.error("Watch device position error");
-        console.error(err);
-      }, { enableHighAccuracy: true });
-    }
-    
-    function set(key, value) {
-      window[key] = value;
-    }
-    function get(key) {
-      if (key === "position") {
-        if (!_position) {
-          _position = new google.maps.LatLng(42.358431, -71.059773); // boston
-        }
-        
-        return _position;
-      } else {
-        return window[key];
-      }
-    }
-    return {
-      get: get,
-      set: set
-    };
   }])
   .factory("GeoService", [function() {
     // default location is Boston
@@ -252,7 +231,7 @@ angular.module('hotbar.services', [])
       all: function(callback) {
         var query = new Parse.Query(HotBar);
         var point = new Parse.GeoPoint(_position);
-        var distance = (_user.radius || 1609) / 1609;
+        var distance = (_user.get("radius") || 1609) / 1609;
         query.withinMiles("location", point, distance).find({
           success: function(results) {
             callback(null, results);

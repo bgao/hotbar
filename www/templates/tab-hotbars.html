@@ -21,7 +21,7 @@
         HotBars
       </div>
       <div class="item" ng-show="hotbars.length == 0">
-        <p>No HotBar found nearby. You can change HotBar search radius in your
+        <p>No HotBar found nearby. <br />You can change HotBar search distance in your
           <a ng-href="#/tab/account">Settings</a>
         </p>
       </div>
@@ -34,9 +34,9 @@
             <i class="icon ion-ios7-location-outline"></i>
             {{getBarDistance(hotbar)}} miles
           </a>
-          <a class="subdued">
+          <!-- <a class="subdued">
             <i class="icon ion-ios7-clock-outline"></i> Close
-          </a>
+          </a> -->
           <a class="subdued">
             <i class="icon ion-ios7-people-outline"></i> 
             {{hotbar.followers.length}} Followers

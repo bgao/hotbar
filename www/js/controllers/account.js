@@ -1,7 +1,7 @@
 "use strict";
 
 angular.module("hotbar.controllers")
-  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal, GeoService) {
+  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal, $ionicLoading, GeoService) {
     var alert = navigator.notification ? navigator.notification.alert : window.alert;
 
     $ionicModal.fromTemplateUrl('reset-password-modal.html', function($ionicModal) {
@@ -13,12 +13,15 @@ angular.module("hotbar.controllers")
 
     $scope.login = function(user) {
       if (user && user.email && user.password) {
+        $ionicLoading.show();
         Parse.User.logIn(user.email, user.password, {
           success: function(user) {
+            $ionicLoading.hide();
             $log.debug("Logged in as: ", user);
             $state.go("tab.posts");
           },
           error: function(user, error) {
+            $ionicLoading.hide();
             $log.error("Login failed: ", error);
             alert(error.message, null, "Login Failed");
           }
@@ -37,6 +40,7 @@ angular.module("hotbar.controllers")
           }
         },
         error: function(user, error) {
+          $log.error(error);
           alert("User cancelled the Facebook login or did not fully authorize.");
         }
       });
@@ -138,7 +142,7 @@ angular.module("hotbar.controllers")
       displayName: _user.get("displayName"),
       email: _user.get("email"),
       picture: _user.get("picture"),
-      radius: _user.get("radius") / 1609
+      radius: Number((_user.get("radius") / 1609).toFixed(2))
     };
     // Get user posts
     var Post = Parse.Object.extend("Post");

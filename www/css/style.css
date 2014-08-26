@@ -27,7 +27,7 @@ a:visited {
     background-color: #222;
 }
 
-.item.thumb-right img:nth-child(5){
+.item.thumb-right img:nth-child(6){
   position: absolute !important;
   top: 10px !important;
   right: 10px !important;
@@ -48,7 +48,7 @@ a:visited {
     text-align: left;
     font-family: "Myriad Pro";
     font-style: italic;
-    color: #abb1b5;
+    /* color: #abb1b5; */
 }
 
 .terms-container{

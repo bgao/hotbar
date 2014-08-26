@@ -4,17 +4,17 @@
       <div class="item item-avatar">
         <img src="{{post.user.picture}}">
         <h2>{{post.media.description}}</h2>
-        <p><a ng-href="#/tab/posts/users/{{post.user.id}}">{{post.user.displayName}}</a> @ <a ng-href="#/tab/hotbars/{{post.hotbar.id}}">{{post.hotbar.name}}</a></p>
+        <p><!-- <a ng-href="#/tab/posts/users/{{post.user.id}}">-->
+          {{post.user.displayName}} @ 
+          <!-- <a ng-href="#/tab/hotbars/{{post.hotbar.id}}"> -->
+          {{post.hotbar.name}}</p>
         <p>{{post.createdAt | prettyDate}}</p>
       </div>
       <div class="item item-body">
         <img class="full-image" ng-src="{{post.media.url}}" 
              ng-show="post.media.type == 'image/jpeg'">
-        <video class="full-image" ng-show="post.media.type != 'image/jpeg'"
-               onclick="this.play()" controls>
-          <source src="{{post.mediaUrl}}"  type="{{post.media.type}}">
-          Your browser does not support the video tag.
-        </video>
+        <video class="full-image" src="{{post.mediaUrl}}" width="320" height="640" ng-show="post.media.type != 'image/jpeg'"
+               webkit-playsinline controls></video>
         <p>
           <a class="subdued">
             <i class="icon ion-ios7-heart-outline"></i> 

@@ -41,13 +41,13 @@
     <ion-header-bar class="bar bar-header bar-assertive">
       <h1 class="title">User Agreement & Terms of Use</h1>
       <div class="button button-clear" ng-click="userAgreementModal.hide()">
-        <span class="icon ion-close-round"></span>
+        <span class="ion-close-round"></span>
       </div>
     </ion-header-bar>
     <ion-content padding="true">
       <div class="list">
         <div class="item">
-        <pre>
+        <pre class="terms-text">
 Welcome to a HOTBAR! A free social-media application to it’s users.
 
 HotBar is a platform designed to bring users and bar establishments together to help enhance the customer and hosting experiences. This is free software that can be downloaded via your mobile device’s applications store or by various other means.
@@ -114,11 +114,7 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         </div>
         <label class="item item-thumbnail-right">
           <img ng-src="{{user.picture}}">
-          <span class="input-label">Profile Picture</span>
-        </label>
-        <label class="item item-input-inset">
-          <span class="input-label">Name</span>
-          <input type="text" ng-model="user.displayName" ng-disabled="true">
+          <span class="input-label">{{user.displayName}}</span>
         </label>
         <label class="item item-input-inset">
           <span class="input-label">Email</span>
@@ -148,10 +144,10 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
           HotBar Settings
         </div>
         <label class="item item-input">
-          <span class="input-label">HotBar Search Radius (miles)</span>
+          <span class="input-label">Search Distance(miles)</span>
           <input type="number" min="0.1" max="50" ng-model="user.radius">
         </label>
-        <label class="item item-toggle">
+        <!-- <label class="item item-toggle">
           <span class="input-label">Push Notification</span>
           <label class="toggle toggle-assertive">
             <input type="checkbox" ng-model="user.pushNote">
@@ -159,7 +155,7 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
               <div class="handle"></div>
             </div>
           </label>
-        </label>
+        </label> -->
         <div class="item item-divider">
           About
         </div>

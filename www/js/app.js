@@ -29,7 +29,9 @@ angular.module('hotbar', ['ionic',
       }
     });
   })
-
+  .config(function($sceDelegateProvider){
+    $sceDelegateProvider.resourceUrlWhitelist(['https://*.amazonaws.com/**', 'self']);
+  })
   .config(function($httpProvider) {
     $httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
@@ -87,7 +89,6 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-
       .state('tab.hotbars', {
         url: '/hotbars',
         views: {
@@ -151,7 +152,7 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('user-post-detail', {
+      .state('tab.user-post-detail', {
         url: '/posts/users/:userId/:postId',
         views: {
           'tab-posts': {

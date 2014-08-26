@@ -3,6 +3,8 @@
 echo "Install plugins..."
 echo "Install org.apache.cordova.console"
 cordova plugin add org.apache.cordova.console
+echo "Install org.apache.cordova.statusbar"
+cordova plugin add org.apache.cordova.statusbar
 echo "Install org.apache.cordova.device"
 cordova plugin add org.apache.cordova.device
 echo "Install org.apache.cordova.dialogs"
