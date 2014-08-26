@@ -31,6 +31,29 @@ angular.module('hotbar.controllers')
       });
     };
 
+    $scope.changeProflePicture = function(){
+     navigator.camera.getPicture(cameraSuccess, cameraError, {
+      quality : 50,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.PHOTOLIBRARY,
+      allowEdit : true
+      encodingType : Camera.EncodingType.JPEG,
+      targeWidth : 150,
+      targetHeight: 150,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false
+     });
+
+     function onSucess(imageURI){
+      user.picture = imageURI;
+     }
+
+     function onFail(message){
+      navigator.notification.alert(message, null, "Error");
+     }
+
+    }
+
     $scope.$on('$destroy', function() {
       $scope.passwordModal.remove();
       $scope.userAgreementModal.remove();

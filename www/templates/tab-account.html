@@ -36,6 +36,35 @@
     </ion-content>
   </div>
 </script>
+<script id="change-profilepix-modal.html" type="text/ng-template">
+  <div class="modal">
+    <ion-header-bar class="bar bar-header bar-assertive">
+      <h1 class="title">Change Profile Picture</h1>
+    </ion-header-bar>
+    <ion-content>
+      <div class="padding">
+      <div class="list">
+        <button class="button button-outline button-dark" ng-click="captureImage()">Camera</button>
+        <button class="button button-outline button-dark"  ng-click="getImage()">From File</button>
+        <div class="row">
+          <div class="col col-50">
+            <button class="button button-full button-assertive"
+                    ng-click="changeProfilePicture()">
+              SUBMIT
+            </button>
+          </div>
+          <div class="col col-50">
+            <button class="button button-full button-assertive"
+                    ng-click="profilepixModal.hide()">
+              CANCEL
+            </button>
+          </div>
+        </div>
+      </div>
+      </div>
+    </ion-content>
+  </div>
+</script>
 <script id="user-agreement-modal.html" type="text/ng-template">
   <div class="modal">
     <ion-header-bar class="bar bar-header bar-assertive">
@@ -125,6 +154,7 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         <div class="item item-divider">
           Account Information
         </div>
+        <image ng-src="{{user.picture}}" ng-click="profilepixModal.show()">
         <label class="item item-input-inset">
           <span class="input-label">Username</span>
           <input type="text" ng-model="user.username" ng-disabled="true">
