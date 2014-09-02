@@ -62,11 +62,22 @@ a:visited {
     height: 220px;
 }
 
-.media {
-    max-width: 100px;
-    max-height: 100px;
+.thumbnail {
     width: 100%;
-    margin: 1px;
-    float: left;
-    overflow: hidden;
+}
+
+.nopadding {
+   padding: 0 !important;
+}
+
+.video {
+    position: relative;
+}
+
+.video div {
+    position: absolute;
+    z-index: 2;
+    font-size: 24pt;
+    left: 10px;
+    bottom: 10px;
 }

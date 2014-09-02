@@ -12,16 +12,18 @@
       </div>
       <div class="item item-body">
         <img class="full-image" ng-src="{{post.media.url}}" 
-             ng-show="post.media.type == 'image/jpeg'">
-        <video class="full-image" src="{{post.mediaUrl}}" width="320" height="640" ng-show="post.media.type != 'image/jpeg'"
-               webkit-playsinline controls></video>
+             ng-show="post.media.type === 'image/jpeg'">
+        <video id="video1" class="full-image" preload="metadata" controls webkit-playsinline onclick="play()"
+          ng-show="post.media.type !== 'image/jpeg'" ng-src="{{post.media.secUrl}}" ng-poster="{{post.media.thumbnailUrl}}">
+          Your browser does not support HTML5 video.
+        </video>
         <p>
           <a class="subdued">
             <i class="icon ion-ios7-heart-outline"></i> 
             {{post.likes.length}} Likes
           </a>
           <a class="subdued">
-            <i class="icon ion-ios7-chatbubble-outline"></i> 
+            <i class="icon ion-ios7-chatbubble-outline"></i>
             {{post.comments.length}} Comments
           </a>
         </p>
@@ -34,6 +36,7 @@
           </button>
           <label class="item-input-wrapper">
             <input type="text" placeholder="Comment" ng-model="post.comment">
+            <button ng-if="post.comment.length" class="button button-icon ion-ios-close input-button" ng-click="clearComment()"></button>
             <!-- <i class="icon ion-ios7-close placeholder-icon"
                ng-click="clearComment()"></i> -->
           </label>

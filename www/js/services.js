@@ -1,26 +1,13 @@
 "use strict";
 
 angular.module('hotbar.services', [])
-  .run(["PARSE_APP_ID", "PARSE_JS_KEY", "FACEBOOK_APP_ID", function(PARSE_APP_ID, PARSE_JS_KEY, FACEBOOK_APP_ID) {
+  .run(["PARSE_APP_ID", "PARSE_JS_KEY", "FACEBOOK_APP_ID", function(PARSE_APP_ID, PARSE_JS_KEY, FACEBOOK_APP_ID, FACEBOOK_SECRET) {
     Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
-    Parse.FacebookUtils.init({
-        appId      : FACEBOOK_APP_ID, // Facebook App ID
-        // channelUrl : '//www.anyyolk.com/channel.html', // Channel File
-        // status     : true, // check login status
-        cookie     : true, // enable cookies to allow Parse to access the session
-        xfbml      : false  // parse XFBML
-    });
-    /* window.fbAsyncInit = function() {
-      // init the FB JS SDK
-      
-    };
-    (function(d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/all.js";
-      fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk')); */
+    // Defaults to sessionStorage for storing the Facebook token
+    openFB.init({appId: FACEBOOK_APP_ID, secret: FACEBOOK_SECRET});
+
+    //  Uncomment the line below to store the Facebook token in localStorage instead of sessionStorage
+    //  openFB.init({appId: 'YOUR_FB_APP_ID', tokenStore: window.localStorage});
   }])
   .factory("LocalStorage", [function() {
     var loc = {
@@ -182,6 +169,33 @@ angular.module('hotbar.services', [])
           callback("error", null);
         }, options);
       }
+    }
+  }])
+  .factory("ParseFile", ["PARSE_APP_ID", "PARSE_REST_KEY", function(PARSE_APP_ID, PARSE_REST_KEY) {
+    
+    return {
+      /* put: function(media, callback) {
+        var ft = new FileTransfer()
+        , options = new FileUploadOptions();
+
+        options.fileKey = "file";
+        options.fileName = media.filename;
+        options.mimeType = media.contentType;
+        options.chunkedMode = true;
+        options.headers = {
+          "X-Parse-Application-Id": PARSE_APP_ID,
+          "X-Parse-REST-API-Key": PARSE_REST_KEY,
+          "Content-Type": media.contentType
+        };
+        var uri = encodeURI("https://api.parse.com/1/files/" + media.filename);
+        ft.upload(media.data, uri, function(e) {
+          console.log(e);
+          callback(null, "uploaded");
+        }, function(e) {
+          console.log(e);
+          callback("error", null);
+        }, options);
+      } */
     }
   }])
   .factory('Posts', ["GeoService", function(GeoService) {

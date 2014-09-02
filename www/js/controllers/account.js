@@ -30,20 +30,43 @@ angular.module("hotbar.controllers")
         alert("Missing email or password!", null, "Error");
       }
     };
+    // Login with Facebook using simple OAuth way introduced here:
+    // http://coenraets.org/blog/2014/04/facebook-phonegap-cordova-without-plugin/
+    // with addition trick described here:
+    // https://www.parse.com/questions/facebook-with-cordovaphonegap
     $scope.loginFacebook = function() {
-      Parse.FacebookUtils.logIn(null, {
-        success: function(user) {
-          if (!user.existed()) {
-            alert("User signed up and logged in through Facebook!");
-          } else {
-            alert("User logged in through Facebook!");
-          }
-        },
-        error: function(user, error) {
-          $log.error(error);
-          alert("User cancelled the Facebook login or did not fully authorize.");
+      openFB.login(function(response) {
+        if (response.status === "connected") {
+          // $log.debug(response);
+          var expirationDate = new Date(response.authResponse.expiresin*1000+
+            (new Date()).getTime()).toJSON();
+          // get info
+          openFB.api({path: '/me',
+            success: function(data) {
+              Parse.FacebookUtils.logIn(
+                {"id": data.id,
+                 "access_token": response.authResponse.token,
+                 "expiration_date": expirationDate}, {
+                success: function(user) {
+                  // $log.debug("Logged in as: ", user);
+                  user.set("displayName", data.name);
+                  user.set("email", data.email);
+                  user.save();
+                  $state.go("tab.posts");
+                },
+                error: function(user, error) {
+                  $log.error("Login failed: ", error);
+                  alert("Facebook login failed: " + error, null, "Error");
+                }
+              });
+            },
+            error: function(error) {
+              $log.error("Get Facebook User Info error: ", error);
+            }});
+        } else {
+          alert("Facebook login failed: " + response.error, null, "Error");
         }
-      });
+      }, {scope: 'email,read_stream'});
     };
     $scope.loginTwitter = function() {
       
@@ -183,7 +206,13 @@ angular.module("hotbar.controllers")
     $scope.logout = function() {
       Parse.User.logOut();
       $state.go("login");
-    }
+
+      openFB.logout(function() {
+        $log.debug("Logout successful");
+      }, function(error) {
+        $log.error("Logout FB error: ", error.message);
+      });
+    };
   })
 .controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout, $ionicLoading, Users, HotBars) {
   var _user = Parse.User.current();

@@ -1,17 +1,18 @@
 "use strict";
 
 angular.module("hotbar.controllers")
-  .controller("HomeCtrl", function($scope, $log, $timeout, $ionicLoading, $http, GeoService, S3, HotBars) {
-    var alert = typeof navigator.notification == "undefined" ?
-      window.alert : navigator.notification.alert;
+  .controller("HomeCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce, GeoService, S3) {
+    var alert = typeof navigator.notification == "undefined" ? window.alert : navigator.notification.alert;
 
+    // Regex for getting file name extension
     var re = /(?:\.([^.]+))?$/;
 
     var _user = Parse.User.current();
     $scope.posts = [];
 
-    // get hotbars followed by user
+    // get hotbars followed by the current user
     var userRelation = _user.relation("following");
+    $ionicLoading.show();
     userRelation.query().find({
       success: function(hotbars) {
         // get user posts
@@ -25,7 +26,21 @@ angular.module("hotbar.controllers")
         query.find({
           success: function(posts) {
             for (var i = 0; i < posts.length; ++i) {
-              posts[i].media = posts[i].get("media");
+              /* var postGroup = [];
+              for (var j = 0; j < 3; ++j) {
+                if (i+j < posts.length) {
+                  getMedia(posts[i+j]);
+                  getHotbar(posts[i+j]);
+                  posts[i+j].user = {
+                    displayName: _user.get("displayName"),
+                    email: _user.get("email"),
+                    picture: _user.get("picture")
+                  };
+                  postGroup.push(posts[i+j]);
+                }
+              }
+              $scope.posts.push(postGroup); */
+              getMedia(posts[i]);
               getHotbar(posts[i]);
               posts[i].user = {
                 displayName: _user.get("displayName"),
@@ -34,33 +49,58 @@ angular.module("hotbar.controllers")
               };
               $scope.posts.push(posts[i]);
             }
+            $ionicLoading.hide();
           },
           error: function(error) {
             $log.error("Retrieving user's posts error: ", error);
+            $ionicLoading.hide();
           }
         });
       },
       error: function(error) {
         $log.error("Getting hotbars followed by user error: ", error);
+        $ionicLoading.hide();
       }
     });
 
     function getHotbar(post) {
-      HotBars.get(post.get("hotbar").id, function(err, hotbar) {
-        if (err) {
-          $log.error("Getting post hotbar error: ", error);
-        } else {
+      var hotbar = post.get("hotbar");
+      hotbar.fetch({
+        success: function(obj) {
           $timeout(function() {
             post.hotbar = {
-              name: hotbar.get("name"),
-              address: hotbar.get("address"),
-              region: hotbar.get("region"),
-              url: hotbar.get("url")
+              name: obj.get("name"),
+              address: obj.get("address"),
+              region: obj.get("region"),
+              url: obj.get("url"),
+              id: obj.id
+            };
+          });
+        },
+        error: function(error) {
+          $log.error("Fetch hotbar error: ", error);
+        }
+      });
+    }
+    function trustSrc(src) {
+      return $sce.trustAsResourceUrl(src);
+    }
+    function getMedia(post) {
+      var media = post.get("media");
+      media.fetch({
+        success: function(obj) {
+          $timeout(function() {
+            post.media = {
+              description: obj.get("description"),
+              url: obj.get("url"),
+              secUrl: trustSrc(obj.get("url")),
+              thumbnailUrl: obj.get("thumbnailUrl"),
+              type: obj.get("type")
             };
           });
         }
       });
-    }
+    };
 
     function getHotbarNearby(callback) {
       var HotBar = Parse.Object.extend("HotBar");
@@ -78,7 +118,7 @@ angular.module("hotbar.controllers")
       });  
     }
 
-    var cameraSuccess = function(imageFile) {
+    function cameraSuccess(imageFile) {
       console.assert(_user);
       $timeout(function() {
         var index = imageFile.lastIndexOf('/') + 1;
@@ -88,19 +128,28 @@ angular.module("hotbar.controllers")
           type: 'image/jpeg'
           // src: "data:image/jpeg;base64,"+imageData
         };
-        // debug
-        //alert(imageFile, null, "CameraSuccess");
-        //alert($scope.media.filename, null, "CameraSuccess");
       });
     };
-    var cameraError = function(error) {
+
+    /* function cameraSuccess(imageData) {
+      $timeout(function() {
+        $scope.media = {
+          filename: _user.id + "_" + Math.round(new Date().getTime()/1000) + ".jpg",
+          data: "data:image/jepg;base64," + imageData,
+          type: "image/jpeg"
+        };
+      });
+    } */
+    
+    function cameraError(error) {
       if (error && error.code) {
         $log.error("Capture error: " + error.code);
         alert('Error code: ' + error.code, null, 'Capture Error');
       }
       $scope.cleanup();
-    };
-    var captureSuccess = function(mediaFiles) {
+    }
+    
+    function captureSuccess(mediaFiles) {
       // $scope.mediaSrc = $scope.trustSrc(mediaFiles[0].fullPath);
       //alert(mediaFiles[0].fullPath, null, "Original file path");
       var filePath = mediaFiles[0].fullPath;
@@ -111,7 +160,7 @@ angular.module("hotbar.controllers")
         // The path should look like file:/storage...
         filePath = "file://" + filePath.substr(5);
       }
-      // alert(filePath, null, "Fixed file path");
+      // get file extension
       var ext = "." + re.exec(mediaFiles[0].name)[1];
       $timeout(function() {
         $scope.media = {
@@ -124,16 +173,13 @@ angular.module("hotbar.controllers")
         // alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
         //alert($scope.media.filename, null, "CameraSuccess:filename");
       });
-    };
-    var captureError = function(error) {
+    }
+
+    function captureError(error) {
       if (error && error.code) {
         $log.error("Capture error: " + error.code);
         alert('Error code: ' + error.code, null, "Capture Error");
       }
-    };
-
-    $scope.playVideo = function() {
-      cordova.plugins.videoPlayer.play($scope.media.data);
     };
 
     $scope.captureImage = function() {
@@ -146,7 +192,7 @@ angular.module("hotbar.controllers")
             $scope.hotbar = hotbar;
             var options = {
               quality: 45,
-              // destinationType: Camera.DestinationType.DATA_URL
+              // destinationType: Camera.DestinationType.DATA_URL,
               destinationType: Camera.DestinationType.FILE_URI,
               sourceType: Camera.PictureSourceType.CAMERA
             };
@@ -196,15 +242,20 @@ angular.module("hotbar.controllers")
       navigator.camera.getPicture(getImageSuccess, cameraError, options);
     };
 
-    function savePost() {
+    function savePost(media) {
       var Post = Parse.Object.extend("Post");
       var post = new Post();
       post.set("location", GeoService.getPosition());
       post.set("user", _user);
-      post.set("media", $scope.media);
+      post.set("media", media);
       post.set("hotbar", $scope.hotbar);
       post.save();
-      post.media = $scope.media;
+      post.media = {
+        url: media.get("url"),
+        thumbnailUrl: media.get("thumbnailUrl"),
+        type: media.get("type"),
+        description: media.get("description")
+      };
       post.user = {
         displayName: _user.get("displayName"),
         picture: _user.get("picture")
@@ -219,62 +270,107 @@ angular.module("hotbar.controllers")
       $scope.cleanup();
     }
 
-    $scope.uploadMedia = function() {
+    /* function uploadImage() {
       $ionicLoading.show();
-      console.assert($scope.media);
+      // Parse File
+      var mediaFile = new Parse.File($scope.media.filename, { base64: $scope.media.data });
+      mediaFile.save().then(function() {
+        var Media = Parse.Object.extend("Media");
+        var media = new Media();
+        media.set("url", mediaFile.url());
+        media.set("type", $scope.media.type);
+        media.set("description", $scope.media.description);
+        media.set("file", mediaFile);
+        media.save();
+        savePost(media);
+        $ionicLoading.hide();
+      }, function(error) {
+        $log.error("ParseFile save error: ", error);
+        $ionicLoading.hide();
+      });
+    } */
 
-      // alert($scope.media.size, null);
-      //alert($scope.media.data, null);
-
+    function uploadImage() {
+      $ionicLoading.show();
       S3.put($scope.media, function(err, data) {
         if (err) {
           $log.error("HomeCtrl.S3.push error:  ", err);
           alert("Upload media error", null);
           $scope.cleanup();
           $ionicLoading.hide();
-        }
-        else {
-          // $log.debug(data);
-          
-          if ($scope.media.type === "image/jpeg") {
-            // set media url
-              $scope.media.url =
-                "https://d2x86vdxy89a0s.cloudfront.net/" + $scope.media.filename;
-              savePost();              
-              $ionicLoading.hide();
-          } else {
-            // Send encoding request
-            var filename = $scope.media.filename;
-            filename = filename.substr(0, filename.lastIndexOf(".")) + ".mp4";
-            var data = {
-              input: "s3://hotbar/" + $scope.media.filename,
-              credentials: "s3",
-              outputs: [{
-                "url": "s3://hotbar/" + filename,
-                "label": "mp4 high",
-                "h264_profile": "high",
-                "credentials": "s3"
-              }]
-            };
-            Parse.Cloud.run("encoding", {"data": data}, {
-              success: function(response) {
-                // set media url
-                $scope.media.url =
-                  "https://d2x86vdxy89a0s.cloudfront.net/" + filename;
-                // $scope.media.type = "media";
-                // $scope.media.data = null;
-                savePost();
-                $ionicLoading.hide();
-              },
-              error: function(response) {
-                $log.error("Encoding request error: ", response);
-                $ionicLoading.hide();
-              }
-            });
-          }
+        } else {
+          var filename = $scope.media.filename;
+          var Media = Parse.Object.extend("Media");
+          var media = new Media();
+          media.set("url", "https://d2x86vdxy89a0s.cloudfront.net/" + filename);
+          media.set("type", $scope.media.type);
+          media.set("description", $scope.media.description);
+          media.save();
+          savePost(media);
+          $ionicLoading.hide();
         }
       });
-    };
+    }
+
+    function uploadVideo() {
+      $ionicLoading.show();
+      S3.put($scope.media, function(err, data) {
+        if (err) {
+          $log.error("HomeCtrl.S3.push error:  ", err);
+          alert("Upload media error", null);
+          $scope.cleanup();
+          $ionicLoading.hide();
+        } else {
+          // Send encoding request
+          var filename = $scope.media.filename;
+          filename = filename.substr(0, filename.lastIndexOf("."));
+          var encodingData = {
+            input: "s3://hotbar/" + $scope.media.filename,
+            credentials: "s3",
+            outputs: [{
+              "url": "s3://hotbar/" + filename + ".mp4",
+              "label": "mp4 high",
+              "h264_profile": "high",
+              "credentials": "s3",
+              "thumbnails": [{
+                "label": "poster",
+                "public": true,
+                "base_url": "s3://hotbar/",
+                "filename": filename,
+                "credentials": "s3",
+                "height": 256
+              }]
+            }]
+          };
+          Parse.Cloud.run("encoding", {"data": encodingData}, {
+            success: function(response) {
+              var Media = Parse.Object.extend("Media");
+              var media = new Media();
+              media.set("url", "https://d2x86vdxy89a0s.cloudfront.net/" + filename + ".mp4");
+              media.set("thumbnailUrl", "https://d2x86vdxy89a0s.cloudfront.net/" + filename + ".png");
+              // media.set("type", $scope.media.type);
+              media.set("type", "video/mp4");
+              media.set("description", $scope.media.description);
+              media.save();
+              savePost(media);
+              $ionicLoading.hide();
+            },
+            error: function(response) {
+              $log.error("Encoding request error: ", response);
+              $ionicLoading.hide();
+            }
+          });
+        }
+      });
+    }
+
+    $scope.uploadMedia = function() {
+      if ($scope.media.type === "image/jpeg") {
+        uploadImage();
+      } else {
+        uploadVideo();
+      }
+    }
 
     // Cleanup for ios
     $scope.cleanup = function() {      

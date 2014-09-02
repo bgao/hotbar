@@ -57,7 +57,7 @@ angular.module("hotbar.controllers")
       });
     }
 
-    function hotbarDetailCallback(results, status) {
+    /* function hotbarDetailCallback(results, status) {
       if (status == google.maps.places.PlacesServiceStatus.OK) {
         $log.debug(results[0]);
       }
@@ -73,7 +73,7 @@ angular.module("hotbar.controllers")
       };
       var service = new google.maps.places.PlacesService(_map);
       service.nearbySearch(request, hotbarDetailCallback);
-    }
+    } */
 
     function findBarsCallback(results, status) {
       $timeout(function(){
@@ -123,7 +123,6 @@ angular.module("hotbar.controllers")
       if ($scope.hotbars.length > 0) {
         for (var i = 0; i < $scope.hotbars.length; ++i) {
           createMarker($scope.hotbars[i]); 
-//            "http://maps.google.com/mapfiles/ms/icons/red-dot.png");
         }
       } else {
         // markers for other bars
@@ -132,7 +131,7 @@ angular.module("hotbar.controllers")
     }
   })
   .controller("HotBarDetailCtrl", 
-    function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, Users) {
+    function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, HotBars) {
 
       var _infowindow = new google.maps.InfoWindow();
       var _map;
@@ -151,6 +150,25 @@ angular.module("hotbar.controllers")
           bar.get("address")+"</p>");
           _infowindow.open(_map, this);
         });
+      }
+
+      function getFollowers(hotbar) {
+        if (hotbar) {
+          var hotbarRelation = hotbar.relation("followers");
+          hotbarRelation.query().find({
+            success: function(list) {
+              hotbar.followers = list;
+              list.forEach(function(user) {
+                if (user.id == _user.id) {
+                  hotbar.following = true;
+                }
+              });
+            },
+            error: function(error) {
+              $log.error("Get hotbar's number of followers error: ", error);
+            }
+          });  
+        }
       }
 
       $scope.toggleFollow = function() {
@@ -177,20 +195,33 @@ angular.module("hotbar.controllers")
       };
 
       $scope.getBarDistance = function(hotbar) {
-        return GeoService.getDistance(hotbar.get("location")).toFixed(2);
+        if (hotbar) {
+          return GeoService.getDistance(hotbar.get("location")).toFixed(2);
+        } else {
+          return 0;
+        }
       };
 
-      for (var i = 0; i < $rootScope.hotbars.length; ++i) {
-        if ($rootScope.hotbars[i].id == $stateParams.hotbarId) {
-          $scope.hotbar = $rootScope.hotbars[i];
-          break;
+      $scope.openLink = function() {
+        window.open($scope.hotbar.get("url"), '_blank', 'location=yes');
+      };
+
+      HotBars.get($stateParams.hotbarId, function(err, data) {
+        if (err) {
+          $log.error("Get hotbar error: ", err);
+        } else {
+          $scope.hotbar = data;
+          if (_map) {
+            _map.panTo(new GLatLng($scope.hotbar.get("location")));
+          }
+          getFollowers($scope.hotbar);
         }
-      }
+      });
 
       $scope.map = {
         center: {
-          latitude: $scope.hotbar.get("location").latitude,
-          longitude: $scope.hotbar.get("location").longitude
+          latitude: GeoService.getPosition().latitude,
+          longitude: GeoService.getPosition().longitude
         },
         zoom: 16,
         events: {
@@ -202,7 +233,7 @@ angular.module("hotbar.controllers")
       };
 
       // Get hotbar posts
-      $scope.hotbar.posts = [];
+      var posts = [];
       var Post = Parse.Object.extend("Post");
       var query = new Parse.Query(Post);
       query.equalTo("hotbar", $scope.hotbar);
@@ -210,10 +241,13 @@ angular.module("hotbar.controllers")
       query.find({
         success: function(posts) {
           for (var i = 0; i < posts.length; ++i) {
-            posts[i].media = posts[i].get("media");
+            getMedia(posts[i]);
             getUser(posts[i]);
-            $scope.hotbar.posts.push(posts[i]);
+            posts.push(posts[i]);
           }
+          $timeout(function() {
+            $scope.hotbar.posts = posts;
+          });
         },
         error: function(error) {
           $log.error("Getting hotbar posts error: ", error);
@@ -221,20 +255,38 @@ angular.module("hotbar.controllers")
       });
 
       function getUser(post) {
-      Users.get(post.get("user").id, function(err, user) {
-        if (err) {
-          $log.error("Getting post user error: ", error);
-        } else {
-          $timeout(function(){
-            post.user = {
-              displayName: user.get("displayName"),
-              email: user.get("email"),
-              picture: user.get("picture")
-            };  
-          });
-        }
-      });
-    }
+        var user = post.get("user");
+        user.fetch({
+          success: function(obj) {
+            $timeout(function() {
+              post.user = {
+                displayName: obj.get("displayName"),
+                email: obj.get("email"),
+                picture: obj.get("picture"),
+                id: obj.id
+              };
+            });
+          },
+          error: function(error) {
+            $log.error("Fetch user error: ", error);
+          }
+        });
+      }
+      function getMedia(post) {
+        var media = post.get("media");
+        media.fetch({
+          success: function(obj) {
+            $timeout(function() {
+              post.media = {
+                description: obj.get("description"),
+                url: obj.get("url"),
+                thumbnailUrl: obj.get("thumbnailUrl"),
+                type: obj.get("type")
+              };
+            });
+          }
+        });
+      }
       /* HotBars.get($stateParams.hotbarId, function(err, hotbar) {
         if (err) {
           $log.error("HotBars get error: ", err);

@@ -1,5 +1,8 @@
 <ion-view title="{{hotbar.attributes.name}}">
   <ion-content has-header="true" padding="false">
+    <div class="bar bar-header">
+      <div class="title">What's happening</div>
+    </div>
     <!-- <ion-scroll class="cover">
       <div class="full-image">
         <img src="{{hotbar.coverpicture}}">
@@ -11,15 +14,15 @@
       </div>
       <ion-item class="item-button-right">
         <h2 class="assertive">{{hotbar.attributes.name}}</h2>
-        <button class="button button-small button-assertive"
+        <button class="button button-icon icon"
+                ng-class="{'ion-ios7-heart assertive': hotbar.following, 'ion-ios7-heart-outline assertive': !hotbar.following}"
                 ng-click="toggleFollow()">
-          {{ hotbar.following && 'Unfollow' || 'Follow' }}
         </button>
         <p><a class="subdued" href="geo:" + {{hotbar.location.latitude}} + "," +
            {{hotbar.location.longitude}}>
           <i class="icon ion-map"></i>
           {{hotbar.attributes.address}}</a></p>
-        <p><a class="subdued" href="" ng-click="openLink(hotbar.website)">
+        <p><a class="subdued" href="" ng-click="openLink()">
           <i class="icon ion-earth"></i>
           {{hotbar.attributes.url}}</a></p>
         <div class="row">
@@ -31,8 +34,8 @@
             <i class="icon ion-ios7-clock-outline"></i> Close
           </a> -->
           <a class="subdued">
-            <i class="icon ion-ios7-people-outline"></i> 
-            {{hotbar.followers.length}} Followers
+            <i class="icon ion-ios7-heart-outline"></i> 
+            {{hotbar.followers.length}}
           </a>
         </div>
       </ion-item>
@@ -46,7 +49,7 @@
           <p>{{post.user.displayName}}</p>
           <p>@ {{hotbar.attributes.name}}</p>
           <p>{{post.createdAt | prettyDate}}</p>
-          <img ng-src="{{post.media.type === 'image/jpeg' ? post.media.url : 'img/genericvideoicon.jpg'}}">
+          <img ng-src="{{post.media.thumbnailUrl}}">
         </a>
       </div>
     </ion-list>
