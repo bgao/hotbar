@@ -1,0 +1,88 @@
+<ion-view title="CAPTURE">
+  <!-- <ion-nav-buttons side="right">
+    <button class="button-icon icon ion-ios7-camera light"
+            ng-click="captureImage()"></button>
+    <button class="button-icon icon ion-ios7-videocam light"
+            ng-click="captureVideo()"></button>
+  </ion-nav-buttons> -->
+  <!-- <div class="bar bar-subheader">
+    <div class="button-bar">
+      <button class="button button-icon icon ion-ios7-camera"
+              ng-click="captureImage()"></button>
+      <button class="button button-icon icon ion-ios7-videocam"></button>
+      <button class="button button-icon icon ion-ios7-photos"
+              ng-click="getImage()"></button>
+    </div>
+  </div> -->
+  <ion-content has-header="true" padding="false">
+    <ion-scroll class="cover">
+      <img class="full-image" src="{{coverPictureUrl}}">
+      <!-- <a href="" ng-click="getImage()" ng-hide="coverPicture">
+        <img class="full-image" src="{{coverPictureUrl}}">
+      </a>
+      <div class="list" ng-show="coverPicture">
+        <div class="item item-body">
+          <img class="full-image" ng-src="{{coverPicture.data}}">
+        </div>
+        <div class="item">
+          <button class="button">OK</button>
+          <button class="button">Cancel</button>
+        </div>
+      </div> -->
+    </ion-scroll>
+    <!-- <div class="card">
+      <div class="item">
+        <input type="file"
+               onchange="angular.element(this).scope().filesChanged(this)"
+               multiple />
+        <button ng-click="uploadImage()">Upload</button> 
+        <button ng-click="encodingRequest()">Encoding</button>
+      </div>
+      <li ng-repeat="file in files">{{file.name}}</li>
+    </div> -->
+    <div class="list" ng-show="media">
+      <div class="item item-body">
+        <video class="full-image" ng-show="media.type!='image/jpeg'" src="{{media.data}}">
+          Your browser does not support the video tag.
+        </video>
+        <!-- <img class="full-image" src="img/genericvideoicon.jpg" 
+             ng-show="media.type!='image/jpeg'" ng-click="playVideo()"> -->
+        <img class="full-image" ng-src="{{media.data}}"
+             ng-show="media.type=='image/jpeg'">
+      </div>
+      <div class="item item-input-inset">
+        <label class="item-input-wrapper">
+          <input type="text" placeholder="Add Description" ng-model="media.description">
+        </label>
+        <button class="button-icon icon ion-ios7-checkmark"
+                ng-click="uploadMedia()">
+        </button>
+        <button class="button-icon icon ion-ios7-close"
+                ng-click="cleanup()">
+        </button>
+      </div>
+    </div>
+    <div class="list" ng-show="media === null">
+      <div class="item item-input-inset" ng-show="hotbar === null && !adminUser">
+        <span class="input-label">You're not in a HotBar yet.</span>
+      </div>
+      <div class="item item-input-inset" ng-show="hotbar !== null || adminUser">
+        <span class="input-label">Capture the moment at {{hotbar.name}}</span>
+        <button class="button button-icon icon ion-ios7-camera assertive" ng-click="captureImage()">
+        </button>
+        <button class="button button-icon icon icon-left ion-ios7-videocam assertive" ng-click="captureVideo()">
+        </button>
+      </div>
+      <a ng-repeat="post in posts"
+         ng-href="#/tab/capture/{{post.id}}"
+         class="item item-avatar thumb-right">
+        <img src="{{post.user.profilePicture}}">
+        <!-- <h2>{{post.media.description}}</h2> -->
+        <p>{{post.user.displayName}}</p>
+        <p>{{post.hotbar.name}}</p>
+        <p>{{post.createdAt | prettyDate}}</p>
+        <img ng-src="{{post.media.thumbnailUrl}}">
+      </a>
+    </div>
+  </ion-content>
+</ion-view>
