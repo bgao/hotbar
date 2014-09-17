@@ -67,15 +67,15 @@ angular.module('hotbar.services', [])
     // For debugging
     var _position = { latitude: 42.3578035, longitude: -71.0603367 };
     // Assign the geolocation callback
-    /* if (navigator.geolocation) {
+    if (navigator.geolocation) {
       navigator.geolocation.watchPosition(function(pos) {
         console.debug("Updated geolocation: ", pos);
         _position.latitude = pos.coords.latitude;
         _position.longitude = pos.coords.longitude;
       }, function(err) {
         console.error("Watch device position error: ", err);
-      }, { maximumAge: 60000, timeout: 5000, enableHighAccuracy:true });
-    } */
+      }, { maximumAge: 300000, timeout: 60000, enableHighAccuracy:true });
+    }
 
     function getDistance(place) {
       var point1 = new Parse.GeoPoint(_position);

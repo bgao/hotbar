@@ -106,20 +106,27 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
   </div>
 </script>
 <ion-view title="ACCOUNT">
-  <ion-content has-header="true" padding="true">
+  <ion-content has-header="true" padding="false">
     <div>
       <div class="list">
         <div class="item item-divider">
           Account Information
         </div>
-        <label class="item item-thumbnail-right">
-          <img ng-src="{{user.picture}}">
+
+        <a class="item item-thumbnail-right" ng-click="setProfilePicture()">
+          <!-- <ion-profile-picture ng-model="myPicture"> -->
+          <img ng-src="{{user.profilePicture}}">
           <span class="input-label">{{user.displayName}}</span>
-        </label>
-        <label class="item item-input-inset">
+        </a>
+
+        <div class="item item-input-inset">
+          <span class="input-label">Name</span>
+          {{user.displayName}}
+        </div>
+        <div class="item item-input-inset">
           <span class="input-label">Email</span>
-          <input type="email" ng-model="user.email" ng-disabled="true">
-        </label>
+          {{user.email}}
+        </div>
         <!-- <label class="item item-input-inset">
           <span class="input-label">Password</span>
           <button class="button button-small button-clear button-assertive"
@@ -130,23 +137,35 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         <div class="item item-divider">
           Activities
         </div>
-        <label class="item item-input-inset">
-          <span class="input-label">Posts</span>
-          <input type="number" ng-model="user.posts.length"
-                 ng-disabled="true">
-        </label>
-        <label class="item item-input-inset">
-          <span class="input-label">Following HotBars</span>
-          <input type="number" ng-model="user.followings.length"
-                 ng-disabled="true">
-        </label>
+        <div class="item">
+          Posts
+          <span class="badge badge-assertive">{{user.posts.length}}</span>
+        </div>
+        <div class="item">
+          Following HotBars
+          <span class="badge badge-assertive">{{user.followings.length}}</span>
+        </div>
+        <a class="item item-thumbnail-right" ng-click="setCoverPicture()">
+          <img src="{{user.coverPicture}}">
+          <span class="input-label">Home Cover Photo</span>
+          <!-- <button class="button button-icon icon ion-ios7-photos assertive" ng-click="setCoverPicture()"></button> -->
+          <!-- <button class="button button-icon icon ion-ios7-photos assertive" ng-click=""></button> -->
+        </a>
         <div class="item item-divider">
           HotBar Settings
         </div>
-        <label class="item item-input">
+        <div class="item item-input-inset">
           <span class="input-label">Search Distance(miles)</span>
-          <input type="number" min="0.1" max="50" ng-model="user.radius">
-        </label>
+          <input class="item-input-wrapper" type="number" min="0.1" max="50" ng-model="user.radius">
+        </div>
+        <!-- <div class="item item-button-right">
+          HotBar Cover Photo
+          <button class="button button-assertive icon ion-ios7-photos" ng-click=""></button>
+        </div> -->
+        <div class="item item-input-inset" ng-show="user.hotbar">
+          <span class="input-label">News and Updates</span>
+          <input class="item-input-wrapper" type="text" ng-model="hotbar.news">
+        </div>
         <!-- <label class="item item-toggle">
           <span class="input-label">Push Notification</span>
           <label class="toggle toggle-assertive">

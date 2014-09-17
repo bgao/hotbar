@@ -142,6 +142,7 @@ angular.module("hotbar.controllers")
 
   .controller("AccountCtrl", function($scope, $log, $state, $timeout, $ionicModal, $ionicLoading) {
     var alert = navigator.notification ? navigator.notification.alert : window.alert;
+    var _user = Parse.User.current();
 
     $ionicModal.fromTemplateUrl('change-password-modal.html', function($ionicModal) {
       $scope.passwordModal = $ionicModal;
@@ -160,13 +161,102 @@ angular.module("hotbar.controllers")
     $scope.changePassword = function(oldpassword, newpassword) {
     };
 
-    var _user = Parse.User.current();
-    $scope.user = {
-      displayName: _user.get("displayName"),
-      email: _user.get("email"),
-      picture: _user.get("picture"),
-      radius: Number((_user.get("radius") / 1609).toFixed(2))
+    function savePicture(imageData, pictureType, callback) {
+      var picture = {
+        filename: _user.id + "_" + Math.round(new Date().getTime()/1000) + ".jpg",
+        data: imageData,
+        type: 'image/jpeg'
+      };
+      // save the image file
+      var file = new Parse.File(picture.filename, { base64: picture.data });
+      file.save().then(function() {
+        _user.set(pictureType, file);
+        _user.save();
+        callback(null, _user.get(pictureType));
+      }, function(error) {
+        callback(error, null);
+      });
+    }
+
+    function getProfilePicSuccess(imageData) {
+      savePicture(imageData, "profilePicture", function(error, profilePic) {
+        if (error) {
+          $log.error("Save profile picture file error: ", error);
+        } else {
+          var profilePicture = profilePic ? profilePic.url() : null;
+          $timeout(function() {
+            $scope.user.profilePicture = profilePicture;
+          });
+        }
+      });
+    }
+
+    function getCoverPicSuccess(imageData) {
+      savePicture(imageData, "coverPicture", function(error, coverPic) {
+        if (error) {
+          $log.error("Save cover picture file error: ", error);
+        } else {
+          var coverPicture = coverPic ? coverPic.url() : null;
+          $timeout(function() {
+            $scope.user.coverPicture = coverPicture;
+          });
+        }
+      });
+    }
+
+    function cameraError(error) {
+      if (error && error.code) {
+        $log.error("Capture error: " + error.code);
+        alert('Error code: ' + error.code, null, 'Capture Error');
+      }
+      // $scope.cleanup();
+    }
+
+    $scope.setProfilePicture = function() {
+      var options = {
+        destinationType: Camera.DestinationType.DATA_URL,
+        // destinationType: Camera.DestinationType.FILE_URI,
+        quality: 45,
+        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+        encodingType: Camera.EncodingType.JPEG
+      };
+      navigator.camera.getPicture(getProfilePicSuccess, cameraError, options);
     };
+
+    $scope.setCoverPicture = function() {
+      var options = {
+        destinationType: Camera.DestinationType.DATA_URL,
+        // destinationType: Camera.DestinationType.FILE_URI,
+        quality: 45,
+        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+        encodingType: Camera.EncodingType.JPEG
+      };
+      navigator.camera.getPicture(getCoverPicSuccess, cameraError, options);
+    };
+
+    var _coverPicture = _user.get("coverPicture");
+    if (_coverPicture) {
+      _coverPicture = _coverPicture.url();
+    } else {
+      _coverPicture = "img/coverpicture.jpg";
+    }
+
+    var _profilePicture = _user.get("profilePicture");
+    if (_profilePicture) {
+      _profilePicture = _profilePicture.url();
+    } else {
+      _profilePicture = _user.get("picture");
+    }
+    $timeout(function() {
+      $scope.user = {
+        displayName: _user.get("displayName"),
+        email: _user.get("email"),
+        profilePicture: _profilePicture,
+        radius: Number((_user.get("radius") / 1609).toFixed(2)),
+        coverPicture: _coverPicture
+      };
+    });
+    
     // Get user posts
     var Post = Parse.Object.extend("Post");
     var query = new Parse.Query(Post);
@@ -213,58 +303,4 @@ angular.module("hotbar.controllers")
         $log.error("Logout FB error: ", error.message);
       });
     };
-  })
-.controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout, $ionicLoading, Users, HotBars) {
-  var _user = Parse.User.current();
-
-  if (_user.id == $stateParams.userId) {
-    $state.go("tab.account");
-  } else {
-    Users.get($stateParams.userId, function(error, user) {
-      if (error) {
-        $log.error("Getting user error: ", error);
-      } else {
-        $scope.user = {
-          displayName: user.get("displayName"),
-          picture: user.get("picture")
-        };
-        // Get user posts
-        $scope.posts = [];
-        var Post = Parse.Object.extend("Post");
-        var query = new Parse.Query(Post);
-        query.equalTo("user", user);
-        query.descending("createdAt");
-        query.find({
-          success: function(posts) {
-            for (var i = 0; i < posts.length; ++i) {
-              posts[i].media = posts[i].get("media");
-              posts[i].user = $scope.user;
-              getHotbar(posts[i]);
-              $scope.posts.push(posts[i]);
-            }
-          },
-          error: function(error) {
-            $log.error("Getting user posts error: ", error);
-          }
-        });
-      }
-    });
-  }
-
-  function getHotbar(post) {
-    HotBars.get(post.get("hotbar").id, function(err, hotbar) {
-      if (err) {
-        $log.error("Getting post hotbar error: ", error);
-      } else {
-        $timeout(function() {
-          post.hotbar = {
-            name: hotbar.get("name"),
-            address: hotbar.get("address"),
-            region: hotbar.get("region"),
-            url: hotbar.get("url")
-          };
-        });
-      }
-    });
-  }  
-});
+  });

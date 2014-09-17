@@ -3,20 +3,25 @@
     <div class="list">
       <div class="item item-avatar">
         <img src="{{post.user.picture}}">
-        <h2>{{post.media.description}}</h2>
-        <p><!-- <a ng-href="#/tab/posts/users/{{post.user.id}}">-->
-          {{post.user.displayName}} @ 
-          <!-- <a ng-href="#/tab/hotbars/{{post.hotbar.id}}"> -->
-          {{post.hotbar.name}}</p>
+        <p>
+          <a class="subdued" ng-href="#/tab/posts/users/{{post.user.id}}">{{post.user.displayName}}</a> at 
+          <!-- <a ng-href="#/tab/hotbars/{{post.hotbar.id}}">{{post.hotbar.name}}</a> -->
+          {{post.hotbar.name}}
+        </p>
         <p>{{post.createdAt | prettyDate}}</p>
       </div>
       <div class="item item-body">
-        <img class="full-image" ng-src="{{post.media.url}}" 
-             ng-show="post.media.type === 'image/jpeg'">
-        <video id="video1" class="full-image" preload="metadata" controls webkit-playsinline onclick="play()"
-          ng-show="post.media.type !== 'image/jpeg'" ng-src="{{post.media.secUrl}}" ng-poster="{{post.media.thumbnailUrl}}">
+        <img class="full-image" src="{{post.media.url}}" 
+             ng-show="post.media.type === 'image/jpeg'"></img>
+        <div class="video-container" ng-show="post.media.type !== 'image/jpeg'">
+          <iframe src="{{post.media.secUrl}}" frameborder="0" webkit-playsinline>
+          </iframe>
+        </div>
+        <!-- <video id="video1" class="full-image" preload="metadata" controls webkit-playsinline onclick="play()"
+          ng-show="post.media.type !== 'image/jpeg'" ng-src="{{post.media.secUrl}}"
+          ng-poster="{{post.media.thumbnailUrl}}">
           Your browser does not support HTML5 video.
-        </video>
+        </video> -->
         <p>
           <a class="subdued">
             <i class="icon ion-ios7-heart-outline"></i> 
@@ -29,28 +34,30 @@
         </p>
       </div>
       <div class="list">
-        <div class="item item-input-inset">
+        <div class="item item-input">
           <button class="button button-icon icon"
                   ng-class="{'ion-ios7-heart': post.liked, 'ion-ios7-heart-outline': !post.liked}"
                   ng-click="toggleLike()">
           </button>
           <label class="item-input-wrapper">
             <input type="text" placeholder="Comment" ng-model="post.comment">
-            <button ng-if="post.comment.length" class="button button-icon ion-ios-close input-button" ng-click="clearComment()"></button>
-            <!-- <i class="icon ion-ios7-close placeholder-icon"
-               ng-click="clearComment()"></i> -->
+            <!-- <button ng-show="post.comment.length > 0" class="button button-icon ion-android-close input-button"
+                    ng-click="clearComment()">
+            </button> -->
           </label>
-          <button class="button-icon icon ion-checkmark-round"
+          <button class="button-icon icon ion-ios7-checkmark"
                   ng-disabled="!post.comment" ng-click="submitComment(post.comment)">
           </button>
-          <button class="button-icon icon ion-close-round"
+          <button class="button-icon icon ion-ios7-close"
                   ng-disabled="!post.comment"
-                  ng-click="post.comment=''">
+                  ng-click="post.comment = ''">
           </button>
         </div>
         <div ng-repeat="comment in post.comments" class="item item-avatar">
           <img src="{{comment.user.picture}}">
-          <p><a href="">{{comment.user.displayName}}</a> posted {{comment.createdAt | prettyDate}}</p>
+          <p><a href="#/tab/posts/users/{{comment.user.id}}">
+            {{comment.user.displayName}}</a> posted {{comment.createdAt | prettyDate}}
+          </p>
           <p>{{comment.get('content')}}</p>
         </div>
       </div>

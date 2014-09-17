@@ -1,8 +1,5 @@
-<ion-view title="{{hotbar.attributes.name}}">
+<ion-view title="{{hotbar.name}}">
   <ion-content has-header="true" padding="false">
-    <div class="bar bar-header">
-      <div class="title">What's happening</div>
-    </div>
     <!-- <ion-scroll class="cover">
       <div class="full-image">
         <img src="{{hotbar.coverpicture}}">
@@ -12,30 +9,48 @@
       <div class="item">
         <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map>
       </div>
-      <ion-item class="item-button-right">
-        <h2 class="assertive">{{hotbar.attributes.name}}</h2>
+      <div class="item" ng-show="hotbar.news.content">
+        <p>{{hotbar.news.content}}</p>
+      </div>
+      <!-- <div class="item item-input">
+        <label class="item-input-wrapper">
+          <input type="text" placeholder="What's happening?" ng-model="hotbar.news">
+        </label>
+        <button class="button-icon icon ion-ios7-checkmark"
+                ng-disabled="!hotbar.news" ng-click="submitNews(hotbar.news)">
+        </button>
+        <button class="button-icon icon ion-ios7-close"
+                ng-disabled="!hotbar.news" ng-click="hotbar.news = ''">
+        </button>
+      </div> -->
+      <ion-item>
+        <!-- <h2 class="assertive">{{hotbar.attributes.name}}</h2> -->
         <button class="button button-icon icon"
                 ng-class="{'ion-ios7-heart assertive': hotbar.following, 'ion-ios7-heart-outline assertive': !hotbar.following}"
-                ng-click="toggleFollow()">
+                ng-click="toggleFollow()"
+                ng-show="hotbar.isHotbar"> {{hotbar.following ? "Following" : "Follow"}}
         </button>
         <p><a class="subdued" href="geo:" + {{hotbar.location.latitude}} + "," +
            {{hotbar.location.longitude}}>
           <i class="icon ion-map"></i>
-          {{hotbar.attributes.address}}</a></p>
+          {{hotbar.address}}</a></p>
         <p><a class="subdued" href="" ng-click="openLink()">
           <i class="icon ion-earth"></i>
-          {{hotbar.attributes.url}}</a></p>
+          {{hotbar.url}}</a></p>
         <div class="row">
           <a class="subdued">
             <i class="icon ion-ios7-location-outline"></i>
             {{getBarDistance(hotbar)}} miles
           </a>
-          <!-- <a class="subdued">
-            <i class="icon ion-ios7-clock-outline"></i> Close
-          </a> -->
-          <a class="subdued">
+          <a class="subdued" ng-show="hotbar.isHotbar">
             <i class="icon ion-ios7-heart-outline"></i> 
             {{hotbar.followers.length}}
+          </a>
+          <a class="subdued" ng-show="hotbar.openHours">
+            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
+          </a>
+          <a class="subdued" ng-show="hotbar.rating">
+            <i class="icon ion-ios7-star-outline"></i> {{hotbar.rating}}/5
           </a>
         </div>
       </ion-item>
@@ -45,9 +60,9 @@
            ng-href="#/tab/hotbars/{{hotbar.id}}/{{post.id}}"
            class="item item-avatar thumb-right">
           <img ng-src="{{post.user.picture}}">
-          <h2>{{post.media.description}}</h2>
+          <!-- <h2>{{post.media.description}}</h2> -->
           <p>{{post.user.displayName}}</p>
-          <p>@ {{hotbar.attributes.name}}</p>
+          <p>@ {{hotbar.name}}</p>
           <p>{{post.createdAt | prettyDate}}</p>
           <img ng-src="{{post.media.thumbnailUrl}}">
         </a>

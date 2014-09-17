@@ -7,11 +7,17 @@ angular.module("hotbar.controllers")
       var user = post.get("user");
       user.fetch({
         success: function(obj) {
+          var profilePicture = obj.get("profilePicture");
+          if (profilePicture) {
+            profilePicture = profilePicture.url();
+          } else {
+            profilePicture = obj.get("picture");
+          }
           $timeout(function() {
             post.user = {
               displayName: obj.get("displayName"),
               email: obj.get("email"),
-              picture: obj.get("picture"),
+              picture: profilePicture,
               id: obj.id
             };
           });
@@ -23,22 +29,24 @@ angular.module("hotbar.controllers")
     }
     function getHotbar(post) {
       var hotbar = post.get("hotbar");
-      hotbar.fetch({
-        success: function(obj) {
-          $timeout(function() {
-            post.hotbar = {
-              name: obj.get("name"),
-              address: obj.get("address"),
-              region: obj.get("region"),
-              url: obj.get("url"),
-              id: obj.id
-            };
-          });
-        },
-        error: function(error) {
-          $log.error("Fetch hotbar error: ", error);
-        }
-      });
+      if (hotbar) {
+        hotbar.fetch({
+          success: function(obj) {
+            $timeout(function() {
+              post.hotbar = {
+                name: obj.get("name"),
+                address: obj.get("address"),
+                region: obj.get("region"),
+                url: obj.get("url"),
+                id: obj.id
+              };
+            });
+          },
+          error: function(error) {
+            $log.error("Fetch hotbar error: ", error);
+          }
+        });
+      }
     }
     function getMedia(post) {
       var media = post.get("media");
@@ -133,11 +141,17 @@ angular.module("hotbar.controllers")
       var user = post.get("user");
       user.fetch({
         success: function(obj) {
+          var profilePicture = obj.get("profilePicture");
+          if (profilePicture) {
+            profilePicture = profilePicture.url();
+          } else {
+            profilePicture = obj.get("picture");
+          }
           $timeout(function() {
             post.user = {
               displayName: obj.get("displayName"),
               email: obj.get("email"),
-              picture: obj.get("picture"),
+              picture: profilePicture,
               id: obj.id
             };
           });
@@ -149,22 +163,24 @@ angular.module("hotbar.controllers")
     }
     function getHotbar(post) {
       var hotbar = post.get("hotbar");
-      hotbar.fetch({
-        success: function(obj) {
-          $timeout(function() {
-            post.hotbar = {
-              name: obj.get("name"),
-              address: obj.get("address"),
-              region: obj.get("region"),
-              url: obj.get("url"),
-              id: obj.id
-            };
-          });
-        },
-        error: function(error) {
-          $log.error("Fetch hotbar error: ", error);
-        }
-      });      
+      if (hotbar ) {
+        hotbar.fetch({
+          success: function(obj) {
+            $timeout(function() {
+              post.hotbar = {
+                name: obj.get("name"),
+                address: obj.get("address"),
+                region: obj.get("region"),
+                url: obj.get("url"),
+                id: obj.id
+              };
+            });
+          },
+          error: function(error) {
+            $log.error("Fetch hotbar error: ", error);
+          }
+        });
+      }
     }
     function getMedia(post) {
       var media = post.get("media");
@@ -174,7 +190,7 @@ angular.module("hotbar.controllers")
             post.media = {
               description: obj.get("description"),
               url: obj.get("url"),
-              secUrl: trustSrc(obj.get("url")),
+              secUrl: obj.get("type") !== "image/jpeg" ? trustSrc(obj.get("url")) : null,
               thumbnailUrl: obj.get("thumbnailUrl"),
               type: obj.get("type")
             };
