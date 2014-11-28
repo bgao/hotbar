@@ -1,53 +1,8 @@
 "use strict";
 
 angular.module("hotbar.controllers")
-  .controller("PostsCtrl", function($scope, $ionicLoading, $log, $timeout, Posts, GeoService) {
+  .controller("PostsCtrl", function($scope, $ionicLoading, $log, $timeout, $interval, Posts, GeoService) {
 
-    function getUser(post) {
-      var user = post.get("user");
-      user.fetch({
-        success: function(obj) {
-          var profilePicture = obj.get("profilePicture");
-          if (profilePicture) {
-            profilePicture = profilePicture.url();
-          } else {
-            profilePicture = obj.get("picture");
-          }
-          $timeout(function() {
-            post.user = {
-              displayName: obj.get("displayName"),
-              email: obj.get("email"),
-              picture: profilePicture,
-              id: obj.id
-            };
-          });
-        },
-        error: function(error) {
-          $log.error("Fetch user error: ", error);
-        }
-      });
-    }
-    function getHotbar(post) {
-      var hotbar = post.get("hotbar");
-      if (hotbar) {
-        hotbar.fetch({
-          success: function(obj) {
-            $timeout(function() {
-              post.hotbar = {
-                name: obj.get("name"),
-                address: obj.get("address"),
-                region: obj.get("region"),
-                url: obj.get("url"),
-                id: obj.id
-              };
-            });
-          },
-          error: function(error) {
-            $log.error("Fetch hotbar error: ", error);
-          }
-        });
-      }
-    }
     function getMedia(post) {
       var media = post.get("media");
       media.fetch({
@@ -89,30 +44,69 @@ angular.module("hotbar.controllers")
         });
       }
     });
+
+    $scope.$on("$destroy", function() {
+      if (stop) {
+        $interval.cancel(stop);
+      }
+    });
+
+    // load sponsor advertisements
+    var stop;
+    var News = Parse.Object.extend("News");
+    // Create demo news
+    /* for (var i = 1; i < 4; ++i) {
+      var news = new News();
+      news.set("content", "Exciting news " + i);
+      news.save();
+    } */
+    var query = new Parse.Query(News);
+    query.descending("createdAt");
+    query.find({
+      success: function(news) {
+        var index = 0;
+        $timeout(function() {
+          $scope.news = {
+            content: news[index].get("content")
+          };
+          index++;
+        });
+        stop = $interval(function() {
+          var i = index % news.length;
+          $scope.news = {
+            content: news[i].get("content")
+          };
+          index++;
+        }, 3000);
+      },
+      error: function(error) {
+        $log.error("Get news error: ", error);
+      }
+    });
   })
   .controller("PostDetailCtrl", function($scope, $ionicLoading, $log, $timeout, $stateParams, $sce, Posts) {
-    var _user = Parse.User.current();
+    $scope.user = Parse.User.current();
 
     $scope.toggleLike = function() {
       var postRelation = $scope.post.relation("liked");
-      var userRelation = _user.relation("likes");
+      var userRelation = $scope.user.relation("likes");
       if ($scope.post.liked) {
         userRelation.remove($scope.post);
-        postRelation.remove(_user);
+        postRelation.remove($scope.user);
         $scope.post.liked = false;
         for (var i = 0; i < $scope.post.likes.length; i++) {
-          if ($scope.post.likes[i].id == _user.id) {
+          if ($scope.post.likes[i].id == $scope.user.id) {
             $scope.post.likes.splice(i, 1);
             break;
           }
         }
       } else {
         userRelation.add($scope.post);
-        postRelation.add(_user);
+        postRelation.add($scope.user);
         $scope.post.liked = true;
-        $scope.post.likes.push(_user);
+        $scope.post.likes.push($scope.user);
       }
-      _user.save();
+      $scope.user.save();
       $scope.post.save();
     };
 
@@ -121,11 +115,18 @@ angular.module("hotbar.controllers")
       var comment = new Comment();
       comment.set("content", content);
       comment.set("post", $scope.post);
-      comment.set("user", _user);
+      comment.set("user", $scope.user);
       comment.save();
+      var profilePicture = $scope.user.get("profilePictureThumbnail");
+      if (profilePicture) {
+        profilePicture = profilePicture.url();
+      } else {
+        profilePicture = $scope.user.get("picture");
+      }
       comment.user = {
-        displayName: _user.get("displayName"),
-        picture: _user.get("picture")
+        displayName: $scope.user.get("displayName"),
+        picture: profilePicture,
+        id: $scope.user.id
       };
       $timeout(function() {
         $scope.post.comments.push(comment);
@@ -137,11 +138,24 @@ angular.module("hotbar.controllers")
       $scope.post.comment = "";
     };
 
+    $scope.deleteComment = function(index) {
+      var comment = $scope.post.comments[index];
+      $scope.post.comments.splice(index, 1);
+      comment.destroy({
+        success: function(obj) {
+
+        }, 
+        error: function(error) {
+          $log.error("Delete comment error: ", error);
+        }
+      })
+    };
+
     function getUser(post) {
       var user = post.get("user");
       user.fetch({
         success: function(obj) {
-          var profilePicture = obj.get("profilePicture");
+          var profilePicture = obj.get("profilePictureThumbnail");
           if (profilePicture) {
             profilePicture = profilePicture.url();
           } else {
@@ -220,7 +234,7 @@ angular.module("hotbar.controllers")
             $timeout(function() {
               $scope.post.likes = list;
               for (var i = 0; i < list.length; ++i) {
-                if (list[i].id == _user.id) {
+                if (list[i].id == $scope.user.id) {
                   $scope.post.liked = true;
                   break;
                 }

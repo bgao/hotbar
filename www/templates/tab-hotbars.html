@@ -1,31 +1,30 @@
 <ion-view title="HOTBARS">
   <ion-content has-header="true" padding="false">
     <ion-list>
-      <!-- <div class="item">
+      <div class="item">
         <google-map center="map.center" zoom="map.zoom" draggable="true"
                     events="map.events" panControl="map.panControl"
                     scaleControl="map.scaleControl" zoomControl="map.zoomControl"
                     streetViewControl="map.streeViewControl" mapTypeControl="map.mapTypeControl">
         </google-map>
-      </div> -->
+      </div>
       <div class="item" ng-show="hotbarAds">
         <p>{{hotbarAds.content}}</p>
       </div>
-      <form class="item item-input-inset" ng-submit="searchHotbar(search.content)">
+      <div class="item item-input-inset">
         <label class="item-input-wrapper">
           <i class="icon ion-ios7-search placeholder-icon"></i>
           <input type="search" placeholder="Search" ng-model="search.content">
-          <!-- <button ng-show="search.content.length > 0"
-                  class="button button-icon ion-android-close input-button"
-                  ng-click="clearSearch()">
-          </button> -->
         </label>
-        <input type="submit" hidden>
-        <button class="button button-clear" ng-click="clearSearch()"
-                ng-disabled="search.content.length === 0">
-          Clear
+        <button ng-show="search.content.length > 0"
+                class="button button-icon ion-ios7-close input-button"
+                ng-click="clearSearch()">
         </button>
-      </form>
+        <button class="button button-clear" ng-click="searchHotbar(search.content)"
+                ng-disabled="search.content.length === 0">
+          Search
+        </button>
+      </div>
       <div id="hotbar" class="item item-divider">
         HotBars
       </div>
@@ -47,11 +46,11 @@
             <i class="icon ion-ios7-heart-outline"></i> 
             {{hotbar.followers.length}}
           </a>
-          <a class="subdued" ng-show="hotbar.openHours">
-            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
-          </a>
           <a class="subdued" ng-show="hotbar.rating">
             <i class="icon ion-ios7-star-outline"></i> {{hotbar.rating}}/5
+          </a>
+          <a class="subdued" ng-show="hotbar.openHours">
+            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
           </a>
         </div>
       </ion-item>
@@ -75,11 +74,11 @@
             <i class="icon ion-ios7-location-outline"></i>
             {{bar.distance}} miles
           </a>
-          <a class="subdued">
-            <i class="icon ion-ios7-clock-outline"></i> {{bar.openHours.open_now ? "Open" : "Closed"}}
-          </a>
           <a class="subdued" ng-show="bar.rating">
             <i class="icon ion-ios7-star-outline"></i> {{bar.rating}}/5
+          </a>
+          <a class="subdued">
+            <i class="icon ion-ios7-clock-outline"></i> {{bar.opening_hours.open_now ? "Open" : "Closed"}}
           </a>
         </div>
       </ion-item>

@@ -137,19 +137,17 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         <div class="item item-divider">
           Activities
         </div>
-        <div class="item">
+        <a class="item" ng-click="">
           Posts
-          <span class="badge badge-assertive">{{user.posts.length}}</span>
-        </div>
-        <div class="item">
+          <span class="badge">{{user.posts.length}}</span>
+        </a>
+        <a class="item" ng-click="">
           Following HotBars
-          <span class="badge badge-assertive">{{user.followings.length}}</span>
-        </div>
+          <span class="badge">{{user.followings.length}}</span>
+        </a>
         <a class="item item-thumbnail-right" ng-click="setCoverPicture()">
-          <img src="{{user.coverPicture}}">
+          <img ng-src="{{user.coverPicture}}">
           <span class="input-label">Home Cover Photo</span>
-          <!-- <button class="button button-icon icon ion-ios7-photos assertive" ng-click="setCoverPicture()"></button> -->
-          <!-- <button class="button button-icon icon ion-ios7-photos assertive" ng-click=""></button> -->
         </a>
         <div class="item item-divider">
           HotBar Settings
@@ -158,13 +156,9 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
           <span class="input-label">Search Distance(miles)</span>
           <input class="item-input-wrapper" type="number" min="0.1" max="50" ng-model="user.radius">
         </div>
-        <!-- <div class="item item-button-right">
-          HotBar Cover Photo
-          <button class="button button-assertive icon ion-ios7-photos" ng-click=""></button>
-        </div> -->
         <div class="item item-input-inset" ng-show="user.hotbar">
           <span class="input-label">News and Updates</span>
-          <input class="item-input-wrapper" type="text" ng-model="hotbar.news">
+          <input class="item-input-wrapper" type="text" ng-model="user.hotbarNews">
         </div>
         <!-- <label class="item item-toggle">
           <span class="input-label">Push Notification</span>

@@ -12,7 +12,7 @@ angular.module("hotbar.controllers")
       if (error) {
         $log.error("Getting user error: ", error);
       } else {
-        var _profilePicture = user.get("profilePicture");
+        var _profilePicture = user.get("profilePictureThumbnail");
         if (_profilePicture) {
           _profilePicture = _profilePicture.url();
         } else {

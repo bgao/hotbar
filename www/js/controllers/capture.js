@@ -4,6 +4,14 @@ angular.module("hotbar.controllers")
   .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce, GeoService, S3) {
 
     var alert = typeof navigator.notification == "undefined" ? window.alert : navigator.notification.alert;
+    var _position;
+    GeoService.getPosition(function(err, pos) {
+      if (err) {
+        $log.error("Get current position error: ", err);
+      } else {
+        _position = pos;
+      }
+    })
 
     // Regex for getting file name extension
     var re = /(?:\.([^.]+))?$/;
@@ -39,7 +47,7 @@ angular.module("hotbar.controllers")
       success: function(roles) {
         roles[0].getUsers().query().find({
           success: function(users) {
-            $log.debug(users);
+            // $log.debug(users);
           },
           error: function(error) {
             $log.error("Getting Administrator users error: ", error);
@@ -141,7 +149,7 @@ angular.module("hotbar.controllers")
       var user = post.get("user");
       user.fetch({
         success: function(obj) {
-          var profilePicture = obj.get("profilePicture");
+          var profilePicture = obj.get("profilePictureThumbnail");
           if (profilePicture) {
           	profilePicture = profilePicture.url();
           } else {
@@ -205,11 +213,11 @@ angular.module("hotbar.controllers")
 	function getHotbarNearby(callback) {
       var HotBar = Parse.Object.extend("HotBar");
       var query = new Parse.Query(HotBar);
-      var point = new Parse.GeoPoint(GeoService.getPosition());
+      var point = new Parse.GeoPoint(_position);
       query.withinMiles("location", point, 20.0 / 1609.0); // find hotbars within 20 meters
       query.find({
         success: function(hotbars) {
-          $log.debug("Found a list of hotbars: ", hotbars);
+          // $log.debug("Found a list of hotbars: ", hotbars);
           callback(null, hotbars[0]);
         },
         error: function(list, error) {
@@ -332,7 +340,7 @@ angular.module("hotbar.controllers")
       var postACL = new Parse.ACL(_user);
       postACL.setPublicReadAccess(true);
       post.setACL(postACL);
-      post.set("location", GeoService.getPosition());
+      post.set("location", _position);
       post.set("user", _user);
       post.set("media", media);
       post.set("hotbar", $scope.hotbar);
@@ -343,7 +351,7 @@ angular.module("hotbar.controllers")
         type: media.get("type"),
         description: media.get("description")
       };
-      var _profilePicture = _user.get("profilePicture");
+      var _profilePicture = _user.get("profilePictureThumbnail");
       if (_profilePicture) {
         _profilePicture = _profilePicture.url();
       } else {
@@ -550,4 +558,54 @@ angular.module("hotbar.controllers")
       reader.readAsDataURL($scope.files[0]);
     };
 
+  $scope.imgSrc = null;
+  var startTime = null;
+
+  $scope.config = {
+    sources: [
+      {src: $sce.trustAsResourceUrl("http://www.videogular.com/assets/videos/videogular.mp4"), type: "video/mp4"},
+      {src: $sce.trustAsResourceUrl("http://www.videogular.com/assets/videos/videogular.webm"), type: "video/webm"},
+      {src: $sce.trustAsResourceUrl("http://www.videogular.com/assets/videos/videogular.ogg"), type: "video/ogg"}
+    ],
+    theme: {
+      url: "lib/videogular/themes/default/videogular.css"
+    }
+  };
+
+  var gif = new GIF({
+    workers: 4,
+    workerScript: '../lib/gif/gif.worker.js',
+    width: 600,
+    height: 337
+  });
+
+  gif.on('start', function() {
+    startTime = now();
+  });
+
+  gif.on('progress', function(p) {
+    $scope.info = 'rendering: ' + (Math.round(p*100)) + '%';
+  });
+
+  gif.on('finished', function(blob) {
+    $scope.imgSrc = URL.createObjectURL(blob);
+    var delta = now() - startTime;
+    $scope.info = 'done in\n' + ((delta/1000).toFixed(2)) + 'sec,\nsize ' + ((blob.size/1000).toFixed(2)) + 'kb';
+  });
+
+  $scope.capture = function() {
+    return gif.addFrame($scope.video, {
+      copy: true,
+      deplay: 100
+    });
+  };
+  /* var timer = null;
+  $scope.video.addEventListener('play', function() {
+    clearInterval(timer);
+    return timer = setInterval(capture, 100);
+  });
+  $scope.video.addEventListener('ended', function() {
+    clearInterval(timer);
+    return gif.render();
+  }); */
 });

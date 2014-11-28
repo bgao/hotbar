@@ -2,16 +2,16 @@
 
 angular.module("hotbar.controllers")
   .controller("HotBarsCtrl", function($scope, $log, $timeout, $ionicLoading, GeoService, HotBars) {
-    var _position = GeoService.getPosition();
     var _user = Parse.User.current();
 
-    /* var _infowindow = new google.maps.InfoWindow();
+    var _infowindow = new google.maps.InfoWindow();
     var _map;
     var _markers = [];
+    var _mapLoaded = false;
 
     $scope.map = {
-      center: _position,
-      zoom: 14,
+      center: HotBars.position(),
+      zoom: 16,
       panControl: false,
       zoomControl: false,
       scaleControl: false,
@@ -20,9 +20,19 @@ angular.module("hotbar.controllers")
       events: {
         tilesloaded: function (map) {
           _map = map;
+          if (!_mapLoaded) {
+            var loc = new google.maps.LatLng(HotBars.position().latitude, HotBars.position().longitude);
+            _map.panTo(loc);
+            var marker = new google.maps.Marker({
+              map: _map,
+              position: loc,
+              icon: "http://www.google.com/mapfiles/arrow.png"
+            });
+            _mapLoaded = true;
+          }
         }
       }
-    }; */
+    };
 
     $ionicLoading.show();
 
@@ -125,10 +135,10 @@ angular.module("hotbar.controllers")
           if (!$scope.oldhotbars)
             $scope.oldhotbars = $scope.hotbars;
           $scope.hotbars = hotbars;
-          $timeout(function() {
+//          $timeout(function() {
             updateHotbars();
             $ionicLoading.hide();
-          });
+//          });
         },
         error: function(error) {
           $log.error("Search hotbar error: ", error);
@@ -142,7 +152,7 @@ angular.module("hotbar.controllers")
         $timeout(function() {
           $scope.hotbars = $scope.oldhotbars;
           $scope.oldhotbars = null;
-          // createBarMarkers();
+          createBarMarkers();
         });  
       }
     };
@@ -150,14 +160,14 @@ angular.module("hotbar.controllers")
     function updateHotbars() {
       for (var i = 0; i < $scope.hotbars.length; ++i) {
         var hotbar = $scope.hotbars[i];
-        hotbar.distance = GeoService.getDistance(hotbar.get("location")).toFixed(2);
+        hotbar.distance = Math.round(GeoService.getDistance(hotbar.get("location"))*10)/10;
         getFollowers(hotbar);
         getGooglePlaceDetails(hotbar);
       }
       if ($scope.hotbars.length == 0) {
         findBarsOnMap();
       }
-      // createBarMarkers();
+      createBarMarkers();
     }
 
     function getGooglePlaceDetails(hotbar) {
@@ -200,11 +210,11 @@ angular.module("hotbar.controllers")
         $scope.bars = results;
         if (status == google.maps.places.PlacesServiceStatus.OK) {
           for (var i = 0; i < results.length; i++) {
-            /* createMarker (results[i],
-              "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"); */
+            createMarker (results[i],
+              "http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
             var point = new Parse.GeoPoint(results[i].geometry.location.lat(),
                                            results[i].geometry.location.lng());
-            results[i].distance = GeoService.getDistance(point).toFixed(2);
+            results[i].distance = Math.round(GeoService.getDistance(point)*10)/10;
           }
         }
       });
@@ -231,7 +241,7 @@ angular.module("hotbar.controllers")
     }
 
     function findBarsOnMap() {
-      var loc = new google.maps.LatLng(_position.latitude, _position.longitude);
+      var loc = new google.maps.LatLng(HotBars.position().latitude, HotBars.position().longitude);
       var _radius = _user.get("radius");
       var request = {
         location: loc,
@@ -264,10 +274,9 @@ angular.module("hotbar.controllers")
   })
   .controller("HotBarDetailCtrl", 
     function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, HotBars) {
-
+      var _user = Parse.User.current();
       var _infowindow = new google.maps.InfoWindow();
       var _map;
-      var _user = Parse.User.current();
       var _relation = _user.relation("following");
 
       function createMarker(bar) {
@@ -320,6 +329,46 @@ angular.module("hotbar.controllers")
         }
       }
 
+      var stop;
+      function getNews(hotbar) {
+        if (hotbar) {
+          var News = Parse.Object.extend("News");
+          var query = new Parse.Query(News);
+          query.equalTo("hotbar", hotbar._data);
+          query.descending("createdAt");
+          query.find({
+            success: function(news) {
+              if (news.length > 0) {
+                var length = Math.min(3, news.length);
+                var index = 0;
+                $timeout(function() {
+                  $scope.news = {
+                    content: news[index].get("content")
+                  }
+                  index++;
+                });
+                stop = $interval(function() {
+                  var i = index % news.length;
+                  $scope.news = {
+                    content: news[i].get("content")
+                  };
+                  index++;
+                }, 3000);
+              }
+            },
+            error: function(error) {
+              $log.error("Get hotbar news error: ", error);
+            }
+          });
+        }
+      }
+
+      $scope.$on("$destroy", function() {
+        if (stop) {
+          $interval.cancel(stop);
+        }
+      });
+
       $scope.toggleFollow = function() {
         var hotbarRelation = $scope.hotbar._data.relation("followers");
         var userRelation = _user.relation("following");
@@ -345,7 +394,7 @@ angular.module("hotbar.controllers")
 
       $scope.getBarDistance = function(hotbar) {
         if (hotbar) {
-          return GeoService.getDistance(hotbar.location).toFixed(2);
+          return Math.round(GeoService.getDistance(hotbar.location)*10)/10;
         } else {
           return 0;
         }
@@ -357,8 +406,8 @@ angular.module("hotbar.controllers")
 
       $scope.map = {
         center: {
-          latitude: GeoService.getPosition().latitude,
-          longitude: GeoService.getPosition().longitude
+          latitude: HotBars.position().latitude,
+          longitude: HotBars.position().longitude
         },
         zoom: 16,
         events: {
@@ -411,6 +460,7 @@ angular.module("hotbar.controllers")
               _data: data
             };
             getFollowers($scope.hotbar);
+            getNews($scope.hotbar);
             // Get hotbar posts
             var _posts = [];
             var Post = Parse.Object.extend("Post");
@@ -444,7 +494,7 @@ angular.module("hotbar.controllers")
         var user = post.get("user");
         user.fetch({
           success: function(obj) {
-            var profilePicture = obj.get("profilePicture");
+            var profilePicture = obj.get("profilePictureThumbnail");
             if (profilePicture) {
               profilePicture = profilePicture.url();
             } else {

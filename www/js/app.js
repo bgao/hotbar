@@ -10,7 +10,7 @@
 // 'hotbar.controllers' is found in controllers.js
 // 'hotbar.filters' is found in filters.js
 angular.module('hotbar', ['ionic',
-                          'ion-profile-picture',
+                          'ngCordova',
                           'hotbar.config',
                           'hotbar.controllers',
                           'hotbar.services',

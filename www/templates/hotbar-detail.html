@@ -9,8 +9,8 @@
       <div class="item">
         <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map>
       </div>
-      <div class="item" ng-show="hotbar.news.content">
-        <p>{{hotbar.news.content}}</p>
+      <div class="item item-divider" ng-show="news">
+        <p>{{news.content}}</p>
       </div>
       <!-- <div class="item item-input">
         <label class="item-input-wrapper">
@@ -46,11 +46,11 @@
             <i class="icon ion-ios7-heart-outline"></i> 
             {{hotbar.followers.length}}
           </a>
-          <a class="subdued" ng-show="hotbar.openHours">
-            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
-          </a>
           <a class="subdued" ng-show="hotbar.rating">
             <i class="icon ion-ios7-star-outline"></i> {{hotbar.rating}}/5
+          </a>
+          <a class="subdued" ng-show="hotbar.openHours">
+            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
           </a>
         </div>
       </ion-item>

@@ -84,20 +84,19 @@ a:visited {
 }
 
 .video-container {
-    /* position: relative; */
-    /* padding-bottom: 56.25%; */
-    /* padding-top: 30px; */
-    width: 100%;
-    /* height: 0; */
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top: 30px;
+    height: 0;
     overflow: hidden;
 }
- 
-.video-container iframe,
-.video-container object,
+
+.video-container iframe,  
+.video-container object,  
 .video-container embed {
-    /* position: absolute; */
-    /* top: 0;
-    left: 0; */
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
 }

@@ -67,26 +67,38 @@ angular.module('hotbar.services', [])
     // For debugging
     var _position = { latitude: 42.3578035, longitude: -71.0603367 };
     // Assign the geolocation callback
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(function(pos) {
+    /* if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(pos) {
         console.debug("Updated geolocation: ", pos);
         _position.latitude = pos.coords.latitude;
         _position.longitude = pos.coords.longitude;
       }, function(err) {
         console.error("Watch device position error: ", err);
       }, { maximumAge: 300000, timeout: 60000, enableHighAccuracy:true });
-    }
-
-    function getDistance(place) {
-      var point1 = new Parse.GeoPoint(_position);
-      var point2 = place;
-      return point1.milesTo(point2);
-    }
+    } */
 
     return {
-      getPosition: function() { return _position; },
-      getDistance: getDistance
-    }
+      getPosition: function(callback) {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(pos) {
+            _position = {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude
+            };
+            callback(null, _position);
+          }, function(err) {
+            callback(err, null);
+          }, { enableHighAccuracy: true });
+        } else {
+          callback(null, _position);
+        }
+      },
+      getDistance: function(place) {
+        var point1 = new Parse.GeoPoint(_position);
+        var point2 = place;
+        return point1.milesTo(point2);
+      }
+    };
   }])
   .factory("S3", ["S3_URL", "S3_POLICY_BASE64", "S3_SIGNATURE", "S3_ACCESS_KEY",
                   "S3_SECRET_ACCESS_KEY", "S3_REGION",
@@ -201,10 +213,18 @@ angular.module('hotbar.services', [])
   .factory('Posts', ["GeoService", function(GeoService) {
     var _user = Parse.User.current();
     var Post = Parse.Object.extend("Post");
+    var _position;
+    GeoService.getPosition(function(err, pos) {
+      if (err) {
+        console.log("Get current position error: ", err);
+      } else {
+        _position = pos;
+      }
+    });
     return {
       create: function(media, callback) {
         var post = new Post();
-        post.set("location", GeoService.getPosition());
+        post.set("location", _position);
         post.set("media", media);
         post.save();
         callback(null, post);
@@ -236,24 +256,32 @@ angular.module('hotbar.services', [])
   }])
   .factory('HotBars', ["GeoService", function(GeoService) {
     var _user = Parse.User.current();
-    var _position = GeoService.getPosition();
     var HotBar = Parse.Object.extend("HotBar");
+    var _position = { latitude: 42.3578035, longitude: -71.0603367 };
 
     return {
+      position: function() { return _position; },
       create: function(hotbar, callback) {
       },
       all: function(callback) {
-        var query = new Parse.Query(HotBar);
-        var point = new Parse.GeoPoint(_position);
-        var distance = (_user.get("radius") || 1609) / 1609;
-        query.withinMiles("location", point, distance).find({
-          success: function(results) {
-            callback(null, results);
-          },
-          error: function(error) {
-            callback(error, null);
+        GeoService.getPosition(function(err, pos) {
+          if (err) {
+            console.log("Get current position error: ", err);
+          } else {
+            _position = pos;
           }
-        });
+          var query = new Parse.Query(HotBar);
+          var point = new Parse.GeoPoint(_position);
+          var distance = (_user.get("radius") || 1609) / 1609;
+          query.withinMiles("location", point, distance).find({
+            success: function(results) {
+              callback(null, results);
+            },
+            error: function(error) {
+              callback(error, null);
+            }
+          });
+        });        
       },
       get: function(id, callback) {
         var query = new Parse.Query(HotBar);

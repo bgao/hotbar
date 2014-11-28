@@ -2,7 +2,7 @@
   <ion-content has-header="true" padding="false">
     <div class="list">
       <div class="item item-avatar">
-        <img src="{{post.user.picture}}">
+        <img ng-src="{{post.user.picture}}">
         <p>
           <a class="subdued" ng-href="#/tab/posts/users/{{post.user.id}}">{{post.user.displayName}}</a> at 
           <!-- <a ng-href="#/tab/hotbars/{{post.hotbar.id}}">{{post.hotbar.name}}</a> -->
@@ -11,10 +11,10 @@
         <p>{{post.createdAt | prettyDate}}</p>
       </div>
       <div class="item item-body">
-        <img class="full-image" src="{{post.media.url}}" 
+        <img class="full-image" ng-src="{{post.media.url}}" 
              ng-show="post.media.type === 'image/jpeg'"></img>
         <div class="video-container" ng-show="post.media.type !== 'image/jpeg'">
-          <iframe src="{{post.media.secUrl}}" frameborder="0" webkit-playsinline>
+          <iframe ng-src="{{post.media.secUrl}}" frameborder="0" width="800" height="450" allowfullscreen>
           </iframe>
         </div>
         <!-- <video id="video1" class="full-image" preload="metadata" controls webkit-playsinline onclick="play()"
@@ -45,16 +45,19 @@
                     ng-click="clearComment()">
             </button> -->
           </label>
+          <button class="button-icon icon ion-ios7-close"
+                  ng-show="post.comment.length > 0"
+                  ng-click="post.comment = ''">
+          </button>
           <button class="button-icon icon ion-ios7-checkmark"
                   ng-disabled="!post.comment" ng-click="submitComment(post.comment)">
           </button>
-          <button class="button-icon icon ion-ios7-close"
-                  ng-disabled="!post.comment"
-                  ng-click="post.comment = ''">
-          </button>
         </div>
-        <div ng-repeat="comment in post.comments" class="item item-avatar">
-          <img src="{{comment.user.picture}}">
+        <div ng-repeat="comment in post.comments" class="item item-avatar item-button-right">
+          <img ng-src="{{comment.user.picture}}">
+          <button class="button button-icon icon ion-ios7-close-empty" ng-show="user.id === comment.user.id"
+                  ng-click="deleteComment($index)">
+          </button>
           <p><a href="#/tab/posts/users/{{comment.user.id}}">
             {{comment.user.displayName}}</a> posted {{comment.createdAt | prettyDate}}
           </p>

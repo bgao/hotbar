@@ -2,11 +2,14 @@
   <ion-content has-header="true" padding="false">
     <ion-scroll class="cover">
       <a href="" ng-click="getImage()" ng-hide="coverPicture">
-        <img class="full-image" src="{{coverPictureUrl}}">
+        <img class="full-image" ng-src="{{coverPictureUrl}}">
       </a>
       <div class="list" ng-show="coverPicture">
         <div class="item item-body">
           <img class="full-image" ng-src="{{coverPicture.data}}">
+          <div ng-show="post.media.type !== 'image/jpeg'">
+            <i class="ion-ios7-videocam light"></i>
+          </div>
         </div>
         <div class="item">
           <button class="button">OK</button>
@@ -18,7 +21,7 @@
       <a ng-repeat="post in posts"
          ng-href="#/tab/home/{{post.id}}"
          class="item item-avatar thumb-right">
-        <img src="{{post.user.picture}}">
+        <img ng-src="{{post.user.picture}}">
         <!-- <h2>{{post.media.description}}</h2> -->
         <p>{{post.user.displayName}}</p>
         <p>@ {{post.hotbar.name}}</p>

@@ -92,11 +92,8 @@ angular.module("hotbar.controllers")
       $scope.resetPasswordModal.remove();
     });
 
-    // Trigger geolocation callback
-    GeoService.getPosition();
-
     if (Parse.User.current()) {
-      $log.debug(Parse.User.current());
+      // $log.debug(Parse.User.current());
       $state.go("tab.posts");
     }
   })
@@ -140,7 +137,7 @@ angular.module("hotbar.controllers")
     };
   })
 
-  .controller("AccountCtrl", function($scope, $log, $state, $timeout, $ionicModal, $ionicLoading) {
+  .controller("AccountCtrl", function($scope, $log, $state, $timeout, $ionicModal, $ionicLoading, $http) {
     var alert = navigator.notification ? navigator.notification.alert : window.alert;
     var _user = Parse.User.current();
 
@@ -179,27 +176,65 @@ angular.module("hotbar.controllers")
     }
 
     function getProfilePicSuccess(imageData) {
-      savePicture(imageData, "profilePicture", function(error, profilePic) {
+      // remove old profile picture
+      var oldProfilePicture = _user.get("profilePicture");
+      var oldProfileThumbnail = _user.get("profilePictureThumbnail");
+      var config = {
+        headers: {
+          "X-Parse-Application-Id": "VX9NoYMIpR0yA7srjpmncHmthF8sAuVP80Q5Kgo2",
+          "X-Parse-Master-Key": "5jdnO46S55ZodQrr8HmlQrKcPm1svSJYHQtwsQyL"
+        }
+      };
+      $http.delete(oldProfilePicture.url(), config).then({
+        success: function(data, status) {
+          $log.debug("Delete profile picture success: ", data);
+        },
+        error: function(data, status) {
+          $log.error("Delete profile picture error: ", data);
+        }
+      });
+      $http.delete(oldProfileThumbnail.url(), config).then({
+        success: function(data, status) {
+          $log.debug("Delete profile picture thumbnail success: ", data);
+        },
+        error: function(data, status) {
+          $log.error("Delete profile picture thumbnail error: ", data);
+        }
+      });
+      savePicture(imageData, "profilePicture", function(error, profilePicture) {
         if (error) {
-          $log.error("Save profile picture file error: ", error);
+          $log.error("Save profile picture error: ", error);
         } else {
-          var profilePicture = profilePic ? profilePic.url() : null;
+          var thumbnail = _user.get("profilePictureThumbnail");
+          var p =  thumbnail ? thumbnail.url() : null;
+          $timeout(function() {
+            $scope.user.profilePicture = p;
+          })
+        }
+      });
+      /* Parse.Cloud.run("saveProfilePicture", picture, {
+        success: function() {
+          var profilePicture = _user.get("profilePicture").url();
           $timeout(function() {
             $scope.user.profilePicture = profilePicture;
           });
+        },
+        error: function(error) {
+          $log.error("Save profile picture error: ", error);
         }
-      });
+      }); */
     }
 
     function getCoverPicSuccess(imageData) {
-      savePicture(imageData, "coverPicture", function(error, coverPic) {
+      savePicture(imageData, "coverPicture", function(error, coverPicture) {
         if (error) {
-          $log.error("Save cover picture file error: ", error);
+          $log.error("Save cover picture error: ", error);
         } else {
-          var coverPicture = coverPic ? coverPic.url() : null;
-          $timeout(function() {
-            $scope.user.coverPicture = coverPicture;
-          });
+          if (coverPicture) {
+            $timeout(function() {
+              $scope.user.coverPicture = coverPicture.url();
+            });
+          }
         }
       });
     }
@@ -241,7 +276,7 @@ angular.module("hotbar.controllers")
       _coverPicture = "img/coverpicture.jpg";
     }
 
-    var _profilePicture = _user.get("profilePicture");
+    var _profilePicture = _user.get("profilePictureThumbnail");
     if (_profilePicture) {
       _profilePicture = _profilePicture.url();
     } else {
@@ -253,7 +288,8 @@ angular.module("hotbar.controllers")
         email: _user.get("email"),
         profilePicture: _profilePicture,
         radius: Number((_user.get("radius") / 1609).toFixed(2)),
-        coverPicture: _coverPicture
+        coverPicture: _coverPicture,
+        hotbar: _user.get("hotbar")
       };
     });
     
@@ -285,9 +321,18 @@ angular.module("hotbar.controllers")
     });
 
     $scope.$on('$destroy', function(event) {
+      // update user
       _user.set("radius", $scope.user.radius * 1609);
       _user.set("pushnote", $scope.user.pushNote);
       _user.save();
+      // update hotbar news
+      if ($scope.user.hotbar) {
+        var News = Parse.Object.extend("News");
+        var news = new News();
+        news.set("content", $scope.user.hotbarNews);
+        news.set("hotbar", $scope.user.hotbar);
+        news.save();
+      }
       // Remove modals
       $scope.passwordModal.remove();
       $scope.userAgreementModal.remove();
