@@ -1,8 +1,9 @@
 "use strict";
 
 angular.module('hotbar.services', [])
-  .run(["PARSE_APP_ID", "PARSE_JS_KEY", "FACEBOOK_APP_ID", function(PARSE_APP_ID, PARSE_JS_KEY, FACEBOOK_APP_ID, FACEBOOK_SECRET) {
-    Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
+  .run(["PARSE_APP_ID", "PARSE_JS_KEY", "FACEBOOK_APP_ID",
+    function(PARSE_APP_ID, PARSE_JS_KEY, FACEBOOK_APP_ID, FACEBOOK_SECRET) {
+    // Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
     // Defaults to sessionStorage for storing the Facebook token
     openFB.init({appId: FACEBOOK_APP_ID, secret: FACEBOOK_SECRET});
 
@@ -79,19 +80,17 @@ angular.module('hotbar.services', [])
 
     return {
       getPosition: function(callback) {
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(function(pos) {
-            _position = {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude
-            };
+        navigator.geolocation.getCurrentPosition(function(position) {
+          _position = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          if (callback && typeof callback === "function")
             callback(null, _position);
-          }, function(err) {
+        }, function(err) {
+          if (callback && typeof callback === "function")
             callback(err, null);
-          }, { enableHighAccuracy: true });
-        } else {
-          callback(null, _position);
-        }
+        });
       },
       getDistance: function(place) {
         var point1 = new Parse.GeoPoint(_position);

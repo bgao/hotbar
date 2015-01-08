@@ -11,7 +11,7 @@ angular.module("hotbar.controllers")
       } else {
         _position = pos;
       }
-    })
+    });
 
     // Regex for getting file name extension
     var re = /(?:\.([^.]+))?$/;
@@ -20,7 +20,6 @@ angular.module("hotbar.controllers")
 
     $scope.media = null;
     $scope.hotbar = null;
-    $scope.posts = [];
     // Get cover picture
     $scope.coverPictureUrl = _user.get("coverPicture") ? _user.get("coverPicture").url() : "img/coverpicture.jpg";
 
@@ -31,10 +30,10 @@ angular.module("hotbar.controllers")
         if (hotbar) {
           $timeout(function() {
           	$scope.hotbar = {
-	          name: hotbar.get("name"),
-	          address: hotbar.get("address"),
-	          location: hotbar.get("location"),
-	          url: hotbar.get("url")
+  	          name: hotbar.get("name"),
+  	          address: hotbar.get("address"),
+  	          location: hotbar.get("location"),
+  	          url: hotbar.get("url")
           	};
           });
         }
@@ -61,91 +60,100 @@ angular.module("hotbar.controllers")
 
     // get hotbars followed by the current user
     var userRelation = _user.relation("following");
-    $ionicLoading.show();
-    userRelation.query().find({
-      success: function(hotbars) {
-        // get user posts
-        var Post = Parse.Object.extend("Post");
-        var query1 = new Parse.Query(Post);
-        query1.equalTo("user", _user);
-        var query2 = new Parse.Query(Post);
-        query2.containedIn("hotbar", hotbars);
-        var query = Parse.Query.or(query1, query2);
-        query.descending("createdAt");
-        query.find({
-          success: function(posts) {
-            for (var i = 0; i < posts.length; ++i) {
-              /* var postGroup = [];
-              for (var j = 0; j < 3; ++j) {
-                if (i+j < posts.length) {
-                  getMedia(posts[i+j]);
-                  getHotbar(posts[i+j]);
-                  posts[i+j].user = {
-                    displayName: _user.get("displayName"),
-                    email: _user.get("email"),
-                    picture: _user.get("picture")
-                  };
-                  postGroup.push(posts[i+j]);
+
+    $scope.doRefresh = function() {
+      // $ionicLoading.show();
+      $scope.posts = [];
+      userRelation.query().find({
+        success: function(hotbars) {
+          // get user posts
+          var Post = Parse.Object.extend("Post");
+          var query1 = new Parse.Query(Post);
+          query1.equalTo("user", _user);
+          var query2 = new Parse.Query(Post);
+          query2.containedIn("hotbar", hotbars);
+          var query = Parse.Query.or(query1, query2);
+          query.descending("createdAt");
+          query.find({
+            success: function(posts) {
+              for (var i = 0; i < posts.length; ++i) {
+                /* var postGroup = [];
+                for (var j = 0; j < 3; ++j) {
+                  if (i+j < posts.length) {
+                    getMedia(posts[i+j]);
+                    getHotbar(posts[i+j]);
+                    posts[i+j].user = {
+                      displayName: _user.get("displayName"),
+                      email: _user.get("email"),
+                      picture: _user.get("picture")
+                    };
+                    postGroup.push(posts[i+j]);
+                  }
                 }
+                $scope.posts.push(postGroup); */
+                getMedia(posts[i]);
+                getHotbar(posts[i]);
+                getUser(posts[i]);
+                $scope.posts.push(posts[i]);
               }
-              $scope.posts.push(postGroup); */
-              getMedia(posts[i]);
-              getHotbar(posts[i]);
-              getUser(posts[i]);
-              $scope.posts.push(posts[i]);
+              // $ionicLoading.hide();
+              $scope.$broadcast('scroll.refreshComplete');
+            },
+            error: function(error) {
+              $log.error("Retrieving user's posts error: ", error);
+              // $ionicLoading.hide();
+              $scope.$broadcast('scroll.refreshComplete');
             }
-            $ionicLoading.hide();
+          });
+        },
+        error: function(error) {
+          $log.error("Getting hotbars followed by user error: ", error);
+          // $ionicLoading.hide();
+          $scope.$broadcast('scroll.refreshComplete');
+        }
+      });
+    };
+
+    $scope.doRefresh();
+
+    var query = new Parse.Query(Parse.Role);
+    query.equalTo("Administrator");
+    query.find({
+      success: function(roles) {
+        var adminRole = roles[0];
+        // Add someone to the role
+        /* var User = Parse.Object.extend("User");
+        var query = new Parse.Query(User);
+        query.get("0euRClL8bK", {
+          success: function(user) {
+            adminRole.getUsers().add(user);
+            adminRole.save();
           },
           error: function(error) {
-            $log.error("Retrieving user's posts error: ", error);
-            $ionicLoading.hide();
+            $log.error("Query user error: ", error);
+          }
+        }); */
+
+        adminRole.getUsers().query().find({
+          success: function(users) {
+            for (var i = 0; i < users.length; ++i) {
+              if (users[i].id == _user.id) {
+                $scope.adminUser = true;
+                break;
+              }
+            }
+          },
+          error: function(error) {
+            $log.error("Get Admin users error: ", error);
           }
         });
       },
       error: function(error) {
-        $log.error("Getting hotbars followed by user error: ", error);
-        $ionicLoading.hide();
+        $log.error("Get Admin Role error: ", error);
       }
     });
 
-  var query = new Parse.Query(Parse.Role);
-  query.equalTo("Administrator");
-  query.find({
-    success: function(roles) {
-      var adminRole = roles[0];
-      // Add someone to the role
-      /* var User = Parse.Object.extend("User");
-      var query = new Parse.Query(User);
-      query.get("0euRClL8bK", {
-        success: function(user) {
-          adminRole.getUsers().add(user);
-          adminRole.save();
-        },
-        error: function(error) {
-          $log.error("Query user error: ", error);
-        }
-      }); */
-
-      adminRole.getUsers().query().find({
-        success: function(users) {
-          for (var i = 0; i < users.length; ++i) {
-            if (users[i].id == _user.id) {
-              $scope.adminUser = true;
-              break;
-            }
-          }
-        },
-        error: function(error) {
-          $log.error("Get Admin users error: ", error);
-        }
-      });
-    },
-    error: function(error) {
-      $log.error("Get Admin Role error: ", error);
-    }
-  });
-
-	function getUser(post) {
+  	function getUser(post) {
       var user = post.get("user");
       user.fetch({
         success: function(obj) {
@@ -208,9 +216,9 @@ angular.module("hotbar.controllers")
           });
         }
       });
-    };
+    }
 
-	function getHotbarNearby(callback) {
+  	function getHotbarNearby(callback) {
       var HotBar = Parse.Object.extend("HotBar");
       var query = new Parse.Query(HotBar);
       var point = new Parse.GeoPoint(_position);
@@ -252,7 +260,7 @@ angular.module("hotbar.controllers")
     function cameraError(error) {
       if (error && error.code) {
         $log.error("Capture error: " + error.code);
-        alert('Error code: ' + error.code, null, 'Capture Error');
+        alert('Error code: ' + error.code, null, 'Camera Error');
       }
       $scope.cleanup();
     }
@@ -278,7 +286,7 @@ angular.module("hotbar.controllers")
           size: mediaFiles[0].size
         };
         // debug
-        // alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
+        alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
         //alert($scope.media.filename, null, "CameraSuccess:filename");
       });
     }
@@ -286,9 +294,9 @@ angular.module("hotbar.controllers")
     function captureError(error) {
       if (error && error.code) {
         $log.error("Capture error: " + error.code);
-        alert('Error code: ' + error.code, null, "Capture Error");
+        alert('Error code: ' + error.code, null, "Video Error");
       }
-    };
+    }
 
     $scope.captureImage = function() {
       if ($scope.hotbar || $scope.adminUser) {
@@ -369,7 +377,7 @@ angular.module("hotbar.controllers")
           url: $scope.hotbar.get("url")
         };
       }      
-      $scope.posts.unshift(post);
+      // $scope.posts.unshift(post);
       $scope.cleanup();
     }
 
@@ -447,6 +455,7 @@ angular.module("hotbar.controllers")
           };
           Parse.Cloud.run("encoding", {"data": encodingData}, {
             success: function(response) {
+              console.log("[HOTBAR][ENCODING]: ", response);
               var Media = Parse.Object.extend("Media");
               var media = new Media();
               media.set("url", "https://d2x86vdxy89a0s.cloudfront.net/" + filename + ".mp4");
@@ -454,6 +463,7 @@ angular.module("hotbar.controllers")
               // media.set("type", $scope.media.type);
               media.set("type", "video/mp4");
               media.set("description", $scope.media.description);
+              media.set("outputId", response.outputs[0].id);
               media.save();
               savePost(media);
               $ionicLoading.hide();
@@ -558,54 +568,4 @@ angular.module("hotbar.controllers")
       reader.readAsDataURL($scope.files[0]);
     };
 
-  $scope.imgSrc = null;
-  var startTime = null;
-
-  $scope.config = {
-    sources: [
-      {src: $sce.trustAsResourceUrl("http://www.videogular.com/assets/videos/videogular.mp4"), type: "video/mp4"},
-      {src: $sce.trustAsResourceUrl("http://www.videogular.com/assets/videos/videogular.webm"), type: "video/webm"},
-      {src: $sce.trustAsResourceUrl("http://www.videogular.com/assets/videos/videogular.ogg"), type: "video/ogg"}
-    ],
-    theme: {
-      url: "lib/videogular/themes/default/videogular.css"
-    }
-  };
-
-  var gif = new GIF({
-    workers: 4,
-    workerScript: '../lib/gif/gif.worker.js',
-    width: 600,
-    height: 337
   });
-
-  gif.on('start', function() {
-    startTime = now();
-  });
-
-  gif.on('progress', function(p) {
-    $scope.info = 'rendering: ' + (Math.round(p*100)) + '%';
-  });
-
-  gif.on('finished', function(blob) {
-    $scope.imgSrc = URL.createObjectURL(blob);
-    var delta = now() - startTime;
-    $scope.info = 'done in\n' + ((delta/1000).toFixed(2)) + 'sec,\nsize ' + ((blob.size/1000).toFixed(2)) + 'kb';
-  });
-
-  $scope.capture = function() {
-    return gif.addFrame($scope.video, {
-      copy: true,
-      deplay: 100
-    });
-  };
-  /* var timer = null;
-  $scope.video.addEventListener('play', function() {
-    clearInterval(timer);
-    return timer = setInterval(capture, 100);
-  });
-  $scope.video.addEventListener('ended', function() {
-    clearInterval(timer);
-    return gif.render();
-  }); */
-});

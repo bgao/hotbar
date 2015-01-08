@@ -12,11 +12,10 @@
         <img ng-src="{{post.media.thumbnailUrl}}">
       </a>
     </div> -->
-    <div class="item item-divider" ng-show="news">
-      <a class="title positive" href=""><i class="icon ion-ios7-pulse-strong"></i>
-        {{news.content}}
-      </a>
-    </div>
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
     <div ng-repeat="postgroup in posts" class="row">
       <div ng-repeat="post in postgroup" class="col col-33 col-center nopadding">
         <div class="video">

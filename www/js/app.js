@@ -10,13 +10,11 @@
 // 'hotbar.controllers' is found in controllers.js
 // 'hotbar.filters' is found in filters.js
 angular.module('hotbar', ['ionic',
-                          'ngCordova',
                           'hotbar.config',
                           'hotbar.controllers',
                           'hotbar.services',
                           'hotbar.filters',
                           'google-maps'])
-
   .run(function($ionicPlatform) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the
@@ -185,8 +183,17 @@ angular.module('hotbar', ['ionic',
         }
       });
 
-    // if none of the above states are matched, use this as the fallback
-    $urlRouterProvider.otherwise('/login');
+      // Initialize Parse TODO: the constants are defined in the config
+      var PARSE_APP_ID = "VX9NoYMIpR0yA7srjpmncHmthF8sAuVP80Q5Kgo2";
+      var PARSE_JS_KEY = "kiSDtIWzkyj1gaUCsJOIXHkRKXVDISeaQ8kgYBEH";
+      Parse.initialize(PARSE_APP_ID, PARSE_JS_KEY);
+      // if none of the above states are matched, use this as the fallback
+      // if user logged in, go to /posts, otherwise, go to /login
+      if (Parse.User.current()) {
+        $urlRouterProvider.otherwise('/tab/posts');
+      } else {
+        $urlRouterProvider.otherwise('/login');
+      }
 
   });
 

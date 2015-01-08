@@ -91,11 +91,6 @@ angular.module("hotbar.controllers")
     $scope.$on("$destroy", function(event) {
       $scope.resetPasswordModal.remove();
     });
-
-    if (Parse.User.current()) {
-      // $log.debug(Parse.User.current());
-      $state.go("tab.posts");
-    }
   })
 
   .controller("SignupCtrl", function($scope, $state, $log, $ionicModal) {

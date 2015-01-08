@@ -15,6 +15,10 @@
     </div>
   </div> -->
   <ion-content has-header="true" padding="false">
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
     <ion-scroll class="cover">
       <img class="full-image" ng-src="{{coverPictureUrl}}">
       <!-- <a href="" ng-click="getImage()" ng-hide="coverPicture">
@@ -40,10 +44,6 @@
       </div>
       <li ng-repeat="file in files">{{file.name}}</li>
     </div> -->
-    <video width="600">
-      <source src="http://jnordberg.github.io/gif.js/tests/clip.mp4">
-    </video>
-    <!-- <p><img src="imgSrc"></p> -->
     <div class="list" ng-show="media">
       <div class="item item-body">
         <!-- <div class="video-container" ng-show="post.media.type !== 'image/jpeg'">
@@ -55,8 +55,7 @@
         </video>
         <!-- <img class="full-image" src="img/genericvideoicon.jpg" 
              ng-show="media.type!='image/jpeg'" ng-click="playVideo()"> -->
-        <img class="full-image" ng-src="{{media.data}}"
-             ng-show="media.type=='image/jpeg'">
+        <img class="full-image" ng-src="{{media.data}}" ng-show="media.type=='image/jpeg'">
       </div>
       <div class="item item-input-inset">
         <label class="item-input-wrapper">

@@ -14,7 +14,7 @@
         <img class="full-image" ng-src="{{post.media.url}}" 
              ng-show="post.media.type === 'image/jpeg'"></img>
         <div class="video-container" ng-show="post.media.type !== 'image/jpeg'">
-          <iframe ng-src="{{post.media.secUrl}}" frameborder="0" width="800" height="450" allowfullscreen>
+          <iframe ng-src="{{post.media.secUrl}}" frameborder="0" autoplay="false" allowfullscreen>
           </iframe>
         </div>
         <!-- <video id="video1" class="full-image" preload="metadata" controls webkit-playsinline onclick="play()"

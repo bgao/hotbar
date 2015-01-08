@@ -1,7 +1,42 @@
 "use strict";
 
 angular.module("hotbar.controllers")
-  .controller("PostsCtrl", function($scope, $ionicLoading, $log, $timeout, $interval, Posts, GeoService) {
+  .controller("PostsCtrl", function($scope, $ionicLoading, $log, $timeout, Posts, GeoService) {
+    // Get the device geolocation
+    GeoService.getPosition();
+
+    // Create AdMob banner
+    var admobid = {};
+    if (typeof device === "object") {
+      if (device.platform == "Android") {
+        admobid = {
+          banner: "ca-app-pub-3029660904475322/7155482292"
+        };
+      } else if (device.platform == "iOS") {
+        admobid = {
+          banner: "ca-app-pub-3029660904475322/1108948698"
+        };
+      } 
+    }
+
+    if(typeof AdMob === "object") {
+      var defaultOptions = {
+        // bannerId: admobid.banner,
+        // interstitialId: admobid.interstitial,
+        // adSize: 'SMART_BANNER',
+        // width: integer, // valid when set adSize 'CUSTOM'
+        // height: integer, // valid when set adSize 'CUSTOM'
+        position: AdMob.AD_POSITION.TOP_CENTER,
+        offsetTopBar: true, // avoid overlapped by status bar, for iOS7+
+        bgColor: 'black', // color name, or '#RRGGBB'
+        // x: integer,    // valid when set position to 0 / POS_XY
+        // y: integer,    // valid when set position to 0 / POS_XY
+        isTesting: true, // set to true, to receiving test ad for testing purpose
+        // autoShow: true // auto show interstitial ad when loaded, set to false if prepare/show
+      };
+      AdMob.setOptions(defaultOptions);
+      AdMob.createBanner({adId: admobid.banner, adSize: "SMART_BANNER"});
+    }
 
     function getMedia(post) {
       var media = post.get("media");
@@ -18,71 +53,38 @@ angular.module("hotbar.controllers")
         }
       });
     }
-    $ionicLoading.show();
-    Posts.all(function(err, posts) {
-      if (err) {
-        $log.error("Posts all error: ", err);
-        $ionicLoading.hide();
-      } else {
-        // Populate post fields
-        var _posts = [];
-        for (var i = 0; i < posts.length; i+=3) {
-          var postGroup = [];
-          for (var j = 0; j < 3; ++j) {
-            if (i+j < posts.length) {
-              getMedia(posts[i+j]);
-              // getUser(posts[i+j]);
-              // getHotbar(posts[i+j]);
-              postGroup.push(posts[i+j]);
+
+    $scope.doRefresh = function() {
+      // $ionicLoading.show();
+      Posts.all(function(err, posts) {
+        if (err) {
+          $log.error("Posts all error: ", err);
+          // $ionicLoading.hide();
+          $scope.$broadcast('scroll.refreshComplete');
+        } else {
+          // Populate post fields
+          var _posts = [];
+          for (var i = 0; i < posts.length; i+=3) {
+            // 3 posts a row, which are in a group
+            var postGroup = [];
+            for (var j = 0; j < 3; ++j) {
+              if (i+j < posts.length) {
+                getMedia(posts[i+j]);
+                postGroup.push(posts[i+j]);
+              }
             }
+            _posts.push(postGroup);
           }
-          _posts.push(postGroup);
+          $timeout(function() {
+            $scope.posts = _posts;
+            // $ionicLoading.hide();
+            $scope.$broadcast('scroll.refreshComplete');
+          });
         }
-        $timeout(function() {
-          $scope.posts = _posts;
-          $ionicLoading.hide();
-        });
-      }
-    });
+      });
+    };
 
-    $scope.$on("$destroy", function() {
-      if (stop) {
-        $interval.cancel(stop);
-      }
-    });
-
-    // load sponsor advertisements
-    var stop;
-    var News = Parse.Object.extend("News");
-    // Create demo news
-    /* for (var i = 1; i < 4; ++i) {
-      var news = new News();
-      news.set("content", "Exciting news " + i);
-      news.save();
-    } */
-    var query = new Parse.Query(News);
-    query.descending("createdAt");
-    query.find({
-      success: function(news) {
-        var index = 0;
-        $timeout(function() {
-          $scope.news = {
-            content: news[index].get("content")
-          };
-          index++;
-        });
-        stop = $interval(function() {
-          var i = index % news.length;
-          $scope.news = {
-            content: news[i].get("content")
-          };
-          index++;
-        }, 3000);
-      },
-      error: function(error) {
-        $log.error("Get news error: ", error);
-      }
-    });
+    $scope.doRefresh();
   })
   .controller("PostDetailCtrl", function($scope, $ionicLoading, $log, $timeout, $stateParams, $sce, Posts) {
     $scope.user = Parse.User.current();

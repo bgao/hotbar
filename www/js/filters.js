@@ -19,7 +19,7 @@ angular.module('hotbar.filters', [])
       var diff = (((new Date()).getTime() - dateValue) / 1000)
       var day_diff = Math.floor(diff / 86400);
 
-      if ( isNaN(day_diff) || day_diff < 0 || day_diff >= 31 )
+      if ( isNaN(day_diff) || day_diff < 0 )
         return 'just now';
 
       var fred = day_diff == 0 && (
@@ -30,7 +30,7 @@ angular.module('hotbar.filters', [])
           diff < 86400 && Math.floor( diff / 3600 ) + " hours ago") ||
         day_diff == 1 && "Yesterday" ||
         day_diff < 7 && day_diff + " days ago" ||
-        day_diff < 31 && Math.ceil( day_diff / 7 ) + " weeks ago";
+        Math.ceil( day_diff / 7 ) + " weeks ago";
       return fred;
     };
   });
