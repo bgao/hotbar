@@ -161,7 +161,7 @@ angular.module("hotbar.controllers")
           if (profilePicture) {
           	profilePicture = profilePicture.url();
           } else {
-            profilePicture = obj.get("picture");
+            profilePicture = "http://www.stay.com/images/default-user-profile.png";
           }
           $timeout(function() {
             post.user = {
@@ -286,7 +286,7 @@ angular.module("hotbar.controllers")
           size: mediaFiles[0].size
         };
         // debug
-        alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
+        // alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
         //alert($scope.media.filename, null, "CameraSuccess:filename");
       });
     }
@@ -294,7 +294,7 @@ angular.module("hotbar.controllers")
     function captureError(error) {
       if (error && error.code) {
         $log.error("Capture error: " + error.code);
-        alert('Error code: ' + error.code, null, "Video Error");
+        // alert('Error code: ' + error.code, null, "Video Capture Error");
       }
     }
 
@@ -308,7 +308,7 @@ angular.module("hotbar.controllers")
         };
         navigator.camera.getPicture(cameraSuccess, cameraError, options);
       } else {
-        alert("In order to post image, you need to be in a HotBar", null, "Error");
+        alert("In order to post an image, you need to be in a HotBar", null, "Error");
       }
     };
 
@@ -317,7 +317,7 @@ angular.module("hotbar.controllers")
         window.plugins.videocaptureplus.captureVideo(captureSuccess, captureError,
           { limit: 1, duration: 20, highquality: false, frontcamera: false });
       } else {
-        alert("In order to post video, you need to be in a HotBar", null, "Error");
+        alert("In order to post a video, you need to be in a HotBar", null, "Error");
       }
     };
 
@@ -363,7 +363,7 @@ angular.module("hotbar.controllers")
       if (_profilePicture) {
         _profilePicture = _profilePicture.url();
       } else {
-        _profilePicture = _user.get("picture");
+        _profilePicture = "http://www.stay.com/images/default-user-profile.png";
       }
       post.user = {
         displayName: _user.get("displayName"),
@@ -463,7 +463,6 @@ angular.module("hotbar.controllers")
               // media.set("type", $scope.media.type);
               media.set("type", "video/mp4");
               media.set("description", $scope.media.description);
-              media.set("outputId", response.outputs[0].id);
               media.save();
               savePost(media);
               $ionicLoading.hide();

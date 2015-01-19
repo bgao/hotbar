@@ -86,8 +86,91 @@ angular.module("hotbar.controllers")
 
     $scope.doRefresh();
   })
-  .controller("PostDetailCtrl", function($scope, $ionicLoading, $log, $timeout, $stateParams, $sce, Posts) {
+  .controller("PostDetailCtrl", function($scope,$ionicLoading,$log,$timeout,$stateParams,$sce,$ionicModal,$state,Posts) {
+    var confirm = navigator.notification ? navigator.notification.confirm : window.confirm;
+
     $scope.user = Parse.User.current();
+    // check for admin user role
+    var query = new Parse.Query(Parse.Role);
+    query.equalTo("Administrator");
+    query.find({
+      success: function(roles) {
+        var adminRole = roles[0];
+        adminRole.getUsers().query().find({
+          success: function(users) {
+            for (var i = 0; i < users.length; ++i) {
+              if (users[i].id == $scope.user.id) {
+                $scope.adminUser = true;
+                break;
+              }
+            }
+          },
+          error: function(error) {
+            $log.error("Get Admin users error: ", error);
+          }
+        });
+      },
+      error: function(error) {
+        $log.error("Get Admin Role error: ", error);
+      }
+    });
+
+    $scope.hide = [{
+      bars: true
+    }];
+    $ionicModal.fromTemplateUrl('templates/modal.html', function(modal) {
+      $scope.modal = modal;
+    }, {
+      scope: $scope,
+      animation: 'slide-in-up'
+    });
+
+    function onConfirm(buttonIndex) {
+      if (buttonIndex == 2) {
+        $scope.post.destroy({
+          success: function(post) {
+            var media = post.get("media");
+            media.destroy({
+              success: function(obj) {
+                $state.go("tab.posts");
+              },
+              error: function(error) {
+                $log.error("ERROR: delete media[" + media + "] of post[" + post +"]: ", error.message);
+              }
+            })
+          },
+          error: function(error) {
+            $log.error("ERROR: delete post[" + post + "]: ", error.message);
+          }
+        });
+      }      
+    }
+
+    $scope.deletePost = function() {
+      if ( $scope.adminUser || $scope.user.id == $scope.post.user.id) {
+        if (navigator.notification) {
+          navigator.notification.confirm(
+            "Delete this post?", // message
+            onConfirm,           // callback to invoke with index of button pressed
+            "CONFIRM DELETION",  // title
+            ["CANCEL", "DELETE"] // button labels
+          );
+        } else {
+          var ret = window.confirm("Delete this post?");
+          if (ret == true)
+            onConfirm(2);
+        }
+      }
+    }
+
+    $scope.openModal = function() {
+      $scope.modal.show();
+    };
+
+    $scope.closeModal = function() {
+      $scope.modal.hide();
+      $scope.hide.bars = false;
+    };
 
     $scope.toggleLike = function() {
       var postRelation = $scope.post.relation("liked");
@@ -123,7 +206,7 @@ angular.module("hotbar.controllers")
       if (profilePicture) {
         profilePicture = profilePicture.url();
       } else {
-        profilePicture = $scope.user.get("picture");
+        profilePicture = "http://www.stay.com/images/default-user-profile.png";
       }
       comment.user = {
         displayName: $scope.user.get("displayName"),
@@ -161,7 +244,7 @@ angular.module("hotbar.controllers")
           if (profilePicture) {
             profilePicture = profilePicture.url();
           } else {
-            profilePicture = obj.get("picture");
+            profilePicture = "http://www.stay.com/images/default-user-profile.png";
           }
           $timeout(function() {
             post.user = {

@@ -56,7 +56,7 @@ angular.module("hotbar.controllers")
                 },
                 error: function(user, error) {
                   $log.error("Login failed: ", error);
-                  alert("Facebook login failed: " + error, null, "Error");
+                  alert("Facebook login failed: " + error, null, "Login Failed");
                 }
               });
             },
@@ -64,7 +64,7 @@ angular.module("hotbar.controllers")
               $log.error("Get Facebook User Info error: ", error);
             }});
         } else {
-          alert("Facebook login failed: " + response.error, null, "Error");
+          alert("Facebook login failed: " + response.error, null, "Login Failed");
         }
       }, {scope: 'email,read_stream'});
     };
@@ -112,7 +112,7 @@ angular.module("hotbar.controllers")
         // other fields can be set just like with Parse.Object
         _user.set("displayName", user.displayName);
         _user.set("radius", 1609);
-        _user.set("picture", "http://www.stay.com/images/default-user-profile.png");
+        // _user.set("picture", "http://www.stay.com/images/default-user-profile.png");
          
         _user.signUp(null, {
           success: function(user) {
@@ -180,22 +180,27 @@ angular.module("hotbar.controllers")
           "X-Parse-Master-Key": "5jdnO46S55ZodQrr8HmlQrKcPm1svSJYHQtwsQyL"
         }
       };
-      $http.delete(oldProfilePicture.url(), config).then({
-        success: function(data, status) {
-          $log.debug("Delete profile picture success: ", data);
-        },
-        error: function(data, status) {
-          $log.error("Delete profile picture error: ", data);
-        }
-      });
-      $http.delete(oldProfileThumbnail.url(), config).then({
-        success: function(data, status) {
-          $log.debug("Delete profile picture thumbnail success: ", data);
-        },
-        error: function(data, status) {
-          $log.error("Delete profile picture thumbnail error: ", data);
-        }
-      });
+      $ionicLoading.show();
+      if (oldProfilePicture) {
+        $http.delete(oldProfilePicture.url(), config).then({
+          success: function(data, status) {
+            $log.debug("Delete profile picture success: ", data);
+          },
+          error: function(data, status) {
+            $log.error("Delete profile picture error: ", data);
+          }
+        });
+      }
+      if (oldProfileThumbnail) {
+        $http.delete(oldProfileThumbnail.url(), config).then({
+          success: function(data, status) {
+            $log.debug("Delete profile picture thumbnail success: ", data);
+          },
+          error: function(data, status) {
+            $log.error("Delete profile picture thumbnail error: ", data);
+          }
+        });
+      }
       savePicture(imageData, "profilePicture", function(error, profilePicture) {
         if (error) {
           $log.error("Save profile picture error: ", error);
@@ -204,7 +209,8 @@ angular.module("hotbar.controllers")
           var p =  thumbnail ? thumbnail.url() : null;
           $timeout(function() {
             $scope.user.profilePicture = p;
-          })
+          });
+          $ionicLoading.hide();
         }
       });
       /* Parse.Cloud.run("saveProfilePicture", picture, {
@@ -246,7 +252,7 @@ angular.module("hotbar.controllers")
       var options = {
         destinationType: Camera.DestinationType.DATA_URL,
         // destinationType: Camera.DestinationType.FILE_URI,
-        quality: 45,
+        quality: 25,
         sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
         encodingType: Camera.EncodingType.JPEG
       };
@@ -275,7 +281,7 @@ angular.module("hotbar.controllers")
     if (_profilePicture) {
       _profilePicture = _profilePicture.url();
     } else {
-      _profilePicture = _user.get("picture");
+      _profilePicture = "http://www.stay.com/images/default-user-profile.png";
     }
     $timeout(function() {
       $scope.user = {
@@ -335,12 +341,11 @@ angular.module("hotbar.controllers")
 
     $scope.logout = function() {
       Parse.User.logOut();
-      $state.go("login");
-
       openFB.logout(function() {
         $log.debug("Logout successful");
       }, function(error) {
         $log.error("Logout FB error: ", error.message);
       });
+      $state.go("login");
     };
   });

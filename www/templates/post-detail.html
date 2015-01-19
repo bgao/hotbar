@@ -11,7 +11,7 @@
         <p>{{post.createdAt | prettyDate}}</p>
       </div>
       <div class="item item-body">
-        <img class="full-image" ng-src="{{post.media.url}}" 
+        <img class="full-image" ng-src="{{post.media.url}}" ng-click="openModal()"
              ng-show="post.media.type === 'image/jpeg'"></img>
         <div class="video-container" ng-show="post.media.type !== 'image/jpeg'">
           <iframe ng-src="{{post.media.secUrl}}" frameborder="0" autoplay="false" allowfullscreen>
@@ -22,7 +22,8 @@
           ng-poster="{{post.media.thumbnailUrl}}">
           Your browser does not support HTML5 video.
         </video> -->
-        <p>
+        <div class="row">
+          <div class="col col-80">
           <a class="subdued">
             <i class="icon ion-ios7-heart-outline"></i> 
             {{post.likes.length}} Likes
@@ -31,7 +32,13 @@
             <i class="icon ion-ios7-chatbubble-outline"></i>
             {{post.comments.length}} Comments
           </a>
-        </p>
+          </div>
+          <div>
+            <a class="subdued" ng-click="deletePost()">
+              Delete
+            </a>
+          </div>
+        </div>
       </div>
       <div class="list">
         <div class="item item-input">

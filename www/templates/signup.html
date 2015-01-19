@@ -63,7 +63,7 @@ You the user own all posts brought to the social interface by your account. You 
 Thank you for choosing HotBar, now go see what’s going on in your city and have a fun but most importantly safe evening!
         </pre>
         <button class="button button-full button-assertive"
-                ng-click="userAgreementModal.hide()">CLOSE</button>
+                ng-click="userAgreementModal.hide()">I ACCEPT</button>
         </div>
       </div>
     </ion-content>
@@ -90,7 +90,7 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
     </div>
     <div class="item item-checkbox terms-label">
       <label class="checkbox checkbox-assertive">
-        <input type="checkbox" ng-model="checked" ng-click="userAgreementModal.show()">
+        <input type="checkbox" ng-model="checked" ng-click="!checked || userAgreementModal.show()">
       </label>
       I agree to <a href="" ng-click="userAgreementModal.show()">
         User Agreement & Terms of Use</a>

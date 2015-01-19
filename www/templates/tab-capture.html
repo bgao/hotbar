@@ -19,9 +19,9 @@
       pulling-text="Pull to refresh..."
       on-refresh="doRefresh()">
     </ion-refresher>
-    <ion-scroll class="cover">
+    <!-- <ion-scroll class="cover">
       <img class="full-image" ng-src="{{coverPictureUrl}}">
-      <!-- <a href="" ng-click="getImage()" ng-hide="coverPicture">
+      <a href="" ng-click="getImage()" ng-hide="coverPicture">
         <img class="full-image" src="{{coverPictureUrl}}">
       </a>
       <div class="list" ng-show="coverPicture">
@@ -32,8 +32,8 @@
           <button class="button">OK</button>
           <button class="button">Cancel</button>
         </div>
-      </div> -->
-    </ion-scroll>
+      </div>
+    </ion-scroll> -->
     <!-- <div class="card">
       <div class="item">
         <input type="file"
@@ -51,7 +51,7 @@
           </iframe>
         </div> -->
         <video class="full-image" ng-show="media.type!='image/jpeg'" ng-src="{{media.data}}">
-          Your browser does not support the video tag.
+          Sorry, but video is not supported on your machine.
         </video>
         <!-- <img class="full-image" src="img/genericvideoicon.jpg" 
              ng-show="media.type!='image/jpeg'" ng-click="playVideo()"> -->
@@ -71,7 +71,7 @@
     </div>
     <div class="list" ng-show="media === null">
       <div class="item item-input-inset" ng-show="hotbar === null && !adminUser">
-        <span class="input-label">You're not in a HotBar yet.</span>
+        <span class="input-label">Whoops, you're not in a HotBar yet :(</span>
       </div>
       <div class="item item-input-inset" ng-show="hotbar !== null || adminUser">
         <span class="input-label">Capture the moment at {{hotbar.name}}</span>

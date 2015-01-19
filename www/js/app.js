@@ -35,10 +35,10 @@ angular.module('hotbar', ['ionic',
     $httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
   })
-  .config(function($ionicNavBarConfig, $ionicTabsConfig) {
+  /* .config(function($ionicNavBarConfig, $ionicTabsConfig) {
     $ionicNavBarConfig.transition = 'fade-out';
     $ionicTabsConfig.type = '';
-  })
+  }) */
 
   .config(function($stateProvider, $urlRouterProvider) {
 

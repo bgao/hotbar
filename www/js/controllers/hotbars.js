@@ -498,7 +498,7 @@ angular.module("hotbar.controllers")
             if (profilePicture) {
               profilePicture = profilePicture.url();
             } else {
-              profilePicture = obj.get("picture");
+              profilePicture = "http://www.stay.com/images/default-user-profile.png";
             }
             $timeout(function() {
               post.user = {
