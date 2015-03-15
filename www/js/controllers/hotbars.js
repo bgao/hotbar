@@ -10,7 +10,7 @@ angular.module("hotbar.controllers")
     var _mapLoaded = false;
 
     $scope.map = {
-      center: HotBars.position(),
+      center: GeoService.position(),
       zoom: 16,
       panControl: false,
       zoomControl: false,
@@ -21,7 +21,8 @@ angular.module("hotbar.controllers")
         tilesloaded: function (map) {
           _map = map;
           if (!_mapLoaded) {
-            var loc = new google.maps.LatLng(HotBars.position().latitude, HotBars.position().longitude);
+            var loc = new google.maps.LatLng(GeoService.position().latitude,
+                                             GeoService.position().longitude);
             _map.panTo(loc);
             var marker = new google.maps.Marker({
               map: _map,
@@ -48,6 +49,23 @@ angular.module("hotbar.controllers")
         });
       }
     });
+
+    // The following section was used to add current position as a hotbar
+    /* var HotBar = Parse.Object.extend("HotBar");
+    var hotbar1 = new HotBar();
+    hotbar1.set("address", "20 Arch Street, Shresbury, MA 01545");
+    hotbar1.set("location", new Parse.GeoPoint(GeoService.position()));
+    hotbar1.set("name", "HotBar001");
+    hotbar1.set("region", "Metro West");
+    hotbar1.set("nameLowercase", "hotbar001");
+    hotbar1.save(null, {
+      success: function(hotbar1) {
+        console.log("New hotbar created with objectId: ", hotbar1.id);
+      },
+      error: function(hotbar1, error) {
+        console.error("Failed to create new hotbar, with error code: ", error.message);
+      }
+    }); */
 
     // The following section was used to add lower case name field
     /* var HotBar = Parse.Object.extend("HotBar");
@@ -153,7 +171,7 @@ angular.module("hotbar.controllers")
           $scope.hotbars = $scope.oldhotbars;
           $scope.oldhotbars = null;
           createBarMarkers();
-        });  
+        });
       }
     };
 
@@ -182,7 +200,7 @@ angular.module("hotbar.controllers")
             $timeout(function() {
               hotbar.rating = place.rating;
               hotbar.openHours = place.opening_hours;
-            });          
+            });
           }
         });
       }
@@ -219,7 +237,7 @@ angular.module("hotbar.controllers")
         }
       });
     }
-    
+
     function createMarker(bar, icon) {
       console.assert(bar != null);
       var loc = (bar.geometry && bar.geometry.location) || (bar.get("location") &&
@@ -233,7 +251,7 @@ angular.module("hotbar.controllers")
         marker.setIcon(icon);
       }
       _markers.push(marker);
-      
+
       google.maps.event.addListener(marker, 'click', function() {
         _infowindow.setContent(bar.name);
         _infowindow.open(_map, this);
@@ -241,7 +259,8 @@ angular.module("hotbar.controllers")
     }
 
     function findBarsOnMap() {
-      var loc = new google.maps.LatLng(HotBars.position().latitude, HotBars.position().longitude);
+      var loc = new google.maps.LatLng(GeoService.position().latitude,
+                                       GeoService.position().longitude);
       var _radius = _user.get("radius");
       var request = {
         location: loc,
@@ -264,7 +283,7 @@ angular.module("hotbar.controllers")
       // markers for hotbars
       if ($scope.hotbars.length > 0) {
         for (var i = 0; i < $scope.hotbars.length; ++i) {
-          createMarker($scope.hotbars[i]); 
+          createMarker($scope.hotbars[i]);
         }
       } else {
         // markers for other bars
@@ -272,7 +291,7 @@ angular.module("hotbar.controllers")
       }
     }
   })
-  .controller("HotBarDetailCtrl", 
+  .controller("HotBarDetailCtrl",
     function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, HotBars) {
       var _user = Parse.User.current();
       var _infowindow = new google.maps.InfoWindow();
@@ -285,7 +304,7 @@ angular.module("hotbar.controllers")
           position: new google.maps.LatLng(bar.location.latitude,
             bar.location.longitude)
         });
-         
+
         google.maps.event.addListener(marker, 'click', function() {
           _infowindow.setContent("<h2>" + bar.name + "</h2><p>" +
           bar.address+"</p>");
@@ -325,7 +344,7 @@ angular.module("hotbar.controllers")
             error: function(error) {
               $log.error("Get hotbar's number of followers error: ", error);
             }
-          });  
+          });
         }
       }
 
@@ -406,8 +425,8 @@ angular.module("hotbar.controllers")
 
       $scope.map = {
         center: {
-          latitude: HotBars.position().latitude,
-          longitude: HotBars.position().longitude
+          latitude:  GeoService.position().latitude,
+          longitude: GeoService.position().longitude
         },
         zoom: 16,
         events: {
@@ -540,5 +559,5 @@ angular.module("hotbar.controllers")
           });
         }
       }); */
-      
+
   });

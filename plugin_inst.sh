@@ -21,3 +21,5 @@ echo "Install org.apache.cordova.inappbrowser"
 cordova plugin add org.apache.cordova.inappbrowser
 echo "Install video capture plus"
 cordova plugin add https://github.com/EddyVerbruggen/VideoCapturePlus-PhoneGap-Plugin.git
+echo "Install AdMob Plugin Pro"
+cordova plugin add com.google.cordova.admob

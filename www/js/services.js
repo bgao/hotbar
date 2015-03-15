@@ -67,6 +67,7 @@ angular.module('hotbar.services', [])
     // var _position = {latitude: 42.358431, longitude: -71.059773};
     // For debugging
     var _position = { latitude: 42.3578035, longitude: -71.0603367 };
+    var _lastUpdate = null;
     // Assign the geolocation callback
     /* if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(pos) {
@@ -79,18 +80,26 @@ angular.module('hotbar.services', [])
     } */
 
     return {
+      position: function() { return _position; },
       getPosition: function(callback) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-          _position = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          };
-          if (callback && typeof callback === "function")
-            callback(null, _position);
-        }, function(err) {
-          if (callback && typeof callback === "function")
-            callback(err, null);
-        });
+        var now = new Date();
+        if (!_lastUpdate || now - _lastUpdate >= 300000) {  // 300 seconds
+          _lastUpdate = now;
+          navigator.geolocation.getCurrentPosition(function(position) {
+            console.log("Update position");
+            _position = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            };
+            if (callback && typeof callback === "function")
+              callback(null, _position);
+          }, function(err) {
+            if (callback && typeof callback === "function")
+              callback(err, null);
+          }, {enableHighAccuracy: true});
+        } else {
+          callback(null, _position);
+        }
       },
       getDistance: function(place) {
         var point1 = new Parse.GeoPoint(_position);
@@ -121,7 +130,7 @@ angular.module('hotbar.services', [])
       }
       return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
     }
-    
+
     return {
       all: function(callback) {
         var bucket = new AWS.S3({params: {Bucket: 'hotbar'}});
@@ -131,7 +140,7 @@ angular.module('hotbar.services', [])
         });
       },
       get: function(id, callback) {
-        
+
       },
       put: function(media, callback) {
         // put binary
@@ -156,7 +165,7 @@ angular.module('hotbar.services', [])
         // cordova FileTransfer
         var ft = new FileTransfer()
         , options = new FileUploadOptions();
-        
+
         options.fileKey = "file";
         options.fileName = media.filename;
         options.mimeType = media.contentType;
@@ -169,7 +178,7 @@ angular.module('hotbar.services', [])
           "signature": S3_SIGNATURE,
           "Content-Type": media.contentType
         };
-        
+
         ft.upload(media.data, s3URI, function (e) {
           // deferred.resolve(e);
           console.log(e);
@@ -183,7 +192,7 @@ angular.module('hotbar.services', [])
     }
   }])
   .factory("ParseFile", ["PARSE_APP_ID", "PARSE_REST_KEY", function(PARSE_APP_ID, PARSE_REST_KEY) {
-    
+
     return {
       /* put: function(media, callback) {
         var ft = new FileTransfer()
@@ -256,10 +265,10 @@ angular.module('hotbar.services', [])
   .factory('HotBars', ["GeoService", function(GeoService) {
     var _user = Parse.User.current();
     var HotBar = Parse.Object.extend("HotBar");
-    var _position = { latitude: 42.3578035, longitude: -71.0603367 };
+    var _position = null;
+    var _hotbars = null;
 
     return {
-      position: function() { return _position; },
       create: function(hotbar, callback) {
       },
       all: function(callback) {
@@ -267,20 +276,28 @@ angular.module('hotbar.services', [])
           if (err) {
             console.log("Get current position error: ", err);
           } else {
-            _position = pos;
-          }
-          var query = new Parse.Query(HotBar);
-          var point = new Parse.GeoPoint(_position);
-          var distance = (_user.get("radius") || 1609) / 1609;
-          query.withinMiles("location", point, distance).find({
-            success: function(results) {
-              callback(null, results);
-            },
-            error: function(error) {
-              callback(error, null);
+            if (!_position ||
+                (_position.latitude !== pos.latitude ||
+                 _position.longitude !== pos.longitude)) {
+              console.log("Querying hotbars")
+              _position = pos;
+              var query = new Parse.Query(HotBar);
+              var point = new Parse.GeoPoint(_position);
+              var distance = (_user.get("radius") || 1609) / 1609;
+              query.withinMiles("location", point, distance).find({
+                success: function(results) {
+                  _hotbars = results;
+                  callback(null, results);
+                },
+                error: function(error) {
+                  callback(error, null);
+                }
+              });
+            } else {
+              callback(null, _hotbars);
             }
-          });
-        });        
+          }
+        });
       },
       get: function(id, callback) {
         var query = new Parse.Query(HotBar);

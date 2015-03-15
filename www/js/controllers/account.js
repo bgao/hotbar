@@ -11,6 +11,9 @@ angular.module("hotbar.controllers")
       animation: 'slide-in-up'
     });
 
+    // Get current position
+    GeoService.getPosition();
+
     $scope.login = function(user) {
       if (user && user.email && user.password) {
         $ionicLoading.show();
@@ -69,7 +72,7 @@ angular.module("hotbar.controllers")
       }, {scope: 'email,read_stream'});
     };
     $scope.loginTwitter = function() {
-      
+
     };
     $scope.signup = function() {
       $state.go("signup");
@@ -113,7 +116,7 @@ angular.module("hotbar.controllers")
         _user.set("displayName", user.displayName);
         _user.set("radius", 1609);
         // _user.set("picture", "http://www.stay.com/images/default-user-profile.png");
-         
+
         _user.signUp(null, {
           success: function(user) {
             // Hooray! Let them use the app now.
@@ -293,7 +296,7 @@ angular.module("hotbar.controllers")
         hotbar: _user.get("hotbar")
       };
     });
-    
+
     // Get user posts
     var Post = Parse.Object.extend("Post");
     var query = new Parse.Query(Post);

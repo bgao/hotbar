@@ -5,38 +5,36 @@ angular.module("hotbar.controllers")
 
     var alert = typeof navigator.notification == "undefined" ? window.alert : navigator.notification.alert;
     var _position;
+    // Regex for getting file name extension
+    var re = /(?:\.([^.]+))?$/;
+    var _user = Parse.User.current();
+    $scope.media = null;
+    $scope.hotbars = [];
+
     GeoService.getPosition(function(err, pos) {
       if (err) {
         $log.error("Get current position error: ", err);
       } else {
-        _position = pos;
-      }
-    });
-
-    // Regex for getting file name extension
-    var re = /(?:\.([^.]+))?$/;
-
-    var _user = Parse.User.current();
-
-    $scope.media = null;
-    $scope.hotbar = null;
-    // Get cover picture
-    $scope.coverPictureUrl = _user.get("coverPicture") ? _user.get("coverPicture").url() : "img/coverpicture.jpg";
-
-    getHotbarNearby(function(err, hotbar) {
-      if (err) {
-        $log.error("Found nearby hotbar error: ", err);
-      } else {
-        if (hotbar) {
-          $timeout(function() {
-          	$scope.hotbar = {
-  	          name: hotbar.get("name"),
-  	          address: hotbar.get("address"),
-  	          location: hotbar.get("location"),
-  	          url: hotbar.get("url")
-          	};
-          });
-        }
+        getHotbarNearby(pos, function(err, hotbars) {
+          if (err) {
+            $log.error("Found nearby hotbar error: ", err);
+          } else {
+            if (hotbars) {
+              $timeout(function() {
+                $scope.hotbars.length = 0;
+                for (var i = 0; i < hotbars.length; ++i) {
+                  var hotbar = {
+                    name: hotbars[i].get("name"),
+                    address: hotbars[i].get("address"),
+                    location: hotbars[i].get("location"),
+                    url: hotbars[i].get("url")
+                  };
+                  $scope.hotbars.push(hotbar);
+                }
+              });
+            }
+          }
+        });
       }
     });
 
@@ -77,20 +75,6 @@ angular.module("hotbar.controllers")
           query.find({
             success: function(posts) {
               for (var i = 0; i < posts.length; ++i) {
-                /* var postGroup = [];
-                for (var j = 0; j < 3; ++j) {
-                  if (i+j < posts.length) {
-                    getMedia(posts[i+j]);
-                    getHotbar(posts[i+j]);
-                    posts[i+j].user = {
-                      displayName: _user.get("displayName"),
-                      email: _user.get("email"),
-                      picture: _user.get("picture")
-                    };
-                    postGroup.push(posts[i+j]);
-                  }
-                }
-                $scope.posts.push(postGroup); */
                 getMedia(posts[i]);
                 getHotbar(posts[i]);
                 getUser(posts[i]);
@@ -218,20 +202,20 @@ angular.module("hotbar.controllers")
       });
     }
 
-  	function getHotbarNearby(callback) {
+  	function getHotbarNearby(position, callback) {
       var HotBar = Parse.Object.extend("HotBar");
       var query = new Parse.Query(HotBar);
-      var point = new Parse.GeoPoint(_position);
-      query.withinMiles("location", point, 20.0 / 1609.0); // find hotbars within 20 meters
+      var point = new Parse.GeoPoint(position);
+      query.withinMiles("location", point, 200.0 / 1609.0); // find hotbars within 200 meters
       query.find({
         success: function(hotbars) {
           // $log.debug("Found a list of hotbars: ", hotbars);
-          callback(null, hotbars[0]);
+          callback(null, hotbars);
         },
         error: function(list, error) {
           callback(error, null);
         }
-      });  
+      });
     }
 
     function cameraSuccess(imageFile) {
@@ -256,7 +240,7 @@ angular.module("hotbar.controllers")
         };
       });
     } */
-    
+
     function cameraError(error) {
       if (error && error.code) {
         $log.error("Capture error: " + error.code);
@@ -264,7 +248,7 @@ angular.module("hotbar.controllers")
       }
       $scope.cleanup();
     }
-    
+
     function captureSuccess(mediaFiles) {
       // $scope.mediaSrc = $scope.trustSrc(mediaFiles[0].fullPath);
       //alert(mediaFiles[0].fullPath, null, "Original file path");
@@ -376,7 +360,7 @@ angular.module("hotbar.controllers")
           region: $scope.hotbar.get("region"),
           url: $scope.hotbar.get("url")
         };
-      }      
+      }
       // $scope.posts.unshift(post);
       $scope.cleanup();
     }
@@ -485,7 +469,7 @@ angular.module("hotbar.controllers")
     }
 
     // Cleanup for ios
-    $scope.cleanup = function() {      
+    $scope.cleanup = function() {
       if ($scope.media.type === "image/jpeg" && navigator.camera) {
         navigator.camera.cleanup(function() {
           $log.debug("Camera cleanup success");
