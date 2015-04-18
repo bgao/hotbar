@@ -1,15 +1,19 @@
-"use strict";
+// hotbar.controllers.HotBarsCtrl
 
 angular.module("hotbar.controllers")
   .controller("HotBarsCtrl", function($scope, $log, $timeout, $ionicLoading, GeoService, HotBars) {
     var _user = Parse.User.current();
+
+    $scope.mapCreated = function(map) {
+      $scope.map = map;
+    };
 
     var _infowindow = new google.maps.InfoWindow();
     var _map;
     var _markers = [];
     var _mapLoaded = false;
 
-    $scope.map = {
+    /* $scope.map = {
       center: GeoService.position(),
       zoom: 16,
       panControl: false,
@@ -33,9 +37,9 @@ angular.module("hotbar.controllers")
           }
         }
       }
-    };
+    }; */
 
-    $ionicLoading.show();
+    // $ionicLoading.show();
 
     HotBars.all(function(err, hotbars) {
       if (err) {
@@ -244,7 +248,7 @@ angular.module("hotbar.controllers")
         new google.maps.LatLng(bar.get("location").latitude,
                                bar.get("location").longitude));
       var marker = new google.maps.Marker({
-        map: _map,
+        map: $scope.map,
         position: loc
       });
       if (icon) {
@@ -254,7 +258,7 @@ angular.module("hotbar.controllers")
 
       google.maps.event.addListener(marker, 'click', function() {
         _infowindow.setContent(bar.name);
-        _infowindow.open(_map, this);
+        _infowindow.open($scope.map, this);
       });
     }
 
@@ -298,19 +302,23 @@ angular.module("hotbar.controllers")
       var _map;
       var _relation = _user.relation("following");
 
+      $scope.mapCreated = function(map) {
+        $scope.map = map;
+      };
+
       function createMarker(bar) {
         var marker = new google.maps.Marker({
-          map: _map,
+          map: $scope.map,
           position: new google.maps.LatLng(bar.location.latitude,
-            bar.location.longitude)
+                                           bar.location.longitude)
         });
 
         google.maps.event.addListener(marker, 'click', function() {
           _infowindow.setContent("<h2>" + bar.name + "</h2><p>" +
           bar.address+"</p>");
-          _infowindow.open(_map, this);
+          _infowindow.open($scope.map, this);
         });
-        _map.panTo(new google.maps.LatLng(bar.location.latitude, bar.location.longitude));
+        $scope.map.panTo(new google.maps.LatLng(bar.location.latitude, bar.location.longitude));
       }
 
       function getGooglePlaceDetails(hotbar) {
@@ -319,7 +327,7 @@ angular.module("hotbar.controllers")
             placeId: hotbar.placeId
           };
           // console.assert(_map);
-          var service = new google.maps.places.PlacesService(_map);
+          var service = new google.maps.places.PlacesService($scope.map);
           service.getDetails(request, function(place, status) {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
               hotbar.rating = place.rating;
@@ -423,7 +431,7 @@ angular.module("hotbar.controllers")
         window.open($scope.hotbar.url, '_blank', 'location=yes');
       };
 
-      $scope.map = {
+      /* $scope.map = {
         center: {
           latitude:  GeoService.position().latitude,
           longitude: GeoService.position().longitude
@@ -436,13 +444,13 @@ angular.module("hotbar.controllers")
               getRegularBar();
           }
         }
-      };
+      }; */
 
       function getRegularBar() {
         var request = {
           placeId: $stateParams.hotbarId
         };
-        var service = new google.maps.places.PlacesService(_map);
+        var service = new google.maps.places.PlacesService($scope.map);
         service.getDetails(request, function(place, status) {
           if (status == google.maps.places.PlacesServiceStatus.OK) {
             $timeout(function() {

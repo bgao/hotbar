@@ -1,7 +1,6 @@
-"use strict";
 
 angular.module("hotbar.controllers")
-  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal, $ionicLoading, GeoService) {
+  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal, $ionicLoading) {
     var alert = navigator.notification ? navigator.notification.alert : window.alert;
 
     $ionicModal.fromTemplateUrl('reset-password-modal.html', function($ionicModal) {
@@ -10,9 +9,6 @@ angular.module("hotbar.controllers")
       scope: $scope,
       animation: 'slide-in-up'
     });
-
-    // Get current position
-    GeoService.getPosition();
 
     $scope.login = function(user) {
       if (user && user.email && user.password) {

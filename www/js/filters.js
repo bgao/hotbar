@@ -1,4 +1,4 @@
-"use strict";
+// hotbar.filters
 
 angular.module('hotbar.filters', [])
   .filter('prettyDate', function() {

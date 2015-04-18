@@ -1,4 +1,4 @@
-"use strict";
+// hotbar.services
 
 angular.module('hotbar.services', [])
   .run(["PARSE_APP_ID", "PARSE_JS_KEY", "FACEBOOK_APP_ID",
@@ -62,41 +62,38 @@ angular.module('hotbar.services', [])
     };
     return loc;
   }])
-  .factory("GeoService", [function() {
+  .factory("GeoService", ["$cordovaGeolocation", function($cordovaGeolocation) {
     // default location is Boston
     // var _position = {latitude: 42.358431, longitude: -71.059773};
     // For debugging
     var _position = { latitude: 42.3578035, longitude: -71.0603367 };
     var _lastUpdate = null;
-    // Assign the geolocation callback
-    /* if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(pos) {
-        console.debug("Updated geolocation: ", pos);
-        _position.latitude = pos.coords.latitude;
-        _position.longitude = pos.coords.longitude;
+    var posOptions = {timeout: 10000, enableHighAccuracy: true};
+    $cordovaGeolocation
+      .getCurrentPosition(posOptions)
+      .then(function(position) {
+        _position.latitude = position.coords.latitude;
+        _position.longitude = position.coords.longitude;
+        _lastUpdate = new Date();
       }, function(err) {
-        console.error("Watch device position error: ", err);
-      }, { maximumAge: 300000, timeout: 60000, enableHighAccuracy:true });
-    } */
+        // err
+      });
 
     return {
       position: function() { return _position; },
       getPosition: function(callback) {
         var now = new Date();
-        if (!_lastUpdate || now - _lastUpdate >= 300000) {  // 300 seconds
-          _lastUpdate = now;
-          navigator.geolocation.getCurrentPosition(function(position) {
-            console.log("Update position");
-            _position = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude
-            };
-            if (callback && typeof callback === "function")
+        if (now - _lastUpdate > 60000) { // 60 seconds
+          $cordovaGeolocation
+            .getCurrentPosition(posOptions)
+            .then(function(position) {
+              _position.latitude = position.coords.latitude;
+              _position.longitude = position.coords.longitude;
+              _lastUpdate = new Date();
               callback(null, _position);
-          }, function(err) {
-            if (callback && typeof callback === "function")
+            }, function(err) {
               callback(err, null);
-          }, {enableHighAccuracy: true});
+            });
         } else {
           callback(null, _position);
         }
@@ -312,8 +309,38 @@ angular.module('hotbar.services', [])
       }
     };
   }])
-  .factory("Users", [function() {
+  .factory("Users", ["$log", function($log) {
     return {
+      current: function() {
+        return Parse.User.current();
+      },
+      isAdmin: function(user, callback) {
+        var query = new Parse.Query(Parse.Role);
+        query.equalTo("Administrator");
+        query.find({
+          success: function(roles) {
+            var adminRole = roles[0];
+            adminRole.getUsers().query().find({
+              success: function(users) {
+                for (var i = 0; i < users.length; ++i) {
+                  if (users[i].id == user.id) {
+                    callback(null, true);
+                    break;
+                  }
+                }
+              },
+              error: function(err) {
+                $log.error("Getting Admin users error: ", err);
+                callback(err, false);
+              }
+            });
+          },
+          error: function(err) {
+            $log.error("Getting Admin role error: ", err);
+            callback(err, false);
+          }
+        });
+      },
       get: function(id, callback) {
         var User = Parse.Object.extend("User");
         var query = new Parse.Query(User);

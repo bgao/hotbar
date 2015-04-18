@@ -1,7 +1,5 @@
 // HotBar App
 
-"use strict";
-
 // angular.module is a global place for creating, registering and retrieving
 // Angular modules 'hotbar' is the name of this angular module example (also
 // set in a <body> attribute in index.html)
@@ -9,19 +7,21 @@
 // 'hotbar.services' is found in services.js
 // 'hotbar.controllers' is found in controllers.js
 // 'hotbar.filters' is found in filters.js
+// 'hotbar.directives' is found in directives.js
 angular.module('hotbar', ['ionic',
+                          'ngCordova',
                           'hotbar.config',
                           'hotbar.controllers',
                           'hotbar.services',
                           'hotbar.filters',
-                          'google-maps'])
+                          'hotbar.directives'])
   .run(function($ionicPlatform) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the
       // accessory bar above the keyboard for form inputs)
-      // if(window.cordova && window.cordova.plugins.Keyboard) {
-      //   cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-      // }
+      if(window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
+        cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+      }
       if(window.StatusBar) {
         // org.apache.cordova.statusbar required
         StatusBar.styleDefault();
@@ -196,4 +196,3 @@ angular.module('hotbar', ['ionic',
       }
 
   });
-

@@ -1,22 +1,18 @@
-"use strict";
+// hotbar.controllers.PostsCtrl
 
 angular.module("hotbar.controllers")
-  .controller("PostsCtrl", function($scope, $ionicLoading, $log, $timeout, Posts, GeoService) {
-    // Get the device geolocation
-    GeoService.getPosition();
+  .controller("PostsCtrl", function($scope, $ionicLoading, $log, $timeout, Posts) {
 
     // Create AdMob banner
     var admobid = {};
-    if (typeof device === "object") {
-      if (device.platform == "Android") {
-        admobid = {
-          banner: "ca-app-pub-3029660904475322/7155482292"
-        };
-      } else if (device.platform == "iOS") {
-        admobid = {
-          banner: "ca-app-pub-3029660904475322/1108948698"
-        };
-      } 
+    if (/(android)/i.test(navigator.userAgent)) { // for android
+      admobid = {
+        banner: "ca-app-pub-3029660904475322/7155482292"
+      };
+    } else if (/(ipod|iphone|ipad)/i.test(navigator.userAgent)) { // for ios
+      admobid = {
+        banner: "ca-app-pub-3029660904475322/1108948698"
+      };
     }
 
     if(typeof AdMob === "object") {
@@ -86,32 +82,15 @@ angular.module("hotbar.controllers")
 
     $scope.doRefresh();
   })
-  .controller("PostDetailCtrl", function($scope,$ionicLoading,$log,$timeout,$stateParams,$sce,$ionicModal,$state,Posts) {
+  .controller("PostDetailCtrl", function($scope, $ionicLoading, $log, $timeout, $stateParams,
+                                         $sce, $ionicModal, $state, $q, Posts, Users) {
     var confirm = navigator.notification ? navigator.notification.confirm : window.confirm;
 
-    $scope.user = Parse.User.current();
+    $scope.user = Users.current();
     // check for admin user role
-    var query = new Parse.Query(Parse.Role);
-    query.equalTo("Administrator");
-    query.find({
-      success: function(roles) {
-        var adminRole = roles[0];
-        adminRole.getUsers().query().find({
-          success: function(users) {
-            for (var i = 0; i < users.length; ++i) {
-              if (users[i].id == $scope.user.id) {
-                $scope.adminUser = true;
-                break;
-              }
-            }
-          },
-          error: function(error) {
-            $log.error("Get Admin users error: ", error);
-          }
-        });
-      },
-      error: function(error) {
-        $log.error("Get Admin Role error: ", error);
+    Users.isAdmin(function(err, isAdmin) {
+      if (!err) {
+        $scope.user.isAdmin = isAdmin;
       }
     });
 
@@ -135,7 +114,8 @@ angular.module("hotbar.controllers")
                 $state.go("tab.posts");
               },
               error: function(error) {
-                $log.error("ERROR: delete media[" + media + "] of post[" + post +"]: ", error.message);
+                $log.error("ERROR: delete media[" + media + "] of post[" + post +"]: ",
+                           error.message);
               }
             })
           },
@@ -146,8 +126,17 @@ angular.module("hotbar.controllers")
       }      
     }
 
+    $scope.canDelete = function() {
+      var c = $scope.user.isAdmin || false;
+      if (!c) {
+        if ($scope.post && $scope.post.user)
+          c = ($scope.user.id == $scope.post.user.id);
+      }
+      return c;
+    };
+
     $scope.deletePost = function() {
-      if ( $scope.adminUser || $scope.user.id == $scope.post.user.id) {
+      if ( $scope.canDelete()) {
         if (navigator.notification) {
           navigator.notification.confirm(
             "Delete this post?", // message
@@ -228,7 +217,7 @@ angular.module("hotbar.controllers")
       $scope.post.comments.splice(index, 1);
       comment.destroy({
         success: function(obj) {
-
+          $log.debug("Comment deleted");
         }, 
         error: function(error) {
           $log.error("Delete comment error: ", error);
@@ -236,56 +225,60 @@ angular.module("hotbar.controllers")
       })
     };
 
-    function getUser(post) {
-      var user = post.get("user");
-      user.fetch({
-        success: function(obj) {
-          var profilePicture = obj.get("profilePictureThumbnail");
-          if (profilePicture) {
-            profilePicture = profilePicture.url();
-          } else {
-            profilePicture = "http://www.stay.com/images/default-user-profile.png";
-          }
-          $timeout(function() {
+    var getUser = function(post) {
+      var deferred = $q.defer()
+        , user = post.get("user");
+      if (user) {
+        user.fetch({
+          success: function(obj) {
+            var profilePic = obj.get("profilePictureThumbnail");
             post.user = {
               displayName: obj.get("displayName"),
               email: obj.get("email"),
-              picture: profilePicture,
+              picture: profilePic.url(),
               id: obj.id
             };
-          });
-        },
-        error: function(error) {
-          $log.error("Fetch user error: ", error);
-        }
-      });
-    }
-    function getHotbar(post) {
-      var hotbar = post.get("hotbar");
-      if (hotbar ) {
-        hotbar.fetch({
-          success: function(obj) {
-            $timeout(function() {
-              post.hotbar = {
-                name: obj.get("name"),
-                address: obj.get("address"),
-                region: obj.get("region"),
-                url: obj.get("url"),
-                id: obj.id
-              };
-            });
+            deferred.resolve(post);
           },
-          error: function(error) {
-            $log.error("Fetch hotbar error: ", error);
+          error: function(err) {
+            $log.error("Fetch user error: ", err);
+            deferred.reject(err);
           }
         });
       }
-    }
-    function getMedia(post) {
-      var media = post.get("media");
-      media.fetch({
-        success: function(obj) {
-          $timeout(function() {
+      return deferred.promise;
+    };
+
+    var getHotbar = function(post) {
+      var deferred = $q.defer()
+        , hotbar = post.get("hotbar");
+      if (hotbar) {
+        hotbar.fetch({
+          success: function(obj) {
+            post.hotbar = {
+              name: obj.get("name"),
+              address: obj.get("address"),
+              region: obj.get("region"),
+              url: obj.get("url"),
+              id: obj.id
+            };
+            deferred.resolve(post);
+          },
+          error: function(err) {
+            $log.error("Fetch hotbar error: ", error);
+            deferred.reject(err);
+          }
+        });
+      }
+      return deferred.promise;
+    };
+
+    var getMedia = function(post) {
+      var deferred = $q.defer()
+        , media = post.get("media");
+      if (media) {
+        media.fetch({
+          success: function(obj) {
             post.media = {
               description: obj.get("description"),
               url: obj.get("url"),
@@ -293,9 +286,15 @@ angular.module("hotbar.controllers")
               thumbnailUrl: obj.get("thumbnailUrl"),
               type: obj.get("type")
             };
-          });
-        }
-      });
+            deferred.resolve(post);
+          },
+          error: function(err) {
+            $log.error("Fetching media error: ", err);
+            deferred.reject(err);
+          }
+        });
+      }
+      return deferred.promise;
     };
 
     function trustSrc(src) {
@@ -308,22 +307,27 @@ angular.module("hotbar.controllers")
         $log.error("Posts get error: ", err);
         $ionicLoading.hide();
       } else {
-        $scope.post = post;
-        getMedia(post);
-        getUser(post);
-        getHotbar(post);
+        getMedia(post)
+        .then(function(post) {
+          return getUser(post);
+        })
+        .then(function(post) {
+          return getHotbar(post);
+        });
         // get likes
-        var postRelation = $scope.post.relation("liked");
+        var postRelation = post.relation("liked");
         postRelation.query().find({
           success: function(list) {
             $timeout(function() {
+              $scope.post = post;
               $scope.post.likes = list;
               for (var i = 0; i < list.length; ++i) {
                 if (list[i].id == $scope.user.id) {
                   $scope.post.liked = true;
                   break;
                 }
-              }  
+              }
+              $ionicLoading.hide();  
             });
           },
           error: function(error) {
@@ -333,20 +337,23 @@ angular.module("hotbar.controllers")
         // get comments
         var Comment = Parse.Object.extend("Comment");
         var query = new Parse.Query(Comment);
-        query.equalTo("post", $scope.post);
+        query.equalTo("post", post);
         query.find({
           success: function(comments) {
-            $scope.post.comments = comments;
-            // populate the user field
-            for (var i = 0; i < comments.length; ++i) {
-              getUser(comments[i]);
-            }
+            $timeout(function() {
+              if ($scope.post) {
+                $scope.post.comments = comments;
+                // populate the user field
+                for (var i = 0; i < comments.length; ++i) {
+                  getUser(comments[i]);
+                }
+              }
+            });
           },
           error: function(comments, error) {
             $log.error("Getting post comments error: ", error);
           }
         });
-        $ionicLoading.hide();
       }
     });
   });

@@ -7,7 +7,8 @@
     </ion-scroll> -->
     <ion-list>
       <div class="item">
-        <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map>
+        <map on-create="mapCreated(map)"></map>
+        <!-- <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map> -->
       </div>
       <div class="item item-divider" ng-show="news">
         <p>{{news.content}}</p>
@@ -16,17 +17,17 @@
         <label class="item-input-wrapper">
           <input type="text" placeholder="What's happening?" ng-model="hotbar.news">
         </label>
-        <button class="button-icon icon ion-ios7-checkmark"
+        <button class="button-icon icon ion-ios-checkmark"
                 ng-disabled="!hotbar.news" ng-click="submitNews(hotbar.news)">
         </button>
-        <button class="button-icon icon ion-ios7-close"
+        <button class="button-icon icon ion-ios-close"
                 ng-disabled="!hotbar.news" ng-click="hotbar.news = ''">
         </button>
       </div> -->
       <ion-item>
         <!-- <h2 class="assertive">{{hotbar.attributes.name}}</h2> -->
         <button class="button button-icon icon"
-                ng-class="{'ion-ios7-heart assertive': hotbar.following, 'ion-ios7-heart-outline assertive': !hotbar.following}"
+                ng-class="{'ion-ios-heart assertive': hotbar.following, 'ion-ios-heart-outline assertive': !hotbar.following}"
                 ng-click="toggleFollow()"
                 ng-show="hotbar.isHotbar"> {{hotbar.following ? "Following" : "Follow"}}
         </button>
@@ -39,18 +40,18 @@
           {{hotbar.url}}</a></p>
         <div class="row">
           <a class="subdued">
-            <i class="icon ion-ios7-location-outline"></i>
+            <i class="icon ion-ios-location-outline"></i>
             {{getBarDistance(hotbar)}} miles
           </a>
           <a class="subdued" ng-show="hotbar.isHotbar">
-            <i class="icon ion-ios7-heart-outline"></i> 
+            <i class="icon ion-ios-heart-outline"></i> 
             {{hotbar.followers.length}}
           </a>
           <a class="subdued" ng-show="hotbar.rating">
-            <i class="icon ion-ios7-star-outline"></i> {{hotbar.rating}}/5
+            <i class="icon ion-ios-star-outline"></i> {{hotbar.rating}}/5
           </a>
           <a class="subdued" ng-show="hotbar.openHours">
-            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
+            <i class="icon ion-ios-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
           </a>
         </div>
       </ion-item>
@@ -68,13 +69,13 @@
         </a>
       </div>
     </ion-list>
-      <!-- <div class="ui-bar-phonenum"><i class="icon ion-ios7-telephone"></i><span>(617) 426-8888</span></div>
+      <!-- <div class="ui-bar-phonenum"><i class="icon ion-ios-telephone"></i><span>(617) 426-8888</span></div>
       <div class="ui-bar-rate">
-        <i class="icon ion-ios7-star"></i>
-        <i class="icon ion-ios7-star"></i>
-        <i class="icon ion-ios7-star"></i>
-        <i class="icon ion-ios7-star-outline"></i>
-        <i class="icon ion-ios7-star-outline"></i>
+        <i class="icon ion-ios-star"></i>
+        <i class="icon ion-ios-star"></i>
+        <i class="icon ion-ios-star"></i>
+        <i class="icon ion-ios-star-outline"></i>
+        <i class="icon ion-ios-star-outline"></i>
         <span>3.6</span>
       </div>
       <div>

@@ -1,10 +1,11 @@
-"use strict";
+// hotbar.controllers.CaptureCtrl
 
 angular.module("hotbar.controllers")
-  .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce, GeoService, S3) {
+  .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce,
+                                      $cordovaCamera, GeoService, S3) {
 
-    var alert = typeof navigator.notification == "undefined" ? window.alert : navigator.notification.alert;
-    var _position;
+    var alert = typeof navigator.notification == "undefined" ?
+      window.alert : navigator.notification.alert;
     // Regex for getting file name extension
     var re = /(?:\.([^.]+))?$/;
     var _user = Parse.User.current();
@@ -35,24 +36,6 @@ angular.module("hotbar.controllers")
             }
           }
         });
-      }
-    });
-
-    var query = new Parse.Query(Parse.Role);
-    query.equalTo("Administrator");
-    query.find({
-      success: function(roles) {
-        roles[0].getUsers().query().find({
-          success: function(users) {
-            // $log.debug(users);
-          },
-          error: function(error) {
-            $log.error("Getting Administrator users error: ", error);
-          }
-        });
-      },
-      error: function(error) {
-        $log.error("Getting Administrators error: ", error);
       }
     });
 

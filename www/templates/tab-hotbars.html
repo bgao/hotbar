@@ -1,23 +1,24 @@
 <ion-view title="HOTBARS">
   <ion-content has-header="true" padding="false">
     <ion-list>
+      <map on-create="mapCreated(map)"></map>
       <div class="item">
-        <google-map center="map.center" zoom="map.zoom" draggable="true"
+        <!-- <google-map center="map.center" zoom="map.zoom" draggable="true"
                     events="map.events" panControl="map.panControl"
                     scaleControl="map.scaleControl" zoomControl="map.zoomControl"
                     streetViewControl="map.streeViewControl" mapTypeControl="map.mapTypeControl">
-        </google-map>
+        </google-map> -->
       </div>
       <div class="item" ng-show="hotbarAds">
         <p>{{hotbarAds.content}}</p>
       </div>
       <div class="item item-input-inset">
         <label class="item-input-wrapper">
-          <i class="icon ion-ios7-search placeholder-icon"></i>
+          <i class="icon ion-ios-search placeholder-icon"></i>
           <input type="search" placeholder="Search" ng-model="search.content">
         </label>
         <button ng-show="search.content.length > 0"
-                class="button button-icon ion-ios7-close input-button"
+                class="button button-icon ion-ios-close input-button"
                 ng-click="clearSearch()">
         </button>
         <button class="button button-clear" ng-click="searchHotbar(search.content)"
@@ -39,18 +40,18 @@
         <p>{{hotbar.attributes.address}}</p>
         <div class="row">
           <a class="subdued">
-            <i class="icon ion-ios7-location-outline"></i>
+            <i class="icon ion-ios-location-outline"></i>
             {{hotbar.distance}} miles
           </a>
           <a class="subdued">
-            <i class="icon ion-ios7-heart-outline"></i> 
+            <i class="icon ion-ios-heart-outline"></i> 
             {{hotbar.followers.length}}
           </a>
           <a class="subdued" ng-show="hotbar.rating">
-            <i class="icon ion-ios7-star-outline"></i> {{hotbar.rating}}/5
+            <i class="icon ion-ios-star-outline"></i> {{hotbar.rating}}/5
           </a>
           <a class="subdued" ng-show="hotbar.openHours">
-            <i class="icon ion-ios7-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
+            <i class="icon ion-ios-clock-outline"></i> {{hotbar.openHours.open_now ? "Open" : "Closed"}}
           </a>
         </div>
       </ion-item>
@@ -71,14 +72,14 @@
         <p><a class="subdued">{{bar.vicinity}}</a></p>
         <div class="row">
           <a class="subdued">
-            <i class="icon ion-ios7-location-outline"></i>
+            <i class="icon ion-ios-location-outline"></i>
             {{bar.distance}} miles
           </a>
           <a class="subdued" ng-show="bar.rating">
-            <i class="icon ion-ios7-star-outline"></i> {{bar.rating}}/5
+            <i class="icon ion-ios-star-outline"></i> {{bar.rating}}/5
           </a>
           <a class="subdued">
-            <i class="icon ion-ios7-clock-outline"></i> {{bar.opening_hours.open_now ? "Open" : "Closed"}}
+            <i class="icon ion-ios-clock-outline"></i> {{bar.opening_hours.open_now ? "Open" : "Closed"}}
           </a>
         </div>
       </ion-item>

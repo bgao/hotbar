@@ -166,3 +166,9 @@ a:visited {
   left: 0;
   right: 0;
 }
+
+map {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
