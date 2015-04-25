@@ -2,73 +2,122 @@
 
 angular.module("hotbar.controllers")
   .controller("HotBarsCtrl", function($scope, $log, $timeout, $ionicLoading, GeoService, HotBars) {
+
     var _user = Parse.User.current();
+    var _infowindow = new google.maps.InfoWindow();
+    var _markers = [];
+
+    $scope.search = {
+      content: ""
+    };
+
+    function getGooglePlaceDetails(hotbar) {
+      if (hotbar.get("googlePlaceId")) {
+        var request = {
+          placeId: hotbar.get("googlePlaceId")
+        };
+        // console.assert(_map);
+        var service = new google.maps.places.PlacesService(document.getElementById("hotbar"));
+        service.getDetails(request, function(place, status) {
+          if (status == google.maps.places.PlacesServiceStatus.OK) {
+            $timeout(function() {
+              hotbar.rating = place.rating;
+              hotbar.openHours = place.opening_hours;
+            });
+          }
+        });
+      }
+      GeoService.getDistance(hotbar.get("location"), function(err, distance) {
+        if (err) {
+          $log.error("Getting hotbar distance error: ", status);
+        } else {
+          $timeout(function() {
+            hotbar.distance = distance.text;
+          });
+        }
+      });
+    }
+
+    function getFollowers(hotbar) {
+      var hotbarRelation = hotbar.relation("followers");
+      hotbarRelation.query().find({
+        success: function(list) {
+          hotbar.followers = list;
+          list.forEach(function(user) {
+            if (user.id == _user.id) {
+              hotbar.following = true;
+            }
+          });
+        },
+        error: function(error) {
+          $log.error("Get hotbar's number of followers error: ", error);
+        }
+      });
+    }
+
+    function updateHotbars() {
+      for (var i = 0; i < $scope.hotbars.length; ++i) {
+        var hotbar = $scope.hotbars[i];
+        getFollowers(hotbar);
+        getGooglePlaceDetails(hotbar);
+      }
+      if ($scope.hotbars.length == 0) {
+        findBarsOnMap();
+      }
+      createBarMarkers();
+    }
+
+    $ionicLoading.show();
 
     $scope.mapCreated = function(map) {
       $scope.map = map;
-    };
-
-    var _infowindow = new google.maps.InfoWindow();
-    var _map;
-    var _markers = [];
-    var _mapLoaded = false;
-
-    /* $scope.map = {
-      center: GeoService.position(),
-      zoom: 16,
-      panControl: false,
-      zoomControl: false,
-      scaleControl: false,
-      mapTypeControl: false,
-      streetViewControl: false,
-      events: {
-        tilesloaded: function (map) {
-          _map = map;
-          if (!_mapLoaded) {
-            var loc = new google.maps.LatLng(GeoService.position().latitude,
-                                             GeoService.position().longitude);
-            _map.panTo(loc);
-            var marker = new google.maps.Marker({
-              map: _map,
-              position: loc,
-              icon: "http://www.google.com/mapfiles/arrow.png"
-            });
-            _mapLoaded = true;
-          }
-        }
-      }
-    }; */
-
-    // $ionicLoading.show();
-
-    HotBars.all(function(err, hotbars) {
-      if (err) {
-        $log.error("HotBars all error: ", err);
-        $ionicLoading.hide();
-      } else {
-        $scope.hotbars = hotbars;
-        $timeout(function() {
-          updateHotbars();
-          $ionicLoading.hide();
+      GeoService.getPosition(function(err, position) {
+        var pos = new google.maps.LatLng(position.latitude, position.longitude);
+        $scope.map.setCenter(pos);
+        var marker = new google.maps.Marker({
+          map: $scope.map,
+          position: pos,
+          icon: "http://www.google.com/mapfiles/arrow.png"
         });
-      }
-    });
+      });
+      HotBars.all(function(err, hotbars) {
+        if (err) {
+          $log.error("HotBars all error: ", err);
+          $ionicLoading.hide();
+        } else {
+          $scope.hotbars = hotbars;
+          $timeout(function() {
+            updateHotbars();
+            $ionicLoading.hide();
+          });
+        }
+      });
+    };
 
     // The following section was used to add current position as a hotbar
     /* var HotBar = Parse.Object.extend("HotBar");
     var hotbar1 = new HotBar();
     hotbar1.set("address", "20 Arch Street, Shresbury, MA 01545");
-    hotbar1.set("location", new Parse.GeoPoint(GeoService.position()));
-    hotbar1.set("name", "HotBar001");
+    hotbar1.set("name", "HotBar002");
     hotbar1.set("region", "Metro West");
-    hotbar1.set("nameLowercase", "hotbar001");
-    hotbar1.save(null, {
-      success: function(hotbar1) {
-        console.log("New hotbar created with objectId: ", hotbar1.id);
-      },
-      error: function(hotbar1, error) {
-        console.error("Failed to create new hotbar, with error code: ", error.message);
+    hotbar1.set("nameLowercase", "hotbar002");
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({'address': hotbar1.get("address")}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        var loc = {
+          latitude: results[0].geometry.location.lat(),
+          longitude: results[0].geometry.location.lng()
+        };
+        hotbar1.set("location", new Parse.GeoPoint(loc));
       }
+      hotbar1.save(null, {
+        success: function(hotbar1) {
+          console.log("New hotbar created with objectId: ", hotbar1.id);
+        },
+        error: function(hotbar1, error) {
+          console.error("Failed to create new hotbar, with error code: ", error.message);
+        }
+      });
     }); */
 
     // The following section was used to add lower case name field
@@ -144,9 +193,7 @@ angular.module("hotbar.controllers")
       }
     }); */
 
-    $scope.search = {
-      content: ""
-    };
+
     $scope.searchHotbar = function(name) {
       $ionicLoading.show();
       var HotBar = Parse.Object.extend("HotBar");
@@ -179,54 +226,6 @@ angular.module("hotbar.controllers")
       }
     };
 
-    function updateHotbars() {
-      for (var i = 0; i < $scope.hotbars.length; ++i) {
-        var hotbar = $scope.hotbars[i];
-        hotbar.distance = Math.round(GeoService.getDistance(hotbar.get("location"))*10)/10;
-        getFollowers(hotbar);
-        getGooglePlaceDetails(hotbar);
-      }
-      if ($scope.hotbars.length == 0) {
-        findBarsOnMap();
-      }
-      createBarMarkers();
-    }
-
-    function getGooglePlaceDetails(hotbar) {
-      if (hotbar.get("googlePlaceId")) {
-        var request = {
-          placeId: hotbar.get("googlePlaceId")
-        };
-        // console.assert(_map);
-        var service = new google.maps.places.PlacesService(document.getElementById("hotbar"));
-        service.getDetails(request, function(place, status) {
-          if (status == google.maps.places.PlacesServiceStatus.OK) {
-            $timeout(function() {
-              hotbar.rating = place.rating;
-              hotbar.openHours = place.opening_hours;
-            });
-          }
-        });
-      }
-    }
-
-    function getFollowers(hotbar) {
-      var hotbarRelation = hotbar.relation("followers");
-      hotbarRelation.query().find({
-        success: function(list) {
-          hotbar.followers = list;
-          list.forEach(function(user) {
-            if (user.id == _user.id) {
-              hotbar.following = true;
-            }
-          });
-        },
-        error: function(error) {
-          $log.error("Get hotbar's number of followers error: ", error);
-        }
-      });
-    }
-
     function findBarsCallback(results, status) {
       $timeout(function(){
         $scope.bars = results;
@@ -236,7 +235,6 @@ angular.module("hotbar.controllers")
               "http://maps.google.com/mapfiles/ms/icons/blue-dot.png");
             var point = new Parse.GeoPoint(results[i].geometry.location.lat(),
                                            results[i].geometry.location.lng());
-            results[i].distance = Math.round(GeoService.getDistance(point)*10)/10;
           }
         }
       });
@@ -299,7 +297,6 @@ angular.module("hotbar.controllers")
     function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, HotBars) {
       var _user = Parse.User.current();
       var _infowindow = new google.maps.InfoWindow();
-      var _map;
       var _relation = _user.relation("following");
 
       $scope.mapCreated = function(map) {
@@ -319,6 +316,15 @@ angular.module("hotbar.controllers")
           _infowindow.open($scope.map, this);
         });
         $scope.map.panTo(new google.maps.LatLng(bar.location.latitude, bar.location.longitude));
+        GeoService.getDistance(bar.location, function(err, distance) {
+          if (err) {
+            $log.error("Getting bar distance error: ", err);
+          } else {
+            $timeout(function() {
+              $scope.hotbar.distance = distance.text;
+            });
+          }
+        });
       }
 
       function getGooglePlaceDetails(hotbar) {
@@ -326,7 +332,6 @@ angular.module("hotbar.controllers")
           var request = {
             placeId: hotbar.placeId
           };
-          // console.assert(_map);
           var service = new google.maps.places.PlacesService($scope.map);
           service.getDetails(request, function(place, status) {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
@@ -419,14 +424,6 @@ angular.module("hotbar.controllers")
         $scope.hotbar._data.save();
       };
 
-      $scope.getBarDistance = function(hotbar) {
-        if (hotbar) {
-          return Math.round(GeoService.getDistance(hotbar.location)*10)/10;
-        } else {
-          return 0;
-        }
-      };
-
       $scope.openLink = function() {
         window.open($scope.hotbar.url, '_blank', 'location=yes');
       };
@@ -453,20 +450,21 @@ angular.module("hotbar.controllers")
         var service = new google.maps.places.PlacesService($scope.map);
         service.getDetails(request, function(place, status) {
           if (status == google.maps.places.PlacesServiceStatus.OK) {
+            var pos = {
+              latitude: place.geometry.location.lat(),
+              longitude: place.geometry.location.lng()
+            };
             $timeout(function() {
               $scope.hotbar = {
-              name: place.name,
-              address: place.vicinity,
-              rating: place.rating,
-              openHours: place.opening_hours,
-              url: place.website,
-              location: {
-                latitude: place.geometry.location.lat(),
-                longitude: place.geometry.location.lng()
-              },
-              isHotbar: false
-            };
-            createMarker($scope.hotbar);
+                name: place.name,
+                address: place.vicinity,
+                rating: place.rating,
+                openHours: place.opening_hours,
+                url: place.website,
+                location: pos,
+                isHotbar: false
+              };
+              createMarker($scope.hotbar);
             });
           }
         });

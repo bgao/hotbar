@@ -15,6 +15,8 @@ echo "Install org.apache.cordova.file-transfer"
 cordova plugin add org.apache.cordova.file-transfer
 echo "Install org.apache.cordova.camera"
 cordova plugin add org.apache.cordova.camera
+echo "Install org.apache.cordova.media-capture"
+cordova plugin add org.apache.cordova.media-capture
 echo "Install org.apache.cordova.geolocation"
 cordova plugin add org.apache.cordova.geolocation
 echo "Install org.apache.cordova.inappbrowser"

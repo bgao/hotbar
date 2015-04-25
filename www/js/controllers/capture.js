@@ -2,7 +2,7 @@
 
 angular.module("hotbar.controllers")
   .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce,
-                                      $cordovaCamera, GeoService, S3) {
+                                      $cordovaCamera, $cordovaCapture, GeoService, S3) {
 
     var alert = typeof navigator.notification == "undefined" ?
       window.alert : navigator.notification.alert;
@@ -11,33 +11,77 @@ angular.module("hotbar.controllers")
     var _user = Parse.User.current();
     $scope.media = null;
     $scope.hotbars = [];
+    $scope.position = null;
 
-    GeoService.getPosition(function(err, pos) {
-      if (err) {
-        $log.error("Get current position error: ", err);
-      } else {
-        getHotbarNearby(pos, function(err, hotbars) {
-          if (err) {
-            $log.error("Found nearby hotbar error: ", err);
-          } else {
-            if (hotbars) {
-              $timeout(function() {
-                $scope.hotbars.length = 0;
-                for (var i = 0; i < hotbars.length; ++i) {
-                  var hotbar = {
-                    name: hotbars[i].get("name"),
-                    address: hotbars[i].get("address"),
-                    location: hotbars[i].get("location"),
-                    url: hotbars[i].get("url")
-                  };
-                  $scope.hotbars.push(hotbar);
-                }
-              });
+    var init = function() {
+      GeoService.getPosition(function(err, pos) {
+        if (err) {
+          $log.error("Get current position error: ", err);
+        } else {
+          $scope.position = pos;
+          getHotbarNearby(pos, function(err, hotbars) {
+            if (err) {
+              $log.error("Found nearby hotbar error: ", err);
+            } else {
+              if (hotbars) {
+                $timeout(function() {
+                  $scope.hotbars.length = 0;
+                  for (var i = 0; i < hotbars.length; ++i) {
+                    var hotbar = {
+                      name: hotbars[i].get("name"),
+                      address: hotbars[i].get("address"),
+                      location: hotbars[i].get("location"),
+                      url: hotbars[i].get("url")
+                    };
+                    $scope.hotbars.push(hotbar);
+                  }
+                  $scope.hotbar = $scope.hotbars[0];
+                  // alert(JSON.stringify($scope.hotbar));
+                });
+              }
             }
-          }
-        });
-      }
-    });
+          });
+        }
+      });
+      $scope.doRefresh();
+
+      var query = new Parse.Query(Parse.Role);
+      query.equalTo("Administrator");
+      query.find({
+        success: function(roles) {
+          var adminRole = roles[0];
+          // Add someone to the role
+          /* var User = Parse.Object.extend("User");
+          var query = new Parse.Query(User);
+          query.get("0euRClL8bK", {
+            success: function(user) {
+              adminRole.getUsers().add(user);
+              adminRole.save();
+            },
+            error: function(error) {
+              $log.error("Query user error: ", error);
+            }
+          }); */
+
+          adminRole.getUsers().query().find({
+            success: function(users) {
+              for (var i = 0; i < users.length; ++i) {
+                if (users[i].id == _user.id) {
+                  $scope.adminUser = true;
+                  break;
+                }
+              }
+            },
+            error: function(error) {
+              $log.error("Get Admin users error: ", error);
+            }
+          });
+        },
+        error: function(error) {
+          $log.error("Get Admin Role error: ", error);
+        }
+      });
+    }
 
     // get hotbars followed by the current user
     var userRelation = _user.relation("following");
@@ -80,45 +124,6 @@ angular.module("hotbar.controllers")
         }
       });
     };
-
-    $scope.doRefresh();
-
-    var query = new Parse.Query(Parse.Role);
-    query.equalTo("Administrator");
-    query.find({
-      success: function(roles) {
-        var adminRole = roles[0];
-        // Add someone to the role
-        /* var User = Parse.Object.extend("User");
-        var query = new Parse.Query(User);
-        query.get("0euRClL8bK", {
-          success: function(user) {
-            adminRole.getUsers().add(user);
-            adminRole.save();
-          },
-          error: function(error) {
-            $log.error("Query user error: ", error);
-          }
-        }); */
-
-        adminRole.getUsers().query().find({
-          success: function(users) {
-            for (var i = 0; i < users.length; ++i) {
-              if (users[i].id == _user.id) {
-                $scope.adminUser = true;
-                break;
-              }
-            }
-          },
-          error: function(error) {
-            $log.error("Get Admin users error: ", error);
-          }
-        });
-      },
-      error: function(error) {
-        $log.error("Get Admin Role error: ", error);
-      }
-    });
 
   	function getUser(post) {
       var user = post.get("user");
@@ -234,7 +239,7 @@ angular.module("hotbar.controllers")
 
     function captureSuccess(mediaFiles) {
       // $scope.mediaSrc = $scope.trustSrc(mediaFiles[0].fullPath);
-      //alert(mediaFiles[0].fullPath, null, "Original file path");
+      alert(mediaFiles[0].fullPath, null, "Original file path");
       var filePath = mediaFiles[0].fullPath;
       if (filePath.indexOf("file:") < 0) {
         // The path should look like /private/storage...
@@ -253,8 +258,8 @@ angular.module("hotbar.controllers")
           size: mediaFiles[0].size
         };
         // debug
-        // alert(mediaFiles[0].fullPath, null, "CameraSuccess:fullpath");
-        //alert($scope.media.filename, null, "CameraSuccess:filename");
+        alert(mediaFiles[0].fullPath, null, "captureSuccess:fullpath");
+        //alert($scope.media.filename, null, "captureSuccess:filename");
       });
     }
 
@@ -268,12 +273,14 @@ angular.module("hotbar.controllers")
     $scope.captureImage = function() {
       if ($scope.hotbar || $scope.adminUser) {
         var options = {
-          quality: 45,
+          quality: 50,
           // destinationType: Camera.DestinationType.DATA_URL,
           destinationType: Camera.DestinationType.FILE_URI,
-          sourceType: Camera.PictureSourceType.CAMERA
+          sourceType: Camera.PictureSourceType.CAMERA,
+          encodingType: Camera.EncodingType.JPEG,
+          saveToPhotoAlbum: false
         };
-        navigator.camera.getPicture(cameraSuccess, cameraError, options);
+        $cordovaCamera.getPicture(options).then(cameraSuccess, cameraError);
       } else {
         alert("In order to post an image, you need to be in a HotBar", null, "Error");
       }
@@ -281,8 +288,11 @@ angular.module("hotbar.controllers")
 
     $scope.captureVideo = function() {
       if ($scope.hotbar || $scope.adminUser) {
-        window.plugins.videocaptureplus.captureVideo(captureSuccess, captureError,
-          { limit: 1, duration: 20, highquality: false, frontcamera: false });
+        var options = {
+          limit: 1,
+          duration: 20
+        };
+        $cordovaCapture.captureVideo(options).then(captureSuccess, captureError);
       } else {
         alert("In order to post a video, you need to be in a HotBar", null, "Error");
       }
@@ -302,11 +312,11 @@ angular.module("hotbar.controllers")
       var options = {
         // destinationType: Camera.DestinationType.DATA_URL,
         destinationType: Camera.DestinationType.FILE_URI,
-        quality: 45,
+        quality: 50,
         sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
         encodingType: Camera.EncodingType.JPEG
       };
-      navigator.camera.getPicture(getImageSuccess, cameraError, options);
+      $cordovaCamera.getPicture(options).then(getImageSuccess, cameraError);
     };
 
     function savePost(media) {
@@ -315,7 +325,7 @@ angular.module("hotbar.controllers")
       var postACL = new Parse.ACL(_user);
       postACL.setPublicReadAccess(true);
       post.setACL(postACL);
-      post.set("location", _position);
+      post.set("location", $scope.position);
       post.set("user", _user);
       post.set("media", media);
       post.set("hotbar", $scope.hotbar);
@@ -346,6 +356,7 @@ angular.module("hotbar.controllers")
       }
       // $scope.posts.unshift(post);
       $scope.cleanup();
+      $ionicLoading.hide();
     }
 
     /* function uploadImage() {
@@ -534,4 +545,5 @@ angular.module("hotbar.controllers")
       reader.readAsDataURL($scope.files[0]);
     };
 
+    init();
   });

@@ -1,6 +1,6 @@
 {
   "name": "hotbar",
-  "app_id": "",
+  "app_id": "ec034f1c",
   "gulpStartupTasks": [
     "sass",
     "watch"

@@ -1,15 +1,12 @@
 <ion-view title="{{hotbar.name}}">
   <ion-content has-header="true" padding="false">
+    <map on-create="mapCreated(map)"></map>
     <!-- <ion-scroll class="cover">
       <div class="full-image">
         <img src="{{hotbar.coverpicture}}">
       </div>
     </ion-scroll> -->
     <ion-list>
-      <div class="item">
-        <map on-create="mapCreated(map)"></map>
-        <!-- <google-map center="map.center" zoom="map.zoom" draggable="true" events="map.events"></google-map> -->
-      </div>
       <div class="item item-divider" ng-show="news">
         <p>{{news.content}}</p>
       </div>
@@ -41,10 +38,11 @@
         <div class="row">
           <a class="subdued">
             <i class="icon ion-ios-location-outline"></i>
-            {{getBarDistance(hotbar)}} miles
+            <!-- {{getBarDistance(hotbar)}} miles -->
+            {{hotbar.distance}}
           </a>
           <a class="subdued" ng-show="hotbar.isHotbar">
-            <i class="icon ion-ios-heart-outline"></i> 
+            <i class="icon ion-ios-heart-outline"></i>
             {{hotbar.followers.length}}
           </a>
           <a class="subdued" ng-show="hotbar.rating">

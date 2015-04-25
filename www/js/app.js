@@ -39,6 +39,10 @@ angular.module('hotbar', ['ionic',
     $ionicNavBarConfig.transition = 'fade-out';
     $ionicTabsConfig.type = '';
   }) */
+  .config(function($ionicConfigProvider) {
+    $ionicConfigProvider.tabs.position("bottom");
+    $ionicConfigProvider.navBar.alignTitle("center");
+  })
 
   .config(function($stateProvider, $urlRouterProvider) {
 
@@ -64,7 +68,7 @@ angular.module('hotbar', ['ionic',
         templateUrl: "templates/retrievePass.html",
         controller: "RetrievePassCtrl"
       })
-    
+
     // setup an abstract state for the tabs directive
       .state('tab', {
         url: "/tab",

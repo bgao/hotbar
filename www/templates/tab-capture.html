@@ -1,16 +1,16 @@
 <ion-view title="CAPTURE">
   <!-- <ion-nav-buttons side="right">
-    <button class="button-icon icon ion-ios7-camera light"
+    <button class="button-icon icon ion-ios-camera light"
             ng-click="captureImage()"></button>
-    <button class="button-icon icon ion-ios7-videocam light"
+    <button class="button-icon icon ion-ios-videocam light"
             ng-click="captureVideo()"></button>
   </ion-nav-buttons> -->
   <!-- <div class="bar bar-subheader">
     <div class="button-bar">
-      <button class="button button-icon icon ion-ios7-camera"
+      <button class="button button-icon icon ion-ios-camera"
               ng-click="captureImage()"></button>
-      <button class="button button-icon icon ion-ios7-videocam"></button>
-      <button class="button button-icon icon ion-ios7-photos"
+      <button class="button button-icon icon ion-ios-videocam"></button>
+      <button class="button button-icon icon ion--photos"
               ng-click="getImage()"></button>
     </div>
   </div> -->
@@ -39,7 +39,7 @@
         <input type="file"
                onchange="angular.element(this).scope().filesChanged(this)"
                multiple />
-        <button ng-click="uploadImage()">Upload</button> 
+        <button ng-click="uploadImage()">Upload</button>
         <button ng-click="encodingRequest()">Encoding</button>
       </div>
       <li ng-repeat="file in files">{{file.name}}</li>
@@ -53,7 +53,7 @@
         <video class="full-image" ng-show="media.type!='image/jpeg'" ng-src="{{media.data}}">
           Sorry, but video is not supported on your machine.
         </video>
-        <!-- <img class="full-image" src="img/genericvideoicon.jpg" 
+        <!-- <img class="full-image" src="img/genericvideoicon.jpg"
              ng-show="media.type!='image/jpeg'" ng-click="playVideo()"> -->
         <img class="full-image" ng-src="{{media.data}}" ng-show="media.type=='image/jpeg'">
       </div>
@@ -61,10 +61,10 @@
         <label class="item-input-wrapper">
           <input type="text" placeholder="Add Description" ng-model="media.description">
         </label>
-        <button class="button-icon icon ion-ios7-checkmark"
+        <button class="button-icon icon ion-ios-checkmark"
                 ng-click="uploadMedia()">
         </button>
-        <button class="button-icon icon ion-ios7-close"
+        <button class="button-icon icon ion-ios-close"
                 ng-click="cleanup()">
         </button>
       </div>
@@ -75,9 +75,9 @@
       </div>
       <div class="item item-input-inset" ng-show="hotbar !== null || adminUser">
         <span class="input-label">Capture the moment at {{hotbar.name}}</span>
-        <button class="button button-icon icon ion-ios7-camera assertive" ng-click="captureImage()">
+        <button class="button button-icon icon ion-ios-camera assertive" ng-click="captureImage()">
         </button>
-        <button class="button button-icon icon icon-left ion-ios7-videocam assertive" ng-click="captureVideo()">
+        <button class="button button-icon icon icon-left ion-ios-videocam assertive" ng-click="captureVideo()">
         </button>
       </div>
       <a ng-repeat="post in posts"

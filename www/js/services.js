@@ -98,10 +98,26 @@ angular.module('hotbar.services', [])
           callback(null, _position);
         }
       },
-      getDistance: function(place) {
-        var point1 = new Parse.GeoPoint(_position);
+      getDistance: function(place, callback) {
+        /* var point1 = new Parse.GeoPoint(_position);
         var point2 = place;
-        return point1.milesTo(point2);
+        return point1.milesTo(point2); */
+        var o = new google.maps.LatLng(_position.latitude, _position.longitude);
+        var d = new google.maps.LatLng(place.latitude, place.longitude);
+        var service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: [o],
+          destinations: [d],
+          travelMode: google.maps.TravelMode.DRIVING,
+          unitSystem: google.maps.UnitSystem.IMPERIAL
+        }, function(response, status) {
+          if (status != google.maps.DistanceMatrixStatus.OK) {
+            callback(status, null);
+          } else {
+            var results = response.rows[0].elements;
+            callback(null, results[0].distance);
+          }
+        });
       }
     };
   }])
