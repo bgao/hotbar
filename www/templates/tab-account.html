@@ -7,25 +7,30 @@
       <div class="padding">
       <div class="list">
         <label class="item item-input">
-          <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
+          <i class="icon ion-ios-locked-outline placeholder-icon"></i>
           <input ng-model="currentPassword" type="password"
                  placeholder="Current Password">
         </label>
         <label class="item item-input">
-          <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
+          <i class="icon ion-ios-locked-outline placeholder-icon"></i>
           <input ng-model="newPassword" type="password"
                  placeholder="New Password">
         </label>
+        <label class="item item-input">
+          <i class="icon ion-ios-locked-outline placeholder-icon"></i>
+          <input ng-model="newPassword2" type="password"
+                 placeholder="New Password Again">
+        </label>
         <div class="row">
           <div class="col col-50">
-            <button class="button button-full button-assertive"
-                    ng-disabled="!currentPassword || !newPassword"
-                    ng-click="changePassword(currentPassword, newPassword)">
+            <button class="button button-block button-assertive"
+                    ng-disabled="!currentPassword || !newPassword || !newPassword2"
+                    ng-click="changePassword(currentPassword, newPassword, newPassword2)">
               SUBMIT
             </button>
           </div>
           <div class="col col-50">
-            <button class="button button-full button-assertive"
+            <button class="button button-block button-assertive"
                     ng-click="passwordModal.hide()">
               CANCEL
             </button>
@@ -107,14 +112,12 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
 </script>
 <ion-view title="ACCOUNT">
   <ion-content has-header="true" padding="false">
-    <div>
-      <div class="list">
-        <div class="item item-divider">
-          Account Information
+    <div class="card">
+      <div class="item item-divider">
+          Account Details
         </div>
 
         <a class="item item-thumbnail-right" ng-click="setProfilePicture()">
-          <!-- <ion-profile-picture ng-model="myPicture"> -->
           <img ng-src="{{user.profilePicture}}">
           <span class="input-label">{{user.displayName}}</span>
         </a>
@@ -127,6 +130,9 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
           <span class="input-label">Email</span>
           {{user.email}}
         </div>
+    </div>
+      <div class="card">
+        
         <!-- <label class="item item-input-inset">
           <span class="input-label">Password</span>
           <button class="button button-small button-clear button-assertive"
@@ -145,10 +151,6 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
           Following HotBars
           <span class="badge">{{user.followings.length}}</span>
         </a>
-        <!-- <a class="item item-thumbnail-right" ng-click="setCoverPicture()">
-          <img ng-src="{{user.coverPicture}}">
-          <span class="input-label">Home Cover Photo</span>
-        </a> -->
         <div class="item item-divider">
           HotBar Settings
         </div>
@@ -178,10 +180,12 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         </div>
       </div>
       <div>
-        <button class="button button-full button-assertive" ng-click="logout()">
+        <button class="button button-block button-assertive" ng-click="passwordModal.show()">
+          CHANGE PASSWORD
+        </button>
+        <button class="button button-block button-assertive" ng-click="logout()">
           LOG OUT
         </button>
       </div>
-    </div>
   </ion-content>
 </ion-view>

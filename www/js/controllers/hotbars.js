@@ -67,8 +67,6 @@ angular.module("hotbar.controllers")
       createBarMarkers();
     }
 
-    $ionicLoading.show();
-
     $scope.mapCreated = function(map) {
       $scope.map = map;
       GeoService.getPosition(function(err, position) {
@@ -80,19 +78,27 @@ angular.module("hotbar.controllers")
           icon: "http://www.google.com/mapfiles/arrow.png"
         });
       });
+    };
+
+    $scope.doRefresh = function() {
+      $ionicLoading.show();
       HotBars.all(function(err, hotbars) {
         if (err) {
           $log.error("HotBars all error: ", err);
           $ionicLoading.hide();
+          $scope.$broadcast('scroll.refreshComplete');
         } else {
           $scope.hotbars = hotbars;
           $timeout(function() {
             updateHotbars();
             $ionicLoading.hide();
+            $scope.$broadcast('scroll.refreshComplete');
           });
         }
       });
     };
+
+    $scope.doRefresh();
 
     // The following section was used to add current position as a hotbar
     /* var HotBar = Parse.Object.extend("HotBar");

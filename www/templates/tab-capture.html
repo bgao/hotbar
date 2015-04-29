@@ -70,15 +70,16 @@
       </div>
     </div>
     <div class="list" ng-show="media === null">
-      <div class="item item-input-inset" ng-show="hotbar === null && !adminUser">
+      <!-- <div class="item item-input-inset" ng-show="hotbar === null && !adminUser">
         <span class="input-label">Whoops, you're not in a HotBar yet :(</span>
-      </div>
-      <div class="item item-input-inset" ng-show="hotbar !== null || adminUser">
-        <span class="input-label">Capture the moment at {{hotbar.name}}</span>
-        <button class="button button-icon icon ion-ios-camera assertive" ng-click="captureImage()">
-        </button>
-        <button class="button button-icon icon icon-left ion-ios-videocam assertive" ng-click="captureVideo()">
-        </button>
+      </div> -->
+      <div class="item item-button-right" ng-show="hotbar !== null || adminUser">
+        <div class="buttons">
+          <button class="button button-icon icon ion-ios-camera assertive" ng-click="captureImage()">
+          </button>
+          <button class="button button-icon icon ion-ios-videocam assertive" ng-click="captureVideo()">
+          </button>
+        </div>
       </div>
       <a ng-repeat="post in posts"
          ng-href="#/tab/capture/{{post.id}}"

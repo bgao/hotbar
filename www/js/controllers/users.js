@@ -1,9 +1,7 @@
 // hotbar.controllers.UserCtrl
 
 angular.module("hotbar.controllers")
-.controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout,
-                                 $ionicLoading, Users, HotBars) {
-  var _user = Users.current();
+.controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout, $q, $ionicLoading, Users, HotBars) {
 
   Users.get($stateParams.userId, function(error, user) {
     if (error) {
@@ -36,9 +34,9 @@ angular.module("hotbar.controllers")
         success: function(posts) {
           for (var i = 0; i < posts.length; ++i) {
             posts[i].user = $scope.user;
-            getHotbar(posts[i])
+            getMedia(posts[i])
               .then(function(post) {
-                return getMedia(post);
+                return getHotbar(post);
               });
             _posts.push(posts[i]);
           }

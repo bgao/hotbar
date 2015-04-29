@@ -1,7 +1,8 @@
 
 angular.module("hotbar.controllers")
-  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal, $ionicLoading) {
-    var alert = navigator.notification ? navigator.notification.alert : window.alert;
+  .controller("LoginCtrl", function($scope, $state, $log, $ionicModal, $ionicLoading, $cordovaCamera) {
+    var alert = navigator.notification ?
+      navigator.notification.alert : window.alert;
 
     $ionicModal.fromTemplateUrl('reset-password-modal.html', function($ionicModal) {
       $scope.resetPasswordModal = $ionicModal;
@@ -132,8 +133,9 @@ angular.module("hotbar.controllers")
   })
 
   .controller("AccountCtrl", function($scope, $log, $state, $timeout, $ionicModal, $ionicLoading, $http) {
-    var alert = navigator.notification ? navigator.notification.alert : window.alert;
-    var _user = Parse.User.current();
+    var alert = navigator.notification
+      ? navigator.notification.alert : window.alert;
+    var currentUser = Parse.User.current();
 
     $ionicModal.fromTemplateUrl('change-password-modal.html', function($ionicModal) {
       $scope.passwordModal = $ionicModal;
@@ -149,21 +151,39 @@ angular.module("hotbar.controllers")
       animation: 'slide-in-up'
     });
 
-    $scope.changePassword = function(oldpassword, newpassword) {
+    $scope.changePassword = function(oldpassword, newpassword, newpassword2) {
+      if (newpassword != newpassword2) {
+        alert("ERROR: New passwords don't match!");
+      } else {
+        Parse.User.logIn(currentUser.get("email"), oldpassword, {
+          success: function(user) {
+            if (newpassword == oldpassword) {
+              alert("ERROR: New password is same as the current password");
+            } else {
+              user.set("password", newpassword);
+              user.save();
+              $scope.passwordModal.hide();
+            }
+          },
+          error: function(user, error) {
+            alert("ERROR: Invalid current password");
+          }
+        });
+      }
     };
 
     function savePicture(imageData, pictureType, callback) {
       var picture = {
-        filename: _user.id + "_" + Math.round(new Date().getTime()/1000) + ".jpg",
+        filename: currentUser.id + "_" + Math.round(new Date().getTime()/1000) + ".jpg",
         data: imageData,
         type: 'image/jpeg'
       };
       // save the image file
       var file = new Parse.File(picture.filename, { base64: picture.data });
       file.save().then(function() {
-        _user.set(pictureType, file);
-        _user.save();
-        callback(null, _user.get(pictureType));
+        currentUser.set(pictureType, file);
+        currentUser.save();
+        callback(null, currentUser.get(pictureType));
       }, function(error) {
         callback(error, null);
       });
@@ -171,8 +191,8 @@ angular.module("hotbar.controllers")
 
     function getProfilePicSuccess(imageData) {
       // remove old profile picture
-      var oldProfilePicture = _user.get("profilePicture");
-      var oldProfileThumbnail = _user.get("profilePictureThumbnail");
+      var oldProfilePicture = currentUser.get("profilePicture");
+      var oldProfileThumbnail = currentUser.get("profilePictureThumbnail");
       var config = {
         headers: {
           "X-Parse-Application-Id": "VX9NoYMIpR0yA7srjpmncHmthF8sAuVP80Q5Kgo2",
@@ -204,7 +224,7 @@ angular.module("hotbar.controllers")
         if (error) {
           $log.error("Save profile picture error: ", error);
         } else {
-          var thumbnail = _user.get("profilePictureThumbnail");
+          var thumbnail = currentUser.get("profilePictureThumbnail");
           var p =  thumbnail ? thumbnail.url() : null;
           $timeout(function() {
             $scope.user.profilePicture = p;
@@ -214,7 +234,7 @@ angular.module("hotbar.controllers")
       });
       /* Parse.Cloud.run("saveProfilePicture", picture, {
         success: function() {
-          var profilePicture = _user.get("profilePicture").url();
+          var profilePicture = currentUser.get("profilePicture").url();
           $timeout(function() {
             $scope.user.profilePicture = profilePicture;
           });
@@ -255,7 +275,7 @@ angular.module("hotbar.controllers")
         sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
         encodingType: Camera.EncodingType.JPEG
       };
-      navigator.camera.getPicture(getProfilePicSuccess, cameraError, options);
+      $cordovaCamera.getPicture(options).then(getProfilePicSuccess, cameraError);
     };
 
     $scope.setCoverPicture = function() {
@@ -266,17 +286,17 @@ angular.module("hotbar.controllers")
         sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
         encodingType: Camera.EncodingType.JPEG
       };
-      navigator.camera.getPicture(getCoverPicSuccess, cameraError, options);
+      $cordovaCamera.getPicture(options).then(getCoverPicSuccess, cameraError);
     };
 
-    var _coverPicture = _user.get("coverPicture");
+    var _coverPicture = currentUser.get("coverPicture");
     if (_coverPicture) {
       _coverPicture = _coverPicture.url();
     } else {
       _coverPicture = "img/coverpicture.jpg";
     }
 
-    var _profilePicture = _user.get("profilePictureThumbnail");
+    var _profilePicture = currentUser.get("profilePictureThumbnail");
     if (_profilePicture) {
       _profilePicture = _profilePicture.url();
     } else {
@@ -284,19 +304,19 @@ angular.module("hotbar.controllers")
     }
     $timeout(function() {
       $scope.user = {
-        displayName: _user.get("displayName"),
-        email: _user.get("email"),
+        displayName: currentUser.get("displayName"),
+        email: currentUser.get("email"),
         profilePicture: _profilePicture,
-        radius: Number((_user.get("radius") / 1609).toFixed(2)),
+        radius: Number((currentUser.get("radius") / 1609).toFixed(2)),
         coverPicture: _coverPicture,
-        hotbar: _user.get("hotbar")
+        hotbar: currentUser.get("hotbar")
       };
     });
 
     // Get user posts
     var Post = Parse.Object.extend("Post");
     var query = new Parse.Query(Post);
-    query.equalTo("user", _user);
+    query.equalTo("user", currentUser);
     query.find({
       success: function(posts) {
         $timeout(function() {
@@ -308,7 +328,7 @@ angular.module("hotbar.controllers")
       }
     });
     // Get user followed hotbars
-    var userRelation = _user.relation("following");
+    var userRelation = currentUser.relation("following");
     userRelation.query().find({
       success: function(list) {
         $timeout(function() {
@@ -322,9 +342,9 @@ angular.module("hotbar.controllers")
 
     $scope.$on('$destroy', function(event) {
       // update user
-      _user.set("radius", $scope.user.radius * 1609);
-      _user.set("pushnote", $scope.user.pushNote);
-      _user.save();
+      currentUser.set("radius", $scope.user.radius * 1609);
+      currentUser.set("pushnote", $scope.user.pushNote);
+      currentUser.save();
       // update hotbar news
       if ($scope.user.hotbar) {
         var News = Parse.Object.extend("News");
@@ -336,6 +356,7 @@ angular.module("hotbar.controllers")
       // Remove modals
       $scope.passwordModal.remove();
       $scope.userAgreementModal.remove();
+      $scope.passwordModal.remove();
     });
 
     $scope.logout = function() {

@@ -73,27 +73,27 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
   <ion-content class="has-header padding">
     <div class="list list-inset">
       <label class="item item-input">
-        <i class="icon ion-ios7-email-outline placeholder-icon"></i>
+        <i class="icon ion-ios-email-outline placeholder-icon"></i>
         <input type="email" placeholder="E-Mail (Required)"
                ng-model="user.email" required>
       </label>
       <label class="item item-input">
-        <i class="icon ion-ios7-locked-outline placeholder-icon"></i>
+        <i class="icon ion-ios-locked-outline placeholder-icon"></i>
         <input type="password" placeholder="Password (8 characters minimum) (Required)"
                ng-model="user.password" required>
       </label>
       <label class="item item-input">
-        <i class="icon ion-ios7-person-outline placeholder-icon"></i>
+        <i class="icon ion-ios-person-outline placeholder-icon"></i>
         <input type="text" placeholder="Name (Required)"
                ng-model="user.displayName" required>
       </label>
     </div>
-    <div class="item item-checkbox terms-label">
-      <label class="checkbox checkbox-assertive">
+    <div class="item terms-label">
+      <!-- <label class="checkbox checkbox-assertive">
         <input type="checkbox" ng-model="checked" ng-click="!checked || userAgreementModal.show()">
-      </label>
-      I agree to <a href="" ng-click="userAgreementModal.show()">
-        User Agreement & Terms of Use</a>
+      </label> -->
+      By signup, I agree to <a href="" ng-click="userAgreementModal.show()">
+        User Agreement & Terms of Use</a>.
     </div>
     <button class="button button-full button-assertive"
             ng-disabled="!checked"
