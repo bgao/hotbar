@@ -1,4 +1,4 @@
-<ion-view title="CAPTURE">
+<ion-view title="DISCOVERY">
   <!-- <ion-nav-buttons side="right">
     <button class="button-icon icon ion-ios-camera light"
             ng-click="captureImage()"></button>
@@ -73,7 +73,8 @@
       <!-- <div class="item item-input-inset" ng-show="hotbar === null && !adminUser">
         <span class="input-label">Whoops, you're not in a HotBar yet :(</span>
       </div> -->
-      <div class="item item-button-right" ng-show="hotbar !== null || adminUser">
+      <div class="item item-button-right" ng-show="hotbar || adminUser">
+        Capture
         <div class="buttons">
           <button class="button button-icon icon ion-ios-camera assertive" ng-click="captureImage()">
           </button>
@@ -81,6 +82,18 @@
           </button>
         </div>
       </div>
+      <a class="item" ng-href="#/tab/capture/posts">
+        Posts
+        <span class="badge">{{posts.length}}</span>
+      </a>
+      <a class="item" ng-click="#/tab/capture/hotbars">
+        Following HotBars
+        <span class="badge">{{user.followings.length}}</span>
+      </a>
+      <a class="item" ng-click="#/tab/capture/users">
+        Following Users
+        <span class="badge">{{user.followingUsers.length}}</span>
+      </a>
       <a ng-repeat="post in posts"
          ng-href="#/tab/capture/{{post.id}}"
          class="item item-avatar thumb-right">

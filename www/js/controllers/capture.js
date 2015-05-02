@@ -2,15 +2,17 @@
 
 angular.module("hotbar.controllers")
   .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce,
-                                      $cordovaCamera, $cordovaCapture, GeoService, S3) {
-
+                                      $cordovaCamera, GeoService, S3) {
     var alert = typeof navigator.notification == "undefined" ?
       window.alert : navigator.notification.alert;
     // Regex for getting file name extension
     var re = /(?:\.([^.]+))?$/;
-    var _user = Parse.User.current();
+    var currentUser = Parse.User.current();
+    $scope.user = currentUser;
     $scope.media = null;
     $scope.position = null;
+    $scope.hotbars = [];
+    $scope.hotbar = null;
 
     var getNearestHotbar = function(callback) {
       $ionicLoading.show();
@@ -19,26 +21,30 @@ angular.module("hotbar.controllers")
           $log.error("Get current position error: ", err);
           callback(err, null);
         } else {
+          // alert("Current position: " + JSON.stringify(pos));
           $scope.position = pos;
           getHotbarNearby(pos, function(err, hotbars) {
             if (err) {
               $log.error("Found nearby hotbar error: ", err);
               callback(err, null);
             } else {
-              var _hotbars = [];
               if (hotbars) {
-                for (var i = 0; i < hotbars.length; ++i) {
-                  var hotbar = {
-                    name: hotbars[i].get("name"),
-                    address: hotbars[i].get("address"),
-                    location: hotbars[i].get("location"),
-                    url: hotbars[i].get("url")
-                  };
-                  _hotbars.push(hotbar);
-                }
-                $scope.hotbar = _hotbars[0];
+                $timeout(function() {
+                  $scope.hotbars.length = 0;
+                  for (var i = 0; i < hotbars.length; ++i) {
+                    var hotbar = {
+                      name: hotbars[i].get("name"),
+                      address: hotbars[i].get("address"),
+                      location: hotbars[i].get("location"),
+                      url: hotbars[i].get("url")
+                    };
+                    $scope.hotbars.push(hotbar);
+                  }
+                  $scope.hotbar = hotbars[0];
+                  // alert(JSON.stringify($scope.hotbar));
+                });
               }
-              callback(null, _hotbars);
+              callback(null, $scope.hotbars);
             }
           });
         }
@@ -70,7 +76,7 @@ angular.module("hotbar.controllers")
           adminRole.getUsers().query().find({
             success: function(users) {
               for (var i = 0; i < users.length; ++i) {
-                if (users[i].id == _user.id) {
+                if (users[i].id == currentUser.id) {
                   $scope.adminUser = true;
                   break;
                 }
@@ -87,99 +93,23 @@ angular.module("hotbar.controllers")
       });
     };
 
-    // get hotbars followed by the current user
-    var userRelation = _user.relation("following");
-
-    $scope.doRefresh = function() {
-      // $ionicLoading.show();
-      init();
-      $scope.posts = [];
-      userRelation.query().find({
-        success: function(hotbars) {
-          // get user posts
-          var Post = Parse.Object.extend("Post");
-          var query1 = new Parse.Query(Post);
-          query1.equalTo("user", _user);
-          var query2 = new Parse.Query(Post);
-          query2.containedIn("hotbar", hotbars);
-          var query = Parse.Query.or(query1, query2);
-          query.descending("createdAt");
-          query.find({
-            success: function(posts) {
-              for (var i = 0; i < posts.length; ++i) {
-                getMedia(posts[i]);
-                getHotbar(posts[i]);
-                getUser(posts[i]);
-                $scope.posts.push(posts[i]);
-              }
-              // $ionicLoading.hide();
-              $scope.$broadcast('scroll.refreshComplete');
-            },
-            error: function(error) {
-              $log.error("Retrieving user's posts error: ", error);
-              // $ionicLoading.hide();
-              $scope.$broadcast('scroll.refreshComplete');
-            }
-          });
-        },
-        error: function(error) {
-          $log.error("Getting hotbars followed by user error: ", error);
-          // $ionicLoading.hide();
-          $scope.$broadcast('scroll.refreshComplete');
-        }
-      });
-    };
-
-  	function getUser(post) {
-      var user = post.get("user");
-      user.fetch({
-        success: function(obj) {
-          var profilePic = obj.get("profilePictureThumbnail");
-          profilePic = profilePic ?
-            profilePic.url() : "http://www.stay.com/images/default-user-profile.png";
-          $timeout(function() {
-            post.user = {
-              displayName: obj.get("displayName"),
-              email: obj.get("email"),
-              profilePicture: profilePic,
-              id: obj.id
-            };
-          });
-        },
-        error: function(error) {
-          $log.error("Fetch user error: ", error);
-        }
-      });
-    }
-    function getHotbar(post) {
-      var hotbar = post.get("hotbar");
-      if (hotbar) {
-        hotbar.fetch({
-          success: function(obj) {
-            $timeout(function() {
-              post.hotbar = {
-                name: obj.get("name"),
-                address: obj.get("address"),
-                region: obj.get("region"),
-                url: obj.get("url"),
-                id: obj.id
-              };
-            });
-          },
-          error: function(error) {
-            $log.error("Fetch hotbar error: ", error);
-          }
-        });
-      }
-    }
     function trustSrc(src) {
       return $sce.trustAsResourceUrl(src);
     }
-    function getMedia(post) {
-      var media = post.get("media");
-      media.fetch({
-        success: function(obj) {
-          $timeout(function() {
+    var getPostDetails = function(posts) {
+      posts.forEach(function(post) {
+        var profilePic = currentUser.get("profilePictureThumbnail");
+        profilePic = profilePic ?
+          profilePic.url() : "http://www.stay.com/images/default-user-profile.png";
+        post.user = {
+          displayName: currentUser.get("displayName"),
+          email: currentUser.get("email"),
+          profilePicture: profilePic,
+          id: currentUser.id
+        };
+        var media = post.get("media");
+        media.fetch({
+          success: function(obj) {
             post.media = {
               description: obj.get("description"),
               url: obj.get("url"),
@@ -187,10 +117,79 @@ angular.module("hotbar.controllers")
               thumbnailUrl: obj.get("thumbnailUrl"),
               type: obj.get("type")
             };
+          },
+          error: function(err) {
+            $log.error("Getting media error, post.id: ", post.id);
+          }
+        });
+        var hotbar = post.get("hotbar");
+        if (hotbar) {
+          hotbar.fetch({
+            success: function(obj) {
+              post.hotbar = {
+                name: obj.get("name"),
+                address: obj.get("address"),
+                region: obj.get("region"),
+                url: obj.get("url"),
+                id: obj.id
+              };
+            },
+            error: function(error) {
+              $log.error("Fetch hotbar error: ", error);
+            }
           });
         }
+        $timeout(function() {
+          $scope.posts.push(post);
+        });
       });
-    }
+    };
+
+    $scope.doRefresh = function() {
+      $ionicLoading.show();
+      init();
+      // Get user posts
+      $scope.posts = [];
+      var Post = Parse.Object.extend("Post");
+      var query = new Parse.Query(Post);
+      query.equalTo("user", currentUser);
+      query.find({
+        success: function(posts) {
+          getPostDetails(posts);
+        },
+        error: function(error) {
+          $log.error("Getting user posts error: ", error);
+        }
+      });
+      // Get user followed hotbars
+      var userRelation = currentUser.relation("following");
+      userRelation.query().find({
+        success: function(list) {
+          $timeout(function() {
+            $scope.user.followings = list;
+          });
+        },
+        error: function(error) {
+          $log.error("Getting user followings error: ", error);
+        }
+      });
+      // Get followed uesrs
+      var followUsers = currentUser.relation("followingUsers");
+      followUsers.query().find({
+        success: function(list) {
+          $timeout(function() {
+            $scope.user.followingUsers = list;
+          });
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        },
+        error: function(err) {
+          $log.error("Getting followed users error: ", err);
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        }
+      });
+    };
 
   	function getHotbarNearby(position, callback) {
       var HotBar = Parse.Object.extend("HotBar");
@@ -209,11 +208,11 @@ angular.module("hotbar.controllers")
     }
 
     function cameraSuccess(imageFile) {
-      console.assert(_user);
+      console.assert(currentUser);
       $timeout(function() {
         var index = imageFile.lastIndexOf('/') + 1;
         $scope.media = {
-          filename: _user.id + "_" + imageFile.substr(index),
+          filename: currentUser.id + "_" + imageFile.substr(index),
           data: imageFile,
           type: 'image/jpeg'
           // src: "data:image/jpeg;base64,"+imageData
@@ -224,7 +223,7 @@ angular.module("hotbar.controllers")
     /* function cameraSuccess(imageData) {
       $timeout(function() {
         $scope.media = {
-          filename: _user.id + "_" + Math.round(new Date().getTime()/1000) + ".jpg",
+          filename: currentUser.id + "_" + Math.round(new Date().getTime()/1000) + ".jpg",
           data: "data:image/jepg;base64," + imageData,
           type: "image/jpeg"
         };
@@ -254,7 +253,7 @@ angular.module("hotbar.controllers")
       var ext = "." + re.exec(mediaFiles[0].name)[1];
       $timeout(function() {
         $scope.media = {
-          filename: _user.id + "_" + Math.round(new Date().getTime()/1000) + ext,
+          filename: currentUser.id + "_" + Math.round(new Date().getTime()/1000) + ext,
           data: filePath,
           type: mediaFiles[0].type,
           size: mediaFiles[0].size
@@ -295,11 +294,18 @@ angular.module("hotbar.controllers")
       getNearestHotbar(function(err, hotbars) {
         $ionicLoading.hide();
         if ($scope.hotbar || $scope.adminUser) {
-          var options = {
+          /* var options = {
             limit: 1,
             duration: 20
           };
-          $cordovaCapture.captureVideo(options).then(captureSuccess, captureError);
+          $cordovaCapture.captureVideo(options).then(captureSuccess, captureError); */
+          var options = {
+            limit: 1,
+            duration: 20,
+            highquality: false,
+            frontcamera: false
+          };
+          window.plugins.videocaptureplus.captureVideo(captureSuccess, captureError, options);
         } else {
           alert("In order to post a video, you need to be in a HotBar", null, "Error");
         }
@@ -309,7 +315,7 @@ angular.module("hotbar.controllers")
     function getImageSuccess(imageFile) {
       var index = imageFile.lastIndexOf('/') + 1;
       $scope.coverPicture = {
-        filename: _user.id + "_" + imageFile.substr(index),
+        filename: currentUser.id + "_" + imageFile.substr(index),
         data: imageFile,
         type: 'image/jpeg'
         // src: "data:image/jpeg;base64,"+imageData
@@ -330,11 +336,11 @@ angular.module("hotbar.controllers")
     function savePost(media) {
       var Post = Parse.Object.extend("Post");
       var post = new Post();
-      var postACL = new Parse.ACL(_user);
+      var postACL = new Parse.ACL(currentUser);
       postACL.setPublicReadAccess(true);
       post.setACL(postACL);
       post.set("location", $scope.position);
-      post.set("user", _user);
+      post.set("user", currentUser);
       post.set("media", media);
       post.set("hotbar", $scope.hotbar);
       post.save();
@@ -344,11 +350,11 @@ angular.module("hotbar.controllers")
         type: media.get("type"),
         description: media.get("description")
       };
-      var _profilePic = _user.get("profilePictureThumbnail");
+      var _profilePic = currentUser.get("profilePictureThumbnail");
       _profilePic = _profilePic ?
         _profilePic.url() : "http://www.stay.com/images/default-user-profile.png";
       post.user = {
-        displayName: _user.get("displayName"),
+        displayName: currentUser.get("displayName"),
         profilePicture: _profilePic
       };
       if ($scope.hotbar) {
@@ -540,7 +546,7 @@ angular.module("hotbar.controllers")
       reader.onloadend = function() {
         $timeout(function() {
           $scope.media = {
-            filename: _user.id + "_" + /* $scope.files[0].name, */
+            filename: currentUser.id + "_" + /* $scope.files[0].name, */
             Math.round(new Date().getTime()/1000) + ".jpg",
             data: reader.result,
             type: "image/jpeg"

@@ -132,8 +132,17 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('tab.capture-detail', {
-        url: '/capture/:postId',
+      .state('tab.capture.posts', {
+        url: '/capture/posts',
+        view: {
+          'tab-capture': {
+            templateUrl: 'templates/tab-capture-posts.html',
+            controller: 'capturePostsCtrl'
+          }
+        }
+      })
+      .state('tab.capture.post-detail', {
+        url: '/capture/posts/:postId',
         views: {
           'tab-capture': {
             templateUrl: 'templates/post-detail.html',
@@ -141,21 +150,21 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('tab.home', {
-        url: '/home',
+      .state('tab.capture.hotbars', {
+        url: '/capture/hotbars',
         views: {
-          'tab-home': {
-            templateUrl: 'templates/tab-home.html',
-            controller: 'HomeCtrl'
+          'tab-capture': {
+            templateUrl: 'templates/tab-capture-hotbars.html',
+            controller: 'captureHotbarsCtrl'
           }
         }
       })
-      .state('tab.home-detail', {
-        url: '/home/:postId',
+      .state('tab.capture.hotbar-detail', {
+        url: '/capture/hotbars/:hotbarId',
         views: {
-          'tab-home': {
-            templateUrl: 'templates/post-detail.html',
-            controller: 'PostDetailCtrl'
+          'tab-capture': {
+            templateUrl: 'templates/hotbar-detail.html',
+            controller: 'HotbarDetailCtrl'
           }
         }
       })

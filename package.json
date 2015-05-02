@@ -18,5 +18,7 @@
     "org.apache.cordova.geolocation",
     "com.google.cordova.admob"
   ],
-  "cordovaPlatforms": []
+  "cordovaPlatforms": [
+    "android"
+  ]
 }

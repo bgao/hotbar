@@ -278,67 +278,27 @@ angular.module("hotbar.controllers")
       $cordovaCamera.getPicture(options).then(getProfilePicSuccess, cameraError);
     };
 
-    $scope.setCoverPicture = function() {
-      var options = {
-        destinationType: Camera.DestinationType.DATA_URL,
-        // destinationType: Camera.DestinationType.FILE_URI,
-        quality: 45,
-        sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-        encodingType: Camera.EncodingType.JPEG
-      };
-      $cordovaCamera.getPicture(options).then(getCoverPicSuccess, cameraError);
-    };
+    $scope.doRefresh = function() {
 
-    var _coverPicture = currentUser.get("coverPicture");
-    if (_coverPicture) {
-      _coverPicture = _coverPicture.url();
-    } else {
-      _coverPicture = "img/coverpicture.jpg";
-    }
-
-    var _profilePicture = currentUser.get("profilePictureThumbnail");
-    if (_profilePicture) {
-      _profilePicture = _profilePicture.url();
-    } else {
-      _profilePicture = "http://www.stay.com/images/default-user-profile.png";
-    }
-    $timeout(function() {
-      $scope.user = {
-        displayName: currentUser.get("displayName"),
-        email: currentUser.get("email"),
-        profilePicture: _profilePicture,
-        radius: Number((currentUser.get("radius") / 1609).toFixed(2)),
-        coverPicture: _coverPicture,
-        hotbar: currentUser.get("hotbar")
-      };
-    });
-
-    // Get user posts
-    var Post = Parse.Object.extend("Post");
-    var query = new Parse.Query(Post);
-    query.equalTo("user", currentUser);
-    query.find({
-      success: function(posts) {
-        $timeout(function() {
-          $scope.user.posts = posts;
-        });
-      },
-      error: function(error) {
-        $log.error("Getting user posts error: ", error);
+      var _profilePicture = currentUser.get("profilePictureThumbnail");
+      if (_profilePicture) {
+        _profilePicture = _profilePicture.url();
+      } else {
+        _profilePicture = "http://www.stay.com/images/default-user-profile.png";
       }
-    });
-    // Get user followed hotbars
-    var userRelation = currentUser.relation("following");
-    userRelation.query().find({
-      success: function(list) {
-        $timeout(function() {
-          $scope.user.followings = list;
-        });
-      },
-      error: function(error) {
-        $log.error("Getting user followings error: ", error);
-      }
-    });
+      $timeout(function() {
+        $scope.user = {
+          displayName: currentUser.get("displayName"),
+          email: currentUser.get("email"),
+          profilePicture: _profilePicture,
+          radius: Number((currentUser.get("radius") / 1609).toFixed(2)),
+          hotbar: currentUser.get("hotbar")
+        };
+        $scope.$broadcast('scroll.refreshComplete');
+      });
+    }; // doRefresh
+
+    $scope.doRefresh();
 
     $scope.$on('$destroy', function(event) {
       // update user

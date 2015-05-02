@@ -4,9 +4,13 @@
       <!-- <ion-scroll class="cover">
         <img class="full-image" ng-src="{{user.coverPicture}}">
       </ion-scroll> -->
-      <div class="item item-thumbnail-left">
+      <div class="item item-thumbnail-left item-button-right">
         <img ng-src="{{user.profilePicture}}">
         <span class="input-label">{{user.displayName}}</span>
+        <button class="button button-icon icon-left"
+                ng-class="{'ion-ios-heart assertive': user.followed, 'ion-ios-heart-outline assertive': !user.followed}"
+                ng-click="toggleFollow()">{{user.followed ? "Following" : "Follow"}}
+        </button>
       </div>
       <a ng-repeat="post in posts"
          ng-href="#/tab/posts/{{post.id}}"

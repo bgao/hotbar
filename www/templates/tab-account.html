@@ -112,6 +112,10 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
 </script>
 <ion-view title="ACCOUNT">
   <ion-content has-header="true" padding="false">
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
     <div class="card">
       <div class="item item-divider">
           Account Details
@@ -132,7 +136,7 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
         </div>
     </div>
       <div class="card">
-        
+
         <!-- <label class="item item-input-inset">
           <span class="input-label">Password</span>
           <button class="button button-small button-clear button-assertive"
@@ -141,21 +145,10 @@ Thank you for choosing HotBar, now go see what’s going on in your city and hav
           </button>
         </label> -->
         <div class="item item-divider">
-          Activities
-        </div>
-        <a class="item" ng-click="">
-          Posts
-          <span class="badge">{{user.posts.length}}</span>
-        </a>
-        <a class="item" ng-click="">
-          Following HotBars
-          <span class="badge">{{user.followings.length}}</span>
-        </a>
-        <div class="item item-divider">
           HotBar Settings
         </div>
         <div class="item item-input-inset">
-          <span class="input-label">Search Distance(miles)</span>
+          <span class="input-label">HotBar Search Distance (miles)</span>
           <input class="item-input-wrapper" type="number" min="0.1" max="50" ng-model="user.radius">
         </div>
         <div class="item item-input-inset" ng-show="user.hotbar">

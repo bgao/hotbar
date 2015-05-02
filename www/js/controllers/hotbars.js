@@ -1,9 +1,9 @@
 // hotbar.controllers.HotBarsCtrl
 
 angular.module("hotbar.controllers")
-  .controller("HotBarsCtrl", function($scope, $log, $timeout, $ionicLoading, GeoService, HotBars) {
+  .controller("HotBarsCtrl", function($scope, $log, $timeout, $ionicLoading, $q, GeoService, HotBars) {
 
-    var _user = Parse.User.current();
+    var currentUser = Parse.User.current();
     var _infowindow = new google.maps.InfoWindow();
     var _markers = [];
 
@@ -20,10 +20,8 @@ angular.module("hotbar.controllers")
         var service = new google.maps.places.PlacesService(document.getElementById("hotbar"));
         service.getDetails(request, function(place, status) {
           if (status == google.maps.places.PlacesServiceStatus.OK) {
-            $timeout(function() {
-              hotbar.rating = place.rating;
-              hotbar.openHours = place.opening_hours;
-            });
+            hotbar.rating = place.rating;
+            hotbar.openHours = place.opening_hours;
           }
         });
       }
@@ -31,20 +29,18 @@ angular.module("hotbar.controllers")
         if (err) {
           $log.error("Getting hotbar distance error: ", status);
         } else {
-          $timeout(function() {
-            hotbar.distance = distance.text;
-          });
+          hotbar.distance = distance.text;
         }
       });
     }
 
-    function getFollowers(hotbar) {
+    /* function getFollowers(hotbar) {
       var hotbarRelation = hotbar.relation("followers");
       hotbarRelation.query().find({
         success: function(list) {
           hotbar.followers = list;
           list.forEach(function(user) {
-            if (user.id == _user.id) {
+            if (user.id == currentUser.id) {
               hotbar.following = true;
             }
           });
@@ -53,13 +49,32 @@ angular.module("hotbar.controllers")
           $log.error("Get hotbar's number of followers error: ", error);
         }
       });
+    } */
+
+    function getFollowers(hotbar) {
+      var dfd = $q.defer();
+      var hotbarRelation = hotbar.relation("followers");
+      hotbarRelation.query().find({
+        success: function(list) {
+          hotbar.followers = list;
+          list.forEach(function(user) {
+            if (user.id == currentUser.id)
+              hotbar.following = true;
+          });
+          dfd.resolve(hotbar);
+        },
+        error: function(error) {
+          $log.error("Get hotbar's number of followers error: ", error);
+          dfd.reject(error);
+        }
+      });
+      return dfd.promise;
     }
 
     function updateHotbars() {
       for (var i = 0; i < $scope.hotbars.length; ++i) {
         var hotbar = $scope.hotbars[i];
-        getFollowers(hotbar);
-        getGooglePlaceDetails(hotbar);
+        getFollowers(hotbar).then(getGooglePlaceDetails(hotbar));
       }
       if ($scope.hotbars.length == 0) {
         findBarsOnMap();
@@ -69,19 +84,27 @@ angular.module("hotbar.controllers")
 
     $scope.mapCreated = function(map) {
       $scope.map = map;
-      GeoService.getPosition(function(err, position) {
-        var pos = new google.maps.LatLng(position.latitude, position.longitude);
-        $scope.map.setCenter(pos);
-        var marker = new google.maps.Marker({
-          map: $scope.map,
-          position: pos,
-          icon: "http://www.google.com/mapfiles/arrow.png"
-        });
-      });
+      $scope.doRefresh();
     };
 
     $scope.doRefresh = function() {
       $ionicLoading.show();
+      GeoService.getPosition(function(err, position) {
+        // alert("Current position: " + JSON.stringify(position));
+        if (err) {
+          $log.error("Getting position error: ", err);
+          $ionicLoading.hide();
+        } else {
+          var pos = new google.maps.LatLng(position.latitude, position.longitude);
+          $scope.map.setCenter(pos);
+          var marker = new google.maps.Marker({
+            map: $scope.map,
+            position: pos,
+            icon: "http://www.google.com/mapfiles/arrow.png"
+          });
+        }
+      });
+
       HotBars.all(function(err, hotbars) {
         if (err) {
           $log.error("HotBars all error: ", err);
@@ -98,7 +121,7 @@ angular.module("hotbar.controllers")
       });
     };
 
-    $scope.doRefresh();
+    // $scope.doRefresh();
 
     // The following section was used to add current position as a hotbar
     /* var HotBar = Parse.Object.extend("HotBar");
@@ -269,7 +292,7 @@ angular.module("hotbar.controllers")
     function findBarsOnMap() {
       var loc = new google.maps.LatLng(GeoService.position().latitude,
                                        GeoService.position().longitude);
-      var _radius = _user.get("radius");
+      var _radius = currentUser.get("radius");
       var request = {
         location: loc,
         radius: _radius,
@@ -301,9 +324,9 @@ angular.module("hotbar.controllers")
   })
   .controller("HotBarDetailCtrl",
     function($scope, $stateParams, $log, $timeout, $ionicLoading, $rootScope, GeoService, HotBars) {
-      var _user = Parse.User.current();
+      var currentUser = Parse.User.current();
       var _infowindow = new google.maps.InfoWindow();
-      var _relation = _user.relation("following");
+      var _relation = currentUser.relation("following");
 
       $scope.mapCreated = function(map) {
         $scope.map = map;
@@ -355,7 +378,7 @@ angular.module("hotbar.controllers")
             success: function(list) {
               hotbar.followers = list;
               list.forEach(function(user) {
-                if (user.id == _user.id) {
+                if (user.id == currentUser.id) {
                   hotbar.following = true;
                 }
               });
@@ -409,24 +432,24 @@ angular.module("hotbar.controllers")
 
       $scope.toggleFollow = function() {
         var hotbarRelation = $scope.hotbar._data.relation("followers");
-        var userRelation = _user.relation("following");
+        var userRelation = currentUser.relation("following");
         if ($scope.hotbar.following) { // already following, unfollow
           userRelation.remove($scope.hotbar._data);
-          hotbarRelation.remove(_user);
+          hotbarRelation.remove(currentUser);
           $scope.hotbar.following = false;
           for (var i = 0; i < $scope.hotbar.followers.length; ++i) {
-            if ($scope.hotbar.followers[i].id == _user.id) {
+            if ($scope.hotbar.followers[i].id == currentUser.id) {
               $scope.hotbar.followers.splice(i, 1);
               break;
             }
           }
         } else {
           userRelation.add($scope.hotbar._data);
-          hotbarRelation.add(_user);
+          hotbarRelation.add(currentUser);
           $scope.hotbar.following = true;
-          $scope.hotbar.followers.push(_user);
+          $scope.hotbar.followers.push(currentUser);
         }
-        _user.save();
+        currentUser.save();
         $scope.hotbar._data.save();
       };
 

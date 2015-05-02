@@ -3,9 +3,13 @@
 angular.module("hotbar.controllers")
 .controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout, $q, $ionicLoading, Users, HotBars) {
 
+  var currentUser = Parse.User.current();
+
   Users.get($stateParams.userId, function(error, user) {
+    $ionicLoading.show();
     if (error) {
       $log.error("Getting user error: ", error);
+      $ionicLoading.hide();
     } else {
       var _profilePicture = user.get("profilePictureThumbnail");
       if (_profilePicture) {
@@ -13,16 +17,10 @@ angular.module("hotbar.controllers")
       } else {
         _profilePicture = "http://www.stay.com/images/default-user-profile.png";
       }
-      var _coverPicture = user.get("coverPicture");
-      if (_coverPicture) {
-        _coverPicture = _coverPicture.url();
-      } else {
-        _coverPicture = "img/coverPicture.jpg";
-      }
       $scope.user = {
         displayName: user.get("displayName"),
         profilePicture: _profilePicture,
-        coverPicture: _coverPicture
+        parseUser: user
       };
       // Get user posts
       var _posts = [];
@@ -46,6 +44,26 @@ angular.module("hotbar.controllers")
         },
         error: function(error) {
           $log.error("Getting user posts error: ", error);
+          $ionicLoading.hide();
+        }
+      });
+      // get followers
+      var followingRelation = currentUser.relation("followingUsers");
+      followingRelation.query().find({
+        success: function(list) {
+          $timeout(function() {
+            for (var i = 0; i < list.length; ++i) {
+              if (list[i].id == user.id) {
+                $scope.user.followed = true;
+                break;
+              }
+            }
+            $ionicLoading.hide();
+          });
+        },
+        error: function(error) {
+          $log.error("Getting user followers error: ", error);
+          $ionicLoading.hide();
         }
       });
     }
@@ -94,5 +112,17 @@ angular.module("hotbar.controllers")
       });
     }
     return deferred.promise;
+  };
+
+  $scope.toggleFollow = function() {
+    var followingRelation = currentUser.relation("followingUsers");
+    if ($scope.user.followed) {
+      followingRelation.remove($scope.user.parseUser);
+      $scope.user.followed = false;
+    } else {
+      followingRelation.add($scope.user.parseUser);
+      $scope.user.followed = true;
+    }
+    currentUser.save();
   };
 });
