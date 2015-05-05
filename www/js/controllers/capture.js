@@ -1,7 +1,7 @@
 // hotbar.controllers.CaptureCtrl
 
 angular.module("hotbar.controllers")
-  .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading, $http, $sce,
+  .controller("CaptureCtrl", function($scope, $log, $timeout, $ionicLoading,
                                       $cordovaCamera, GeoService, S3) {
     var alert = typeof navigator.notification == "undefined" ?
       window.alert : navigator.notification.alert;
@@ -93,58 +93,6 @@ angular.module("hotbar.controllers")
       });
     };
 
-    function trustSrc(src) {
-      return $sce.trustAsResourceUrl(src);
-    }
-    var getPostDetails = function(posts) {
-      posts.forEach(function(post) {
-        var profilePic = currentUser.get("profilePictureThumbnail");
-        profilePic = profilePic ?
-          profilePic.url() : "http://www.stay.com/images/default-user-profile.png";
-        post.user = {
-          displayName: currentUser.get("displayName"),
-          email: currentUser.get("email"),
-          profilePicture: profilePic,
-          id: currentUser.id
-        };
-        var media = post.get("media");
-        media.fetch({
-          success: function(obj) {
-            post.media = {
-              description: obj.get("description"),
-              url: obj.get("url"),
-              secUrl: trustSrc(obj.get("url")),
-              thumbnailUrl: obj.get("thumbnailUrl"),
-              type: obj.get("type")
-            };
-          },
-          error: function(err) {
-            $log.error("Getting media error, post.id: ", post.id);
-          }
-        });
-        var hotbar = post.get("hotbar");
-        if (hotbar) {
-          hotbar.fetch({
-            success: function(obj) {
-              post.hotbar = {
-                name: obj.get("name"),
-                address: obj.get("address"),
-                region: obj.get("region"),
-                url: obj.get("url"),
-                id: obj.id
-              };
-            },
-            error: function(error) {
-              $log.error("Fetch hotbar error: ", error);
-            }
-          });
-        }
-        $timeout(function() {
-          $scope.posts.push(post);
-        });
-      });
-    };
-
     $scope.doRefresh = function() {
       $ionicLoading.show();
       init();
@@ -155,7 +103,7 @@ angular.module("hotbar.controllers")
       query.equalTo("user", currentUser);
       query.find({
         success: function(posts) {
-          getPostDetails(posts);
+          $scope.posts = posts;
         },
         error: function(error) {
           $log.error("Getting user posts error: ", error);
@@ -471,7 +419,7 @@ angular.module("hotbar.controllers")
       } else {
         uploadVideo();
       }
-    }
+    };
 
     // Cleanup for ios
     $scope.cleanup = function() {
@@ -554,6 +502,250 @@ angular.module("hotbar.controllers")
         });
       };
       reader.readAsDataURL($scope.files[0]);
+    };
+
+    $scope.doRefresh();
+  })
+  .controller("CapturePostsCtrl", function($scope, $log, $timeout, $ionicLoading, $sce) {
+    var currentUser = Parse.User.current();
+
+    function trustSrc(src) {
+      return $sce.trustAsResourceUrl(src);
+    }
+    var getPostDetails = function(posts) {
+      posts.forEach(function(post) {
+        post.user = {
+          displayName: currentUser.get("displayName"),
+          id: currentUser.id
+        };
+        var media = post.get("media");
+        media.fetch({
+          success: function(obj) {
+            post.media = {
+              description: obj.get("description"),
+              url: obj.get("url"),
+              secUrl: trustSrc(obj.get("url")),
+              thumbnailUrl: obj.get("thumbnailUrl"),
+              type: obj.get("type")
+            };
+          },
+          error: function(err) {
+            $log.error("Getting media error, post.id: ", post.id);
+          }
+        });
+        var hotbar = post.get("hotbar");
+        if (hotbar) {
+          hotbar.fetch({
+            success: function(obj) {
+              post.hotbar = {
+                name: obj.get("name"),
+                address: obj.get("address"),
+                region: obj.get("region"),
+                url: obj.get("url"),
+                id: obj.id
+              };
+            },
+            error: function(error) {
+              $log.error("Fetch hotbar error: ", error);
+            }
+          });
+        }
+        $timeout(function() {
+          $scope.posts.push(post);
+        });
+      });
+    };
+
+    $scope.doRefresh = function() {
+      $scope.posts = [];
+      var Post = Parse.Object.extend("Post");
+      var query = new Parse.Query(Post);
+      query.equalTo("user", currentUser);
+      $ionicLoading.show();
+      query.find({
+        success: function(posts) {
+          getPostDetails(posts);
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        },
+        error: function(error) {
+          $ionicLoading.hide();
+          $scope.$broadcast('scroll.refreshComplete');
+          $log.error("Getting user posts error: ", error);
+        }
+      });
+    };
+
+    $scope.doRefresh();
+  })
+  .controller("CaptureHotbarsCtrl", function($scope, $log, $timeout, $ionicLoading, $q, GeoService) {
+    var currentUser = Parse.User.current();
+
+    function getGooglePlaceDetails(hotbar) {
+      if (hotbar.get("googlePlaceId")) {
+        var request = {
+          placeId: hotbar.get("googlePlaceId")
+        };
+        // console.assert(_map);
+        var service = new google.maps.places.PlacesService(document.getElementById("hotbar"));
+        service.getDetails(request, function(place, status) {
+          if (status == google.maps.places.PlacesServiceStatus.OK) {
+            hotbar.rating = place.rating;
+            hotbar.openHours = place.opening_hours;
+          }
+        });
+      }
+      GeoService.getDistance(hotbar.get("location"), function(err, distance) {
+        if (err) {
+          $log.error("Getting hotbar distance error: ", status);
+        } else {
+          hotbar.distance = distance.text;
+        }
+      });
+    }
+
+    function getFollowers(hotbar) {
+      var dfd = $q.defer();
+      var hotbarRelation = hotbar.relation("followers");
+      hotbarRelation.query().find({
+        success: function(list) {
+          hotbar.followers = list;
+          list.forEach(function(user) {
+            if (user.id == currentUser.id)
+              hotbar.following = true;
+          });
+          dfd.resolve(hotbar);
+        },
+        error: function(error) {
+          $log.error("Get hotbar's number of followers error: ", error);
+          dfd.reject(error);
+        }
+      });
+      return dfd.promise;
+    }
+
+    $scope.doRefresh = function() {
+      $scope.hotbars = [];
+      // Get user followed hotbars
+      var userRelation = currentUser.relation("following");
+      $ionicLoading.show();
+      userRelation.query().find({
+        success: function(hotbars) {
+          hotbars.forEach(function(hotbar) {
+            getFollowers(hotbar).then(getGooglePlaceDetails(hotbar));
+            $timeout(function() {
+              $scope.hotbars.push(hotbar);
+            });
+          });
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        },
+        error: function(error) {
+          $log.error("Getting user followings error: ", error);
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        }
+      });
+    };
+
+    $scope.doRefresh();
+  })
+  .controller("CaptureUsersCtrl", function($scope, $log, $timeout, $ionicLoading, $q) {
+    var currentUser = Parse.User.current();
+
+    var getMedia = function(post) {
+      var deferred = $q.defer()
+        , media = post.get("media");
+      if (media) {
+        media.fetch({
+          success: function(obj) {
+            post.media = {
+              description: obj.get("description"),
+              url: obj.get("url"),
+              thumbnailUrl: obj.get("thumbnailUrl"),
+              type: obj.get("type")
+            };
+            deferred.resolve(post);
+          },
+          error: function(err) {
+            $log.error("Getting media error: ", err);
+            deferred.reject(err);
+          }
+        });
+      }
+      return deferred.promise;
+    };
+
+    var getHotbar = function(post) {
+      var deferred = $q.defer()
+        , hotbar = post.get("hotbar");
+      if (hotbar) {
+        post.hotbar = {
+          name: hotbar.get("name"),
+          address: hotbar.get("address"),
+          region: hotbar.get("region"),
+          url: hotbar.get("url")
+        };
+        deferred.resolve(post);
+      } else {
+        deferred.reject();
+      }
+      return deferred.promise;
+    };
+
+    $scope.showPosts = function(user) {
+      user.showPosts = (user.showPosts == undefined) ? true : !user.showPosts;
+      var Post = Parse.Object.extend("Post");
+      var query = new Parse.Query(Post);
+      query.equalTo("user", user);
+      query.descending("createdAt");
+      query.find({
+        success: function(posts) {
+          for (var i = 0; i < posts.length; ++i) {
+            posts[i].user = user;
+            getMedia(posts[i])
+              .then(function(post) {
+                return getHotbar(post);
+              });
+          }
+          $timeout(function() {
+            user.posts = posts;
+          });
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        },
+        error: function(error) {
+          $log.error("Getting user posts error: ", error);
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        }
+      });
+    };
+
+    $scope.doRefresh = function() {
+      $scope.users = [];
+
+      var userRelation = currentUser.relation("followingUsers");
+      $ionicLoading.show();
+      userRelation.query().find({
+        success: function(users) {
+          users.forEach(function(user) {
+            var profilePic = user.get("profilePictureThumbnail");
+            user["displayName"] = user.get("displayName");
+            user["picture"] = profilePic ? profilePic.url() : "http://www.stay.com/images/default-user-profile.png";
+            $timeout(function() {
+              $scope.users.push(user);
+            });
+          });
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        },
+        error: function(err) {
+          $log.error("Querying users error: ", err);
+          $scope.$broadcast('scroll.refreshComplete');
+          $ionicLoading.hide();
+        }
+      });
     };
 
     $scope.doRefresh();

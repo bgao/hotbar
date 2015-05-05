@@ -132,16 +132,16 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('tab.capture.posts', {
+      .state('tab.capture-posts', {
         url: '/capture/posts',
-        view: {
+        views: {
           'tab-capture': {
-            templateUrl: 'templates/tab-capture-posts.html',
-            controller: 'capturePostsCtrl'
+            templateUrl: 'templates/capture-posts.html',
+            controller: 'CapturePostsCtrl'
           }
         }
       })
-      .state('tab.capture.post-detail', {
+      .state('tab.capture-post-detail', {
         url: '/capture/posts/:postId',
         views: {
           'tab-capture': {
@@ -150,21 +150,39 @@ angular.module('hotbar', ['ionic',
           }
         }
       })
-      .state('tab.capture.hotbars', {
+      .state('tab.capture-hotbars', {
         url: '/capture/hotbars',
         views: {
           'tab-capture': {
-            templateUrl: 'templates/tab-capture-hotbars.html',
-            controller: 'captureHotbarsCtrl'
+            templateUrl: 'templates/capture-hotbars.html',
+            controller: 'CaptureHotbarsCtrl'
           }
         }
       })
-      .state('tab.capture.hotbar-detail', {
+      .state('tab.capture-hotbar-detail', {
         url: '/capture/hotbars/:hotbarId',
         views: {
           'tab-capture': {
             templateUrl: 'templates/hotbar-detail.html',
-            controller: 'HotbarDetailCtrl'
+            controller: 'HotBarDetailCtrl'
+          }
+        }
+      })
+      .state('tab.capture-users', {
+        url: '/capture/users',
+        views: {
+          'tab-capture': {
+            templateUrl: 'templates/capture-users.html',
+            controller: 'CaptureUsersCtrl'
+          }
+        }
+      })
+      .state('tab.capture-users-post-detail', {
+        url: '/capture/users/:postId',
+        views: {
+          'tab-capture': {
+            templateUrl: 'templates/post-detail.html',
+            controller: 'PostDetailCtrl'
           }
         }
       })

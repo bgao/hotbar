@@ -1,7 +1,7 @@
 // hotbar.controllers.UserCtrl
 
 angular.module("hotbar.controllers")
-.controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout, $q, $ionicLoading, Users, HotBars) {
+.controller("UserCtrl", function($scope, $stateParams, $state, $log, $timeout, $q, $ionicLoading, Users) {
 
   var currentUser = Parse.User.current();
 
@@ -96,20 +96,15 @@ angular.module("hotbar.controllers")
     var deferred = $q.defer()
       , hotbar = post.get("hotbar");
     if (hotbar) {
-      HotBars.get(hotbar.id, function(err, hotbar) {
-        if (err) {
-          $log.error("Getting post hotbar error: ", err);
-          deferred.reject(err);
-        } else {
-          post.hotbar = {
-            name: hotbar.get("name"),
-            address: hotbar.get("address"),
-            region: hotbar.get("region"),
-            url: hotbar.get("url")
-          };
-          deferred.resolve(post);
-        }
-      });
+      post.hotbar = {
+        name: hotbar.get("name"),
+        address: hotbar.get("address"),
+        region: hotbar.get("region"),
+        url: hotbar.get("url")
+      };
+      deferred.resolve(post);
+    } else {
+      deferred.reject();
     }
     return deferred.promise;
   };

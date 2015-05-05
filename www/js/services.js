@@ -99,10 +99,10 @@ angular.module('hotbar.services', [])
         }
       },
       getDistance: function(place, callback) {
-        /* var point1 = new Parse.GeoPoint(_position);
-        var point2 = place;
-        return point1.milesTo(point2); */
-        var o = new google.maps.LatLng(_position.latitude, _position.longitude);
+        var p1 = new Parse.GeoPoint(_position);
+        var distance = p1.milesTo(place);
+        callback(null, distance);
+        /* var o = new google.maps.LatLng(_position.latitude, _position.longitude);
         var d = new google.maps.LatLng(place.latitude, place.longitude);
         var service = new google.maps.DistanceMatrixService();
         service.getDistanceMatrix({
@@ -117,7 +117,7 @@ angular.module('hotbar.services', [])
             var results = response.rows[0].elements;
             callback(null, results[0].distance);
           }
-        });
+        }); */
       }
     };
   }])

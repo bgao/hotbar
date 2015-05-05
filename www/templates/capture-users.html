@@ -1,0 +1,24 @@
+<ion-view title="USERS">
+  <ion-content has-header="true" padding="false">
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="doRefresh()">
+    </ion-refresher>
+    <div class="list">
+      <div ng-repeat="user in users" class="item item-avatar" ng-click="showPosts(user)">
+        <img ng-src="{{user.picture}}">
+        <h2>{{user.displayName}}</h2>
+        <!-- distance -->
+        <a ng-repeat="post in user.posts"
+           ng-href="#/tab/capture/users/{{post.id}}"
+           class="item item-thumbnail-left"
+           ng-show="user.showPosts">
+          <img ng-src="{{post.media.thumbnailUrl}}">
+          <h2>{{post.media.description}}</h2>
+          <p>{{post.hotbar.name}}</p>
+          <p>{{post.createdAt | prettyDate}}</p>
+        </a>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>

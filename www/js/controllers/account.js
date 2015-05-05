@@ -300,9 +300,18 @@ angular.module("hotbar.controllers")
 
     $scope.doRefresh();
 
+    $scope.$on("$ionicView.beforeLeave", function(event) {
+      currentUser.set("radius", $scope.user.radius * 1609);
+      currentUser.save();
+      // Remove modals
+      $scope.passwordModal.remove();
+      $scope.userAgreementModal.remove();
+      $scope.passwordModal.remove();
+    });
+
+/*
     $scope.$on('$destroy', function(event) {
       // update user
-      currentUser.set("radius", $scope.user.radius * 1609);
       currentUser.set("pushnote", $scope.user.pushNote);
       currentUser.save();
       // update hotbar news
@@ -313,11 +322,8 @@ angular.module("hotbar.controllers")
         news.set("hotbar", $scope.user.hotbar);
         news.save();
       }
-      // Remove modals
-      $scope.passwordModal.remove();
-      $scope.userAgreementModal.remove();
-      $scope.passwordModal.remove();
     });
+    */
 
     $scope.logout = function() {
       Parse.User.logOut();
